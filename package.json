@@ -1,0 +1,41 @@
+{
+  "name": "elevenlabs-testing-framework",
+  "version": "1.0.0",
+  "description": "Framework de testing automatizado para agentes de ElevenLabs con comparación de modelos",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "simulate": "tsx src/index.ts simulate",
+    "create": "tsx src/index.ts create",
+    "run": "tsx src/index.ts run",
+    "list": "tsx src/index.ts list",
+    "report": "tsx src/index.ts report",
+    "test": "echo \"Error: no test runner\" && exit 1"
+  },
+  "keywords": [
+    "elevenlabs",
+    "testing",
+    "ai",
+    "conversational-ai",
+    "voice-agents"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.7",
+    "axios-retry": "^4.5.0",
+    "chalk": "^5.3.0",
+    "commander": "^12.0.0",
+    "dotenv": "^16.4.1",
+    "ora": "^8.0.1",
+    "yaml": "^2.3.4",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.16",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  }
+}
