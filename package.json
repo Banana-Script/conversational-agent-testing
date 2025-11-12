@@ -12,6 +12,11 @@
     "run": "tsx src/index.ts run",
     "list": "tsx src/index.ts list",
     "report": "tsx src/index.ts report",
+    "download-agent": "tsx src/index.ts download-agent",
+    "download": "tsx src/index.ts download-agent",
+    "generate:tests": "node scripts/generate-tests-base.js",
+    "generate:tests:qa": "node scripts/generate-tests-qa.js",
+    "check:claude-cli": "node scripts/check-claude-cli.js",
     "test": "echo \"Error: no test runner\" && exit 1"
   },
   "keywords": [

@@ -318,5 +318,106 @@ program
     }
   });
 
+/**
+ * Comando: download-agent
+ * Descarga la configuración completa de un agente
+ */
+program
+  .command('download-agent')
+  .description('Descarga la configuración completa de un agente')
+  .option('-a, --agent <agent-id>', 'ID del agente a descargar')
+  .option('-o, --output <directory>', 'Directorio de salida', './agents')
+  .action(async (options) => {
+    console.log(chalk.blue.bold('\n📥 Descargando configuración del agente...\n'));
+
+    // Si no se especifica el agent ID, usar el del .env
+    const agentId = options.agent || process.env.ELEVENLABS_AGENT_ID;
+
+    // Validar que el agent ID no esté vacío
+    if (!agentId || agentId.trim() === '') {
+      console.error(chalk.red('❌ Error: El ID del agente está vacío'));
+      console.error(chalk.yellow('\n💡 Asegúrate de:'));
+      console.error(chalk.yellow('   1. Tener ELEVENLABS_AGENT_ID configurado en .env'));
+      console.error(chalk.yellow('   2. O usar: npm run download-agent -- --agent <id>\n'));
+      process.exit(1);
+    }
+
+    let apiKey: string;
+    try {
+      apiKey = getElevenLabsApiKey();
+    } catch (error) {
+      handleMissingEnvVar(error);
+    }
+
+    const spinner = ora('Obteniendo configuración del agente...').start();
+
+    try {
+      const client = new ElevenLabsClient({ apiKey });
+
+      // Obtener configuración del agente
+      spinner.text = 'Descargando configuración del agente...';
+      const agentConfig = await client.getAgent(agentId);
+
+      // Crear directorio de salida si no existe
+      const { mkdir, writeFile } = await import('fs/promises');
+      await mkdir(options.output, { recursive: true });
+
+      // Generar nombres de archivo simples usando solo el agent_id
+      const filename = `${agentId}.json`;
+      const filepath = `${options.output}/${filename}`;
+
+      // Extraer el prompt a un archivo separado
+      let promptPath = null;
+      let modifiedConfig = { ...agentConfig };
+
+      if (
+        agentConfig.conversation_config?.agent?.prompt?.prompt &&
+        typeof agentConfig.conversation_config.agent.prompt.prompt === 'string'
+      ) {
+        const promptContent = agentConfig.conversation_config.agent.prompt.prompt;
+        const promptFilename = `${agentId}.md`;
+        promptPath = `${options.output}/${promptFilename}`;
+
+        // Guardar prompt en archivo markdown
+        await writeFile(promptPath, promptContent, 'utf-8');
+
+        // Modificar la configuración para que referencie el archivo
+        modifiedConfig = {
+          ...agentConfig,
+          conversation_config: {
+            ...agentConfig.conversation_config,
+            agent: {
+              ...agentConfig.conversation_config.agent,
+              prompt: {
+                ...agentConfig.conversation_config.agent.prompt,
+                prompt: `[PROMPT_EXTRAIDO] Ver archivo: ${promptFilename}`,
+              },
+            },
+          },
+        };
+      }
+
+      // Guardar configuración modificada
+      await writeFile(filepath, JSON.stringify(modifiedConfig, null, 2), 'utf-8');
+
+      spinner.succeed('Configuración descargada exitosamente');
+
+      console.log(chalk.green(`\n✓ Configuración guardada en: ${filepath}`));
+      if (promptPath) {
+        console.log(chalk.green(`✓ Prompt extraído en: ${promptPath}`));
+      }
+      console.log(chalk.cyan('\n📋 Resumen del agente:\n'));
+      console.log(chalk.gray(`  Nombre: ${agentConfig.name || 'N/A'}`));
+      console.log(chalk.gray(`  ID: ${agentConfig.agent_id || agentId}`));
+      console.log(chalk.gray(`  Timestamp: ${new Date().toLocaleString()}`));
+      console.log();
+
+    } catch (error) {
+      spinner.fail('Error descargando configuración');
+      console.error(chalk.red(`\n❌ Error: ${error instanceof Error ? error.message : String(error)}\n`));
+      process.exit(1);
+    }
+  });
+
 // Parsear argumentos
 program.parse();

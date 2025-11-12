@@ -1,0 +1,611 @@
+{
+  "agent_id": "agent_1401k6d9rrrzecdbww6x3jdyybx7",
+  "name": "58f3e7b9-2443-4260-bf55-143548d59c26_SOIC Auditoria Validacion",
+  "conversation_config": {
+    "asr": {
+      "quality": "high",
+      "provider": "scribe_realtime",
+      "user_input_audio_format": "ulaw_8000",
+      "keywords": [
+        "SOIC",
+        "Sofía Sierra",
+        "Sofia Sierra",
+        "Banco de Bogotá",
+        "Banco de Bogota",
+        "Bancolombia",
+        "Banco Pichincha",
+        "Pichincha",
+        "crédito de libranza",
+        "libranza",
+        "compra de cartera",
+        "libre inversión",
+        "desembolso",
+        "cuota mensual",
+        "tasa de interés",
+        "tasa nominal",
+        "mes vencida",
+        "outsourcing financiero",
+        "outsourcing",
+        "auditoría de calidad",
+        "auditoria",
+        "validación de datos",
+        "cédula",
+        "cedula",
+        "documento de identidad",
+        "fecha de nacimiento",
+        "dirección de residencia",
+        "correo electrónico",
+        "asesor comercial",
+        "Bogotá",
+        "Bogota",
+        "Cedritos",
+        "Medellín",
+        "Medellin",
+        "Cali",
+        "Barranquilla",
+        "Cartagena",
+        "callback",
+        "llamada de regreso",
+        "reagendar",
+        "programar llamada",
+        "ejecutivo",
+        "asesor",
+        "ley quince ochenta y uno",
+        "protección de datos personales",
+        "grabación de llamada",
+        "consentimiento informado",
+        "discrepancia",
+        "verificación",
+        "confirmación de datos",
+        "cobros indebidos",
+        "validación de calidad",
+        "millones",
+        "pesos colombianos",
+        "por ciento",
+        "porcentaje",
+        "estado de salud",
+        "medicamento",
+        "condición médica"
+      ]
+    },
+    "turn": {
+      "turn_timeout": 7,
+      "initial_wait_time": null,
+      "silence_end_call_timeout": 20,
+      "soft_timeout_config": {
+        "timeout_seconds": -1,
+        "message": "Hhmmmm...yeah give me a second..."
+      },
+      "mode": "turn",
+      "turn_eagerness": "normal"
+    },
+    "tts": {
+      "model_id": "eleven_turbo_v2_5",
+      "voice_id": "qHkrJuifPpn95wK3rm2A",
+      "supported_voices": [],
+      "agent_output_audio_format": "ulaw_8000",
+      "optimize_streaming_latency": 3,
+      "stability": 0.5,
+      "speed": 1.03,
+      "similarity_boost": 0.8,
+      "pronunciation_dictionary_locators": [
+        {
+          "pronunciation_dictionary_id": "fijER9U5PQ2QA7LfwkyS",
+          "version_id": null
+        }
+      ]
+    },
+    "conversation": {
+      "text_only": false,
+      "max_duration_seconds": 2000,
+      "client_events": [
+        "audio",
+        "interruption",
+        "user_transcript",
+        "agent_response",
+        "agent_response_correction"
+      ]
+    },
+    "language_presets": {},
+    "vad": {
+      "background_voice_detection": false
+    },
+    "agent": {
+      "first_message": "Hola buen día, habla con Sofía Sierra",
+      "language": "es",
+      "dynamic_variables": {
+        "dynamic_variable_placeholders": {
+          "tipo_credito": "libranza",
+          "correo_electronico": "juan@gmail.com",
+          "valor_a_desembolsar": "10.000.000",
+          "plazo_meses": "12",
+          "nombre_asesor": "Juan",
+          "entidad_financiera_origen": "Banco de Bogota",
+          "direccion": "Calle 137 n 12 16",
+          "nombre_cliente": "Juan Perez",
+          "ciudad": "Bogota",
+          "barrio": "Cedritos",
+          "entidad_financiera_desembolso": "Bancolombia",
+          "tasa_interes": "1.58",
+          "monto_credito": "12.000.000",
+          "fecha_nacimiento": "23/09/1993",
+          "cuota_mensual_proyectada": "1.200.000",
+          "documento_identidad": "1022386944"
+        }
+      },
+      "disable_first_message_interruptions": false,
+      "prompt": {
+        "prompt": "[PROMPT_EXTRAIDO] Ver archivo: agent_1401k6d9rrrzecdbww6x3jdyybx7.md",
+        "llm": "gpt-oss-120b",
+        "reasoning_effort": "low",
+        "thinking_budget": null,
+        "temperature": 0.15,
+        "max_tokens": -1,
+        "tool_ids": [],
+        "built_in_tools": {
+          "end_call": {
+            "type": "system",
+            "name": "end_call",
+            "description": "",
+            "response_timeout_secs": 20,
+            "disable_interruptions": false,
+            "force_pre_tool_speech": false,
+            "assignments": [],
+            "tool_call_sound": null,
+            "tool_call_sound_behavior": "auto",
+            "params": {
+              "system_tool_type": "end_call"
+            }
+          },
+          "language_detection": {
+            "type": "system",
+            "name": "language_detection",
+            "description": "",
+            "response_timeout_secs": 20,
+            "disable_interruptions": false,
+            "force_pre_tool_speech": false,
+            "assignments": [],
+            "tool_call_sound": null,
+            "tool_call_sound_behavior": "auto",
+            "params": {
+              "system_tool_type": "language_detection"
+            }
+          },
+          "transfer_to_agent": null,
+          "transfer_to_number": null,
+          "skip_turn": {
+            "type": "system",
+            "name": "skip_turn",
+            "description": "",
+            "response_timeout_secs": 20,
+            "disable_interruptions": false,
+            "force_pre_tool_speech": false,
+            "assignments": [],
+            "tool_call_sound": null,
+            "tool_call_sound_behavior": "auto",
+            "params": {
+              "system_tool_type": "skip_turn"
+            }
+          },
+          "play_keypad_touch_tone": null,
+          "voicemail_detection": {
+            "type": "system",
+            "name": "voicemail_detection",
+            "description": "Detect when a call has been answered by a voicemail system rather than a human.\nCall this function when you detect that the call recipient is not available and the call has been answered by an automated voicemail system.\n\nCommon indicators of voicemail in Colombia:\n- Automated greeting messages: \"Ha llamado al buzón de voz de...\", \"Gracias por llamar a...\", \"Has llegado al buzón de voz de...\"\n- Recording instructions: \"Deje su mensaje después del tono\", \"Deje su mensaje luego de escuchar la señal\", \"Deje su mensaje después del pitido\"\n- Voicemail system prompts: \"Deje su nombre y número de teléfono\", \"Le devolveremos la llamada\"\n- Generic unavailable messages: \"No está disponible en este momento\", \"No puede atender su llamada\", \"Está ocupado\", \"Actualmente no estamos disponibles\"\n- Business hours messages: \"Fuera del horario comercial\", \"Cerrado en este momento\", \"Nuestro horario de atención es...\"\n- Colombian operator-specific phrases: \"Oprima la tecla numeral para finalizar\" (Claro), \"Digite un número para escuchar los mensajes\" (Tigo)\n\nColombian Spanish characteristics to recognize:\n- Exclusive use of \"usted\" (never \"tú\" or \"vos\") in automated systems\n- Common verbs: \"oprima\", \"marque\", \"presione\" (for button pressing)\n- Formal terminology: \"buzón de voz\" (most common), \"correo de voz\", \"mensajería de voz\"\n\nBefore calling this function:\n- Provide a specific reason referencing the actual Colombian voicemail content heard\n- Consider regional variations (Bogotá formal accent, Medellín \"cantadito\", Cali jejeo, coastal aspirated /s/)\n\nAfter calling this function:\n- If a voicemail message is configured, it will be played automatically  \n- The call will end immediately after the message (or immediately if no message)\n- No further conversation will take place\n\nYou must provide a specific reason for detecting voicemail that references the exact Spanish wording that indicated voicemail.\n\nEXAMPLE FLOWS FOR COLOMBIA:\nExample 1 (Claro voicemail):\nSystem plays: \"Gracias por llamar. No está disponible en este momento. Deje su mensaje luego de escuchar la señal.\"\nAssistant: [voicemail_detection function called with reason=\"Colombian voicemail detected: 'No está disponible en este momento. Deje su mensaje luego de escuchar la señal.'\"]\n\nExample 2 (Tigo voicemail):\nSystem plays: \"Ha llamado al buzón de voz. Digite un número para escuchar los mensajes o deje su mensaje después del tono.\"\nAssistant: [voicemail_detection function called with reason=\"Colombian voicemail system detected: 'Ha llamado al buzón de voz. Digite un número para escuchar los mensajes o deje su mensaje después del tono.'\"]\n\nExample 3 (Business voicemail):\nSystem plays: \"Ha contactado con nuestra empresa. Actualmente no estamos disponibles. Deje su mensaje después del pitido y le devolveremos la llamada.\"\nAssistant: [voicemail_detection function called with reason=\"Business voicemail detected: 'Actualmente no estamos disponibles. Deje su mensaje después del pitido y le devolveremos la llamada.'\"]\n\nExample 4 (Movistar technical issue):\nSystem plays: \"Lo siento, el sistema no puede crear un buzón dinámico ahora. Hasta luego.\"\nAssistant: [voicemail_detection function called with reason=\"Movistar voicemail system error detected: 'Lo siento, el sistema no puede crear un buzón dinámico ahora. Hasta luego.'\"]\n\nExample 5 (DO NOT call - human response with Colombian accent):\nHuman: \"¿Aló? ¿Quién habla?\"\nAssistant: [follows system prompt and conversation objectives rather than calling voicemail_detection]\n\nExample 6 (DO NOT call - IVR menu system):\nSystem: \"Para español oprima 1, para ventas oprima 2, para soporte técnico oprima 3\"\nAssistant: [follows system prompt - this is an IVR menu system, not voicemail]\n\nYou must provide a specific reason for detecting voicemail. Never call this tool without a valid reason.\nThe reason must include a specific reference to the Spanish wording in the user message that indicates Colombian voicemail.",
+            "response_timeout_secs": 20,
+            "disable_interruptions": true,
+            "force_pre_tool_speech": false,
+            "assignments": [],
+            "tool_call_sound": null,
+            "tool_call_sound_behavior": "auto",
+            "params": {
+              "system_tool_type": "voicemail_detection",
+              "voicemail_message": ""
+            }
+          }
+        },
+        "mcp_server_ids": [],
+        "native_mcp_server_ids": [],
+        "knowledge_base": [],
+        "custom_llm": null,
+        "ignore_default_personality": false,
+        "rag": {
+          "enabled": false,
+          "embedding_model": "e5_mistral_7b_instruct",
+          "max_vector_distance": 0.6,
+          "max_documents_length": 50000,
+          "max_retrieved_rag_chunks_count": 20
+        },
+        "timezone": "America/Bogota",
+        "backup_llm_config": {
+          "preference": "override",
+          "order": []
+        },
+        "tools": [
+          {
+            "type": "system",
+            "name": "end_call",
+            "description": "",
+            "response_timeout_secs": 20,
+            "disable_interruptions": false,
+            "force_pre_tool_speech": false,
+            "assignments": [],
+            "tool_call_sound": null,
+            "tool_call_sound_behavior": "auto",
+            "params": {
+              "system_tool_type": "end_call"
+            }
+          },
+          {
+            "type": "system",
+            "name": "language_detection",
+            "description": "",
+            "response_timeout_secs": 20,
+            "disable_interruptions": false,
+            "force_pre_tool_speech": false,
+            "assignments": [],
+            "tool_call_sound": null,
+            "tool_call_sound_behavior": "auto",
+            "params": {
+              "system_tool_type": "language_detection"
+            }
+          },
+          {
+            "type": "system",
+            "name": "skip_turn",
+            "description": "",
+            "response_timeout_secs": 20,
+            "disable_interruptions": false,
+            "force_pre_tool_speech": false,
+            "assignments": [],
+            "tool_call_sound": null,
+            "tool_call_sound_behavior": "auto",
+            "params": {
+              "system_tool_type": "skip_turn"
+            }
+          },
+          {
+            "type": "system",
+            "name": "voicemail_detection",
+            "description": "Detect when a call has been answered by a voicemail system rather than a human.\nCall this function when you detect that the call recipient is not available and the call has been answered by an automated voicemail system.\n\nCommon indicators of voicemail in Colombia:\n- Automated greeting messages: \"Ha llamado al buzón de voz de...\", \"Gracias por llamar a...\", \"Has llegado al buzón de voz de...\"\n- Recording instructions: \"Deje su mensaje después del tono\", \"Deje su mensaje luego de escuchar la señal\", \"Deje su mensaje después del pitido\"\n- Voicemail system prompts: \"Deje su nombre y número de teléfono\", \"Le devolveremos la llamada\"\n- Generic unavailable messages: \"No está disponible en este momento\", \"No puede atender su llamada\", \"Está ocupado\", \"Actualmente no estamos disponibles\"\n- Business hours messages: \"Fuera del horario comercial\", \"Cerrado en este momento\", \"Nuestro horario de atención es...\"\n- Colombian operator-specific phrases: \"Oprima la tecla numeral para finalizar\" (Claro), \"Digite un número para escuchar los mensajes\" (Tigo)\n\nColombian Spanish characteristics to recognize:\n- Exclusive use of \"usted\" (never \"tú\" or \"vos\") in automated systems\n- Common verbs: \"oprima\", \"marque\", \"presione\" (for button pressing)\n- Formal terminology: \"buzón de voz\" (most common), \"correo de voz\", \"mensajería de voz\"\n\nBefore calling this function:\n- Provide a specific reason referencing the actual Colombian voicemail content heard\n- Consider regional variations (Bogotá formal accent, Medellín \"cantadito\", Cali jejeo, coastal aspirated /s/)\n\nAfter calling this function:\n- If a voicemail message is configured, it will be played automatically  \n- The call will end immediately after the message (or immediately if no message)\n- No further conversation will take place\n\nYou must provide a specific reason for detecting voicemail that references the exact Spanish wording that indicated voicemail.\n\nEXAMPLE FLOWS FOR COLOMBIA:\nExample 1 (Claro voicemail):\nSystem plays: \"Gracias por llamar. No está disponible en este momento. Deje su mensaje luego de escuchar la señal.\"\nAssistant: [voicemail_detection function called with reason=\"Colombian voicemail detected: 'No está disponible en este momento. Deje su mensaje luego de escuchar la señal.'\"]\n\nExample 2 (Tigo voicemail):\nSystem plays: \"Ha llamado al buzón de voz. Digite un número para escuchar los mensajes o deje su mensaje después del tono.\"\nAssistant: [voicemail_detection function called with reason=\"Colombian voicemail system detected: 'Ha llamado al buzón de voz. Digite un número para escuchar los mensajes o deje su mensaje después del tono.'\"]\n\nExample 3 (Business voicemail):\nSystem plays: \"Ha contactado con nuestra empresa. Actualmente no estamos disponibles. Deje su mensaje después del pitido y le devolveremos la llamada.\"\nAssistant: [voicemail_detection function called with reason=\"Business voicemail detected: 'Actualmente no estamos disponibles. Deje su mensaje después del pitido y le devolveremos la llamada.'\"]\n\nExample 4 (Movistar technical issue):\nSystem plays: \"Lo siento, el sistema no puede crear un buzón dinámico ahora. Hasta luego.\"\nAssistant: [voicemail_detection function called with reason=\"Movistar voicemail system error detected: 'Lo siento, el sistema no puede crear un buzón dinámico ahora. Hasta luego.'\"]\n\nExample 5 (DO NOT call - human response with Colombian accent):\nHuman: \"¿Aló? ¿Quién habla?\"\nAssistant: [follows system prompt and conversation objectives rather than calling voicemail_detection]\n\nExample 6 (DO NOT call - IVR menu system):\nSystem: \"Para español oprima 1, para ventas oprima 2, para soporte técnico oprima 3\"\nAssistant: [follows system prompt - this is an IVR menu system, not voicemail]\n\nYou must provide a specific reason for detecting voicemail. Never call this tool without a valid reason.\nThe reason must include a specific reference to the Spanish wording in the user message that indicates Colombian voicemail.",
+            "response_timeout_secs": 20,
+            "disable_interruptions": true,
+            "force_pre_tool_speech": false,
+            "assignments": [],
+            "tool_call_sound": null,
+            "tool_call_sound_behavior": "auto",
+            "params": {
+              "system_tool_type": "voicemail_detection",
+              "voicemail_message": ""
+            }
+          }
+        ]
+      }
+    }
+  },
+  "metadata": {
+    "created_at_unix_secs": 1759235564,
+    "updated_at_unix_secs": 1762975586
+  },
+  "platform_settings": {
+    "evaluation": {
+      "criteria": [
+        {
+          "id": "validacion",
+          "name": "validacion",
+          "type": "prompt",
+          "conversation_goal_prompt": "Valida si los datos proporcionados por el usuario son los mismos que se envian\n### Fields to Validate (only when valid and only when requested in Call transcript)\n- `documento_cliente` (Client ID/Document)\n- `fecha_nacimiento` (Date of Birth)\n- `direccion` (Address)\n- `correo_electronico` (Email)\n- `nombre_asesor` (Advisor Name) - Always validate when mentioned\nEXCEPTION: If client mentions \"Sofia Sierra\" as their advisor, do NOT mark as discrepancy (Sofia Sierra is the call agent, not a client advisor)",
+          "use_knowledge_base": false
+        }
+      ]
+    },
+    "widget": {
+      "variant": "full",
+      "placement": "bottom-right",
+      "expandable": "never",
+      "avatar": {
+        "type": "orb",
+        "color_1": "#2792dc",
+        "color_2": "#9ce6e6"
+      },
+      "feedback_mode": "during",
+      "end_feedback": null,
+      "bg_color": "#ffffff",
+      "text_color": "#000000",
+      "btn_color": "#000000",
+      "btn_text_color": "#ffffff",
+      "border_color": "#e1e1e1",
+      "focus_color": "#000000",
+      "border_radius": null,
+      "btn_radius": null,
+      "action_text": null,
+      "start_call_text": null,
+      "end_call_text": null,
+      "expand_text": null,
+      "listening_text": null,
+      "speaking_text": null,
+      "shareable_page_text": null,
+      "shareable_page_show_terms": true,
+      "terms_text": "#### Terms and conditions\n\nBy clicking \"Agree,\" and each time I interact with this AI agent, I consent to the recording, storage, and sharing of my communications with third-party service providers, and as described in the Privacy Policy.\nIf you do not wish to have your conversations recorded, please refrain from using this service.",
+      "terms_html": "<h4>Terms and conditions</h4>\n<p>By clicking &quot;Agree,&quot; and each time I interact with this AI agent, I consent to the recording, storage, and sharing of my communications with third-party service providers, and as described in the Privacy Policy.\nIf you do not wish to have your conversations recorded, please refrain from using this service.</p>\n",
+      "terms_key": null,
+      "show_avatar_when_collapsed": false,
+      "disable_banner": false,
+      "override_link": null,
+      "mic_muting_enabled": false,
+      "transcript_enabled": false,
+      "text_input_enabled": true,
+      "default_expanded": false,
+      "always_expanded": false,
+      "text_contents": {
+        "main_label": null,
+        "start_call": null,
+        "start_chat": null,
+        "new_call": null,
+        "end_call": null,
+        "mute_microphone": null,
+        "change_language": null,
+        "collapse": null,
+        "expand": null,
+        "copied": null,
+        "accept_terms": null,
+        "dismiss_terms": null,
+        "listening_status": null,
+        "speaking_status": null,
+        "connecting_status": null,
+        "chatting_status": null,
+        "input_label": null,
+        "input_placeholder": null,
+        "input_placeholder_text_only": null,
+        "input_placeholder_new_conversation": null,
+        "user_ended_conversation": null,
+        "agent_ended_conversation": null,
+        "conversation_id": null,
+        "error_occurred": null,
+        "copy_id": null
+      },
+      "styles": {
+        "base": null,
+        "base_hover": null,
+        "base_active": null,
+        "base_border": null,
+        "base_subtle": null,
+        "base_primary": null,
+        "base_error": null,
+        "accent": null,
+        "accent_hover": null,
+        "accent_active": null,
+        "accent_border": null,
+        "accent_subtle": null,
+        "accent_primary": null,
+        "overlay_padding": null,
+        "button_radius": null,
+        "input_radius": null,
+        "bubble_radius": null,
+        "sheet_radius": null,
+        "compact_sheet_radius": null,
+        "dropdown_sheet_radius": null
+      },
+      "language_selector": false,
+      "supports_text_only": true,
+      "custom_avatar_path": null,
+      "language_presets": {}
+    },
+    "data_collection": {
+      "success_criteria": {
+        "type": "string",
+        "description": "You are an expert analyst specializing in banking verification call transcripts. Your task is to evaluate client identity verification calls by comparing spoken responses against stored user data.\n\n## Input Data\n- **Call transcript**: Agent-client conversation\n- **User data**: Stored client information from banking records\n\n## Validation Rules\n### Fields to Validate (only when valid and only when requested in Call transcript)\n- `documento_cliente` (Client ID/Document)\n- `fecha_nacimiento` (Date of Birth)\n- `direccion` (Address)\n- `correo_electronico` (Email)\n- `nombre_asesor` (Advisor Name) - Always validate when mentioned\nEXCEPTION: If client mentions \"Sofia Sierra\" as their advisor, do NOT mark as discrepancy (Sofia Sierra is the call agent, not a client advisor)\n\n### Comparison Guidelines\n- **Ignore typographical errors**\n- Minor spelling differences should not be marked as discrepancies\n- **Accept reasonable format variations**\n- **For voice interactions, apply additional flexibility:**\n  - Accept partial names when context clearly identifies the client (e.g., \"Maria\" when stored name is \"Maria Elena\")\n  - Consider audio limitations and natural speech patterns\n  - Evaluate final confirmed responses, not intermediate corrections or clarifications\n\n### Name Validation Specific Rules\n- **Complete vs Partial Names**: Accept reasonable partial names that clearly identify the client\n- **Common Spelling Variations**: Accept standard variations (e.g., \"Johana\" vs \"Johanna\", \"Jhon\" vs \"John\")\n- **Multiple Names**: If stored data has multiple names, accept any complete subset that maintains identity clarity\n\n### Invalid Data Patterns (EXCLUDE COMPLETELY)\nIgnore fields with these values (case-insensitive):\n- \"No aplica\", \"no disponible\", \"null\", \"N/A\", \"\", \" \" (empty/whitespace)\n\n## Analysis Process\n\n### Step 1: Data Preprocessing\n1. Filter out all invalid user data values using the patterns above\n2. Identify which required fields have valid data for comparison\n3. Extract client responses from the transcript for corresponding fields\n4. **For voice calls**: Focus on final confirmed responses, disregarding intermediate corrections or clarifications\n\n### Step 2: Discrepancy Detection\n1. Compare each valid user data field with the client's spoken response\n2. Account for reasonable variations (e.g., address abbreviations, date formats)\n3. **Apply voice interaction flexibility**: Consider natural speech patterns, partial responses, and audio quality limitations\n4. **Prioritize final confirmations**: When there are corrections during the call, evaluate the final confirmed response\n\n### Step 3: Call Outcome Assessment\nEvaluate the call using these criteria:\n\n#### SUCCESS Requirements (ALL must be true):\n- Client (not third party) answered the call\n- Client confirmed all required information with valid user data when available\n- Zero substantial discrepancies found between valid stored data and client responses (minor variations, spelling differences, partial names, and voice interaction nuances do NOT count as discrepancies)\n- Client did not request callback or postponement\n\n#### FAILURE Conditions (ANY triggers failure):\n- Third party answered instead of intended client\n- Client requested to be called back later (any reason)\n- One or more substantial discrepancies found between valid user data and client responses (excluding acceptable variations defined above)\n- Client unable to provide required verification information\n\n## Voice Interaction Specific Guidelines\n- **Natural Speech Patterns**: Accept that people may provide abbreviated or partial information in conversation\n- **Correction Handling**: If client corrects themselves during the call, use the final confirmed response\n- **Context Recognition**: Consider the conversational context when evaluating responses\n- **Audio Quality**: Account for potential mishearing or unclear pronunciation\n- **Response Completeness**: Partial responses that clearly identify the client are acceptable (e.g., first name only when context is clear)\n\n## Quality Guidelines\n- Focus on substantial differences, not minor formatting, typographical, or pronunciation variations\n- Consider context and reasonable human communication patterns in voice interactions\n- Be precise in identifying genuine discrepancies vs. acceptable variations\n- Apply greater tolerance for voice interactions compared to written forms\n- Prioritize security while maintaining practical assessment of real telephone conversations\n- Only respond with the evaluation result.\n",
+        "enum": null,
+        "is_system_provided": false,
+        "dynamic_variable": "",
+        "constant_value": ""
+      },
+      "credit_type": {
+        "type": "string",
+        "description": "Specifies the type of credit or payment method being used (e.g., compra de cartera, libre inversión, etc)",
+        "enum": null,
+        "is_system_provided": false,
+        "dynamic_variable": "",
+        "constant_value": ""
+      },
+      "resumen_llamada": {
+        "type": "string",
+        "description": "You are an expert analyst evaluating banking verification call transcripts. Compare client responses against stored user data, assess interest, and identify objections.\n\n## Input Data\n- **Call transcript**: Agent-client conversation\n- **User data**: Stored client information from banking records\n\n## Validation Rules\n### Fields to Validate (only when valid and only when requested in Call transcript)\n- `documento_cliente` (Client ID/Document)\n- `fecha_nacimiento` (Date of Birth)  \n- `direccion` (Address)\n- `correo_electronico` (Email)\n- `nombre_asesor` (Advisor Name) - Always validate when mentioned\nEXCEPTION: If client mentions \"Sofia Sierra\" as their advisor, do NOT mark as discrepancy (Sofia Sierra is the call agent, not a client advisor)\n### Invalid Data Patterns (EXCLUDE COMPLETELY)\nIgnore fields with these values (case-insensitive):\n- \"No aplica\", \"no disponible\", \"null\", \"N/A\", \"\", \" \" (empty/whitespace)\n\n## Analysis Process\n\n### Step 1: Filter Data\nOnly analyze fields with valid values. If a field contains invalid patterns, exclude it entirely.\n\n### Step 2: Find Discrepancies\n**CRITICAL**: Only report actual mismatches where client response differs from stored data. DO NOT report matches/confirmations.\n**CRITICAL:** \"Sofia Sierra\" no es el asesor del cliente, solamente es un auditor de calidad. DO NOT use this name to find discrepancies.\n\n### Step 3: Assess Interest (0-100)\n- **High (70-100)**: Asks questions, shows enthusiasm, requests info\n- **Medium (30-69)**: Cooperates without enthusiasm  \n- **Low (0-29)**: Evasive, disinterested, wants to end call\n\n### Step 4: Identify Objections\nNote any resistance, concerns, or complaints.\n\n## Output Format (Spanish)\n\n**Diferencias encontradas:**\n[Only list actual discrepancies where client response differs from stored data. If no discrepancies: \"No se encontraron discrepancias entre las respuestas del cliente y los datos almacenados.\"]\n\n**Nivel de interés del cliente:** [0-100]\n[Brief justification based on transcript evidence]\n\n**Objeciones o quejas:** \n[Detail any objections/complaints, or \"No se identificaron objeciones\" if none]\n\n**Key Rule**: Report ONLY mismatches in \"Diferencias encontradas\" - never list confirmations that match stored data.\n\n\n## Quality Guidelines\n- Focus on substantial differences, not minor formatting or typographical variations\n- Consider context and reasonable human communication patterns\n- Be precise in identifying genuine discrepancies vs. acceptable variations\n- Only respond with the evaluation result and always provide answer.\n-",
+        "enum": null,
+        "is_system_provided": false,
+        "dynamic_variable": "",
+        "constant_value": ""
+      },
+      "validacion": {
+        "type": "string",
+        "description": "You are an expert analyst specializing in banking verification call transcripts. Your task is to evaluate client identity verification calls by comparing spoken responses against stored user data.\n\n## Input Data\n- **Call transcript**: Agent-client conversation\n- **User data**: Stored client information from banking records\n\n## Validation Rules\n### Fields to Validate (only when valid and only when requested in Call transcript)\n- `documento_cliente` (Client ID/Document)\n- `fecha_nacimiento` (Date of Birth)\n- `direccion` (Address)\n- `correo_electronico` (Email)\n- `nombre_asesor` (Advisor Name) - Always validate when mentioned\nEXCEPTION: If client mentions \"Sofia Sierra\" as their advisor, do NOT mark as discrepancy (Sofia Sierra is the call agent, not a client advisor)\n\n### Comparison Guidelines\n- **Ignore typographical errors**\n- Minor spelling differences should not be marked as discrepancies\n- **Accept reasonable format variations**\n- **For voice interactions, apply additional flexibility:**\n  - Accept partial names when context clearly identifies the client (e.g., \"Maria\" when stored name is \"Maria Elena\")\n  - Consider audio limitations and natural speech patterns\n  - Evaluate final confirmed responses, not intermediate corrections or clarifications\n\n### Name Validation Specific Rules\n- **Complete vs Partial Names**: Accept reasonable partial names that clearly identify the client\n- **Common Spelling Variations**: Accept standard variations (e.g., \"Johana\" vs \"Johanna\", \"Jhon\" vs \"John\")\n- **Multiple Names**: If stored data has multiple names, accept any complete subset that maintains identity clarity\n\n### Invalid Data Patterns (EXCLUDE COMPLETELY)\nIgnore fields with these values (case-insensitive):\n- \"No aplica\", \"no disponible\", \"null\", \"N/A\", \"\", \" \" (empty/whitespace)\n\n## Analysis Process\n\n### Step 1: Data Preprocessing\n1. Filter out all invalid user data values using the patterns above\n2. Identify which required fields have valid data for comparison\n3. Extract client responses from the transcript for corresponding fields\n4. **For voice calls**: Focus on final confirmed responses, disregarding intermediate corrections or clarifications\n\n### Step 2: Discrepancy Detection\n1. Compare each valid user data field with the client's spoken response\n2. Account for reasonable variations (e.g., address abbreviations, date formats)\n3. **Apply voice interaction flexibility**: Consider natural speech patterns, partial responses, and audio quality limitations\n4. **Prioritize final confirmations**: When there are corrections during the call, evaluate the final confirmed response\n\n### Step 3: Call Outcome Assessment\nEvaluate the call using these criteria:\n\n#### SUCCESS Requirements (ALL must be true):\n- Client (not third party) answered the call\n- Client confirmed all required information with valid user data when available\n- Zero substantial discrepancies found between valid stored data and client responses (minor variations, spelling differences, partial names, and voice interaction nuances do NOT count as discrepancies)\n- Client did not request callback or postponement\n\n#### FAILURE Conditions (ANY triggers failure):\n- Third party answered instead of intended client\n- Client requested to be called back later (any reason)\n- One or more substantial discrepancies found between valid user data and client responses (excluding acceptable variations defined above)\n- Client unable to provide required verification information\n\n## Voice Interaction Specific Guidelines\n- **Natural Speech Patterns**: Accept that people may provide abbreviated or partial information in conversation\n- **Correction Handling**: If client corrects themselves during the call, use the final confirmed response\n- **Context Recognition**: Consider the conversational context when evaluating responses\n- **Audio Quality**: Account for potential mishearing or unclear pronunciation\n- **Response Completeness**: Partial responses that clearly identify the client are acceptable (e.g., first name only when context is clear)\n\n## Quality Guidelines\n- Focus on substantial differences, not minor formatting, typographical, or pronunciation variations\n- Consider context and reasonable human communication patterns in voice interactions\n- Be precise in identifying genuine discrepancies vs. acceptable variations\n- Apply greater tolerance for voice interactions compared to written forms\n- Prioritize security while maintaining practical assessment of real telephone conversations\n- Only respond with the evaluation result.\n",
+        "enum": null,
+        "is_system_provided": false,
+        "dynamic_variable": "",
+        "constant_value": ""
+      },
+      "executive_leader_request": {
+        "type": "string",
+        "description": "Indicates when a conversation or issue has been escalated to or requires attention from executive leadership.",
+        "enum": null,
+        "is_system_provided": false,
+        "dynamic_variable": "",
+        "constant_value": ""
+      },
+      "information_discrepancy": {
+        "type": "string",
+        "description": "Flag noting when there's a mismatch or inconsistency in customer information details.",
+        "enum": null,
+        "is_system_provided": false,
+        "dynamic_variable": "",
+        "constant_value": ""
+      },
+      "follow_up_date": {
+        "type": "string",
+        "description": "Date/time for follow-up call in ISO 8601 format. Only complete if the contact requests to be contacted later (e.g., 2024-12-15T14:30:00Z). Remember, today is {{“now” | date: “%b %d, %Y, %I:%M %p”, “America/Bogota” }}",
+        "enum": null,
+        "is_system_provided": false,
+        "dynamic_variable": "",
+        "constant_value": ""
+      },
+      "audit_type": {
+        "type": "string",
+        "description": "Categorizes the type of review or verification being performed in the conversation (e.g., Alerta en Auditoría, Auditoría Exitosa, Auditoría Devuelta, Auditoría Pendiente)",
+        "enum": null,
+        "is_system_provided": false,
+        "dynamic_variable": "",
+        "constant_value": ""
+      },
+      "next_contact_datetime": {
+        "type": "string",
+        "description": "Timestamp indicating when the next follow-up contact with the customer should occur.",
+        "enum": null,
+        "is_system_provided": false,
+        "dynamic_variable": "",
+        "constant_value": ""
+      }
+    },
+    "overrides": {
+      "conversation_config_override": {
+        "turn": {
+          "soft_timeout_config": {
+            "message": false
+          }
+        },
+        "tts": {
+          "voice_id": false,
+          "stability": false,
+          "speed": false,
+          "similarity_boost": false
+        },
+        "conversation": {
+          "text_only": true
+        },
+        "agent": {
+          "first_message": false,
+          "language": false,
+          "prompt": {
+            "prompt": false,
+            "llm": false,
+            "native_mcp_server_ids": false
+          }
+        }
+      },
+      "custom_llm_extra_body": false,
+      "enable_conversation_initiation_client_data_from_webhook": false
+    },
+    "workspace_overrides": {
+      "conversation_initiation_client_data_webhook": null,
+      "webhooks": {
+        "post_call_webhook_id": "169fef0b2cff4ccb9b92dbb443a1f571",
+        "events": [
+          "transcript"
+        ],
+        "send_audio": false
+      }
+    },
+    "testing": {
+      "attached_tests": [],
+      "referenced_tests_ids": []
+    },
+    "archived": false,
+    "guardrails": {
+      "version": "1",
+      "moderation": {
+        "config": {
+          "sexual": {
+            "is_enabled": false,
+            "threshold": 0.3
+          },
+          "violence": {
+            "is_enabled": false,
+            "threshold": 0.3
+          },
+          "violence_graphic": {
+            "is_enabled": false,
+            "threshold": 0.3
+          },
+          "harassment": {
+            "is_enabled": false,
+            "threshold": 0.3
+          },
+          "harassment_threatening": {
+            "is_enabled": false,
+            "threshold": 0.3
+          },
+          "hate": {
+            "is_enabled": false,
+            "threshold": 0.3
+          },
+          "hate_threatening": {
+            "is_enabled": false,
+            "threshold": 0.3
+          },
+          "self_harm_instructions": {
+            "is_enabled": false,
+            "threshold": 0.3
+          },
+          "self_harm": {
+            "is_enabled": false,
+            "threshold": 0.3
+          },
+          "self_harm_intent": {
+            "is_enabled": false,
+            "threshold": 0.3
+          },
+          "sexual_minors": {
+            "is_enabled": false,
+            "threshold": 0.3
+          }
+        }
+      }
+    },
+    "auth": {
+      "enable_auth": false,
+      "allowlist": [],
+      "shareable_token": null
+    },
+    "call_limits": {
+      "agent_concurrency_limit": -1,
+      "daily_limit": 100000,
+      "bursting_enabled": true
+    },
+    "ban": null,
+    "privacy": {
+      "record_voice": true,
+      "retention_days": -1,
+      "delete_transcript_and_pii": false,
+      "delete_audio": false,
+      "apply_to_existing_conversations": false,
+      "zero_retention_mode": false
+    },
+    "safety": {
+      "is_blocked_ivc": false,
+      "is_blocked_non_ivc": false,
+      "ignore_safety_evaluation": false
+    }
+  },
+  "phone_numbers": [],
+  "workflow": {
+    "edges": {},
+    "nodes": {
+      "start_node": {
+        "type": "start",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "edge_order": []
+      }
+    }
+  },
+  "access_info": {
+    "is_creator": true,
+    "creator_name": "info@bananascript.io",
+    "creator_email": "info@bananascript.io",
+    "role": "admin"
+  },
+  "tags": [],
+  "version_id": null,
+  "branch_id": null
+}
