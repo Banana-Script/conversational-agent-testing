@@ -3,7 +3,7 @@
  * Documentación: https://docs.vapi.ai
  */
 
-import Vapi from '@vapi-ai/server-sdk';
+import { Vapi } from '@vapi-ai/server-sdk';
 import type {
   VapiConfig,
   VapiTestConfig,
@@ -28,7 +28,7 @@ export class VapiClient {
     // Inicializar SDK de Vapi
     this.sdk = new Vapi({
       token: this.apiKey,
-      serverUrl: config.baseURL
+      ...(config.baseURL && { environment: config.baseURL })
     });
   }
 
