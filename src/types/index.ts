@@ -113,6 +113,17 @@ export interface TestDefinition {
   success_examples?: string[];
   failure_examples?: string[];
   type?: 'llm' | 'tool';
+
+  // Multi-provider support
+  provider?: 'elevenlabs' | 'vapi';  // default: 'elevenlabs'
+  category?: string;  // Para agrupar tests en suites (Vapi)
+  tags?: string[];    // Para filtrado y organización
+
+  // Vapi-specific configuration
+  vapi?: {
+    assistant_id?: string;  // Opcional, usa env var si no se especifica
+    attempts?: number;      // 1-5, default: 1
+  };
 }
 
 // Resultado de un test ejecutado

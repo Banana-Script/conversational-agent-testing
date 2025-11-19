@@ -319,6 +319,66 @@ program
   });
 
 /**
+ * Comando: copy-agent
+ * Copia la configuración de un agente a otro
+ */
+program
+  .command('copy-agent')
+  .description('Copia la configuración de un agente origen a un agente destino')
+  .requiredOption('-s, --source <agent-id>', 'ID del agente origen')
+  .requiredOption('-d, --destination <agent-id>', 'ID del agente destino')
+  .action(async (options) => {
+    console.log(chalk.blue.bold('\n📋 Copiando configuración entre agentes...\n'));
+
+    let apiKey: string;
+    try {
+      apiKey = getElevenLabsApiKey();
+    } catch (error) {
+      handleMissingEnvVar(error);
+    }
+
+    const spinner = ora('Descargando configuración del agente origen...').start();
+
+    try {
+      const client = new ElevenLabsClient({ apiKey });
+
+      // 1. Obtener configuración del agente origen
+      spinner.text = `Descargando configuración del agente origen (${options.source})...`;
+      const sourceConfig = await client.getAgent(options.source);
+      spinner.succeed(`Configuración del agente origen descargada`);
+
+      console.log(chalk.cyan('\n📥 Agente origen:\n'));
+      console.log(chalk.gray(`  Nombre: ${sourceConfig.name || 'N/A'}`));
+      console.log(chalk.gray(`  ID: ${sourceConfig.agent_id || options.source}`));
+
+      // 2. Actualizar agente destino con la configuración del origen
+      const updateSpinner = ora(`Actualizando agente destino (${options.destination})...`).start();
+
+      // Crear una copia limpia de la configuración sin campos de solo lectura
+      const configToUpdate = {
+        name: sourceConfig.name,
+        conversation_config: sourceConfig.conversation_config,
+        platform_settings: sourceConfig.platform_settings,
+        secrets: sourceConfig.secrets,
+      };
+
+      const updatedAgent = await client.updateAgent(options.destination, configToUpdate);
+      updateSpinner.succeed(`Agente destino actualizado exitosamente`);
+
+      console.log(chalk.cyan('\n📤 Agente destino:\n'));
+      console.log(chalk.gray(`  Nombre: ${updatedAgent.name || 'N/A'}`));
+      console.log(chalk.gray(`  ID: ${updatedAgent.agent_id || options.destination}`));
+
+      console.log(chalk.green.bold('\n✅ Configuración copiada exitosamente\n'));
+
+    } catch (error) {
+      spinner.fail('Error copiando configuración');
+      console.error(chalk.red(`\n❌ Error: ${error instanceof Error ? error.message : String(error)}\n`));
+      process.exit(1);
+    }
+  });
+
+/**
  * Comando: download-agent
  * Descarga la configuración completa de un agente
  */

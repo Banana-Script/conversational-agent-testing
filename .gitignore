@@ -43,3 +43,9 @@ Thumbs.db
 *.temp
 results/
 tests/scenarios/*
+
+# Vapi cache (auto-generated suite mappings)
+.vapi-suites.json
+
+# Agent configurations (may contain sensitive data)
+agents/

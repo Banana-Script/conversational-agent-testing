@@ -228,4 +228,30 @@ export class ElevenLabsClient {
       throw error;
     }
   }
+
+  /**
+   * Actualiza la configuración de un agente
+   * @param agentId - ID del agente a actualizar
+   * @param agentConfig - Nueva configuración del agente
+   * @returns Datos del agente actualizado
+   */
+  async updateAgent(agentId: string, agentConfig: any): Promise<any> {
+    try {
+      const response = await this.axiosInstance.patch(
+        `/v1/convai/agents/${agentId}`,
+        agentConfig
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new ElevenLabsAPIError(
+          `Error actualizando agente: ${error.message}`,
+          error.response?.status,
+          error.response?.data,
+          error
+        );
+      }
+      throw error;
+    }
+  }
 }
