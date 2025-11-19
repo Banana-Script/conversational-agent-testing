@@ -422,9 +422,21 @@ program
       process.exit(1);
     }
 
-    const spinner = ora(`Obteniendo configuración del ${provider} ${provider === 'vapi' ? 'assistant' : 'agent'}...`).start();
+    const spinner = ora('Limpiando carpeta de destino...').start();
 
     try {
+      // Limpiar carpeta de destino antes de descargar
+      const { rm, mkdir } = await import('fs/promises');
+      try {
+        await rm(options.output, { recursive: true, force: true });
+      } catch (error) {
+        // Ignorar si la carpeta no existe
+      }
+      await mkdir(options.output, { recursive: true });
+      spinner.succeed('Carpeta limpiada');
+
+      spinner.start(`Obteniendo configuración del ${provider} ${provider === 'vapi' ? 'assistant' : 'agent'}...`);
+
       let agentConfig: any;
 
       if (provider === 'vapi') {
@@ -457,9 +469,8 @@ program
 
       spinner.succeed('Configuración descargada');
 
-      // Crear directorio de salida si no existe
-      const { mkdir, writeFile } = await import('fs/promises');
-      await mkdir(options.output, { recursive: true });
+      // Importar writeFile para guardar archivos
+      const { writeFile } = await import('fs/promises');
 
       // Generar nombres de archivo
       const filename = `${agentId}.json`;
