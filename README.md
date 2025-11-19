@@ -1,281 +1,329 @@
-# Framework de Testing para ElevenLabs Agents 🧪
+# Conversational Agent Testing 🧪
 
-Framework automatizado de testing para agentes conversacionales de ElevenLabs con soporte para dos flujos: **simulación directa** y **tests persistentes**.
+Toolkit for evaluating and testing conversational AI agents (voice & chat) across multiple providers.
 
-## 🎯 Características
+## 🎯 Overview
 
-- ✅ **Definición de tests en YAML**: Formato simple y legible
-- 🔄 **Dos flujos de testing**:
-  - **Simulación directa**: Ejecuta tests inmediatamente sin guardarlos
-  - **Tests persistentes**: Guarda tests en ElevenLabs para reutilizar
-- 📊 **Reportes detallados**: JSON y Markdown con métricas completas
-- 🎨 **CLI amigable**: Interface con colores y spinners
-- 📝 **Criterios personalizables**: Define tus propios criterios de evaluación
-- 🤖 **Generación automática de tests**: Claude Code genera test cases a partir de configuración del agente
-- 🔒 **Seguro**: Validación de inputs, prevención de command injection y path traversal
-- 💾 **Backup automático**: Guarda tests existentes antes de regenerar
+A comprehensive testing framework designed for conversational AI agents, supporting both voice and text-based interactions. Currently integrated with ElevenLabs, with planned support for additional providers.
 
-## 📋 Requisitos
+## 🎯 Features
+
+- ✅ **Provider-agnostic architecture**: Designed to support multiple AI providers
+- 🎙️ **Voice testing**: Test voice-based conversational agents
+- 💬 **Chat testing**: Support for text-based conversational agents (coming soon)
+- ✅ **YAML-based test definitions**: Simple and readable test format
+- 🔄 **Two testing flows**:
+  - **Direct simulation**: Execute tests immediately without saving
+  - **Persistent tests**: Save tests in provider platform for reuse
+- 📊 **Detailed reports**: JSON and Markdown with complete metrics
+- 🎨 **Friendly CLI**: Interface with colors and spinners
+- 📝 **Customizable criteria**: Define your own evaluation criteria
+- 🤖 **Automatic test generation**: Claude Code generates test cases from agent configuration
+- 🔒 **Security**: Input validation, command injection prevention, and path traversal protection
+- 💾 **Automatic backup**: Saves existing tests before regenerating
+
+## 📋 Requirements
 
 - Node.js 18+
-- Cuenta de ElevenLabs con API key
-- Agent ID de tu agente
+- ElevenLabs account with API key (for ElevenLabs agents)
+- Agent ID of your agent
 
-## 🚀 Instalación
+## 🚀 Installation
 
 ```bash
-cd testingElevenLabs
+git clone https://github.com/Banana-Script/conversational-agent-testing.git
+cd conversational-agent-testing
 npm install
 ```
 
-Configura el `.env`:
+Configure the `.env`:
 
 ```env
-ELEVENLABS_API_KEY=tu_api_key
-ELEVENLABS_AGENT_ID=tu_agent_id
+ELEVENLABS_API_KEY=your_api_key
+ELEVENLABS_AGENT_ID=your_agent_id
 ```
 
-## 📖 Comandos Disponibles
+## 📖 Available Commands
 
-### 1. Simulación Directa (`simulate`)
+### 1. Direct Simulation (`simulate`)
 
-Ejecuta tests inmediatamente usando la API de simulación:
+Execute tests immediately using the simulation API:
 
 ```bash
 npm run simulate
 ```
 
-✨ **Cuándo usar**: Desarrollo rápido, iteración de prompts, testing ad-hoc
+✨ **When to use**: Rapid development, prompt iteration, ad-hoc testing
 
-### 2. Crear Tests Persistentes (`create`)
+### 2. Create Persistent Tests (`create`)
 
-Guarda tests en tu cuenta de ElevenLabs:
+Save tests in your ElevenLabs account:
 
 ```bash
 npm run create
 ```
 
-Retorna IDs de tests creados que puedes reutilizar.
+Returns test IDs that you can reuse.
 
-### 3. Ejecutar Tests Persistentes (`run`)
+### 3. Run Persistent Tests (`run`)
 
-Ejecuta tests ya creados en ElevenLabs:
+Execute tests already created in ElevenLabs:
 
 ```bash
 npm run run -- --agent agent_123 --tests test_456 test_789
 ```
 
-✨ **Cuándo usar**: CI/CD, testing programado, tests de regresión
+✨ **When to use**: CI/CD, scheduled testing, regression tests
 
-### 4. Listar Tests (`list`)
+### 4. List Tests (`list`)
 
-Lista todos los tests de un agente:
+List all tests for an agent:
 
 ```bash
 npm run list -- --agent agent_123
 ```
 
-### 5. Generar Reporte (`report`)
+### 5. Generate Report (`report`)
 
-Genera reporte Markdown desde resultados:
+Generate Markdown report from results:
 
 ```bash
 npm run report results/test-results-*.json
 ```
 
-### 6. Descargar Configuración de Agente (`download`)
+### 6. Download Agent Configuration (`download`)
 
-Descarga toda la configuración de un agente en formato JSON:
+Download complete agent configuration in JSON format:
 
 ```bash
-# Usar el agente del .env (automático)
+# Use the agent from .env (automatic)
 npm run download
 
-# O especificar un agente manualmente
+# Or specify an agent manually
 npm run download -- --agent agent_123
 
-# Cambiar directorio de salida
+# Change output directory
 npm run download -- --output ./backups
 ```
 
-Opciones:
-- `--agent` (opcional): ID del agente a descargar. Si no se especifica, usa `ELEVENLABS_AGENT_ID` del .env
-- `--output` (opcional): Directorio de salida (default: `./agents`)
+Options:
+- `--agent` (optional): Agent ID to download. If not specified, uses `ELEVENLABS_AGENT_ID` from .env
+- `--output` (optional): Output directory (default: `./agents`)
 
-✨ **Cuándo usar**:
-- Respaldo de configuración antes de hacer cambios
-- Documentar configuración actual del agente
-- Versionamiento de prompts y configuración
-- Comparar configuraciones entre diferentes agentes
+✨ **When to use**:
+- Backup configuration before making changes
+- Document current agent configuration
+- Version control prompts and configuration
+- Compare configurations between different agents
 
-📝 **Extracción automática de prompt**:
-El comando extrae automáticamente el prompt del agente a un archivo `.md` separado:
-- Archivo JSON: `<agent_id>.json` (configuración sin el prompt)
-- Archivo MD: `<agent_id>.md` (prompt completo)
-- En el JSON, el campo `conversation_config.agent.prompt.prompt` tendrá una referencia al archivo markdown
+📝 **Automatic prompt extraction**:
+The command automatically extracts the agent's prompt to a separate `.md` file:
+- JSON file: `<agent_id>.json` (configuration without prompt)
+- MD file: `<agent_id>.md` (complete prompt)
+- In JSON, the `conversation_config.agent.prompt.prompt` field will reference the markdown file
 
-Ejemplo: Para el agente `agent_1401k6d9rrrzecdbww6x3jdyybx7` se crean:
+Example: For agent `agent_1401k6d9rrrzecdbww6x3jdyybx7` creates:
 - `agents/agent_1401k6d9rrrzecdbww6x3jdyybx7.json`
 - `agents/agent_1401k6d9rrrzecdbww6x3jdyybx7.md`
 
-⚠️ **Nota**: Los archivos descargados se guardan en `./agents/` y están en `.gitignore` para evitar exponer información sensible.
+⚠️ **Note**: Downloaded files are saved in `./agents/` and are in `.gitignore` to avoid exposing sensitive information.
 
-### 7. Generar Tests Automáticamente (`generate:tests`)
+### 7. Copy Configuration Between Agents (`copy-agent`)
 
-Genera test cases automáticamente usando Claude Code a partir de la configuración del agente:
+Copy complete configuration from source agent to destination agent:
 
 ```bash
-# Generar con Claude Code base (más rápido, menos tokens)
+npm run copy-agent -- --source source_agent_id --destination destination_agent_id
+```
+
+Options:
+- `--source` or `-s` (required): Source agent ID to copy from
+- `--destination` or `-d` (required): Destination agent ID to update
+
+✨ **When to use**:
+- Replicate agent configuration to another
+- Migrate configuration between environments (dev → staging → prod)
+- Create variants of a base agent
+- Synchronize changes between multiple agents
+
+🔄 **What gets copied**:
+- `name` - Agent name
+- `conversation_config` - Complete conversational configuration (prompt, model, temperature, etc.)
+- `platform_settings` - Platform configurations
+- `secrets` - Environment variables and secrets
+
+⚠️ **Important**:
+- Destination agent will be completely overwritten with source configuration
+- Recommended to backup destination agent before copying: `npm run download -- --agent destination_agent_id`
+
+**Complete usage example**:
+```bash
+# 1. Backup destination agent (recommended)
+npm run download -- --agent destination_agent_123 --output ./backups
+
+# 2. Copy configuration
+npm run copy-agent -- --source source_agent_456 --destination destination_agent_123
+
+# 3. Verify copy was successful
+npm run download -- --agent destination_agent_123
+```
+
+### 8. Generate Tests Automatically (`generate:tests`)
+
+Automatically generate test cases using Claude Code from agent configuration:
+
+```bash
+# Generate with base Claude Code (faster, fewer tokens)
 npm run generate:tests
 
-# Generar con qa-expert agent (mejor calidad, más tokens)
+# Generate with qa-expert agent (better quality, more tokens)
 npm run generate:tests:qa
 ```
 
-🤖 **Cómo funciona**:
-1. Verifica que existan los archivos del agente (JSON + MD)
-2. Si no existen, ejecuta `npm run download` automáticamente
-3. **Crea backup automático** de tests existentes en `tests/scenarios-backup-<timestamp>/`
-4. Limpia `tests/scenarios/` (tests anteriores están en backup)
-5. Usa prompts optimizados de `prompts/` para generar tests de alta calidad
-6. Crea todos los archivos YAML necesarios para cobertura completa
+🤖 **How it works**:
+1. Verifies agent files exist (JSON + MD)
+2. If they don't exist, runs `npm run download` automatically
+3. **Creates automatic backup** of existing tests in `tests/scenarios-backup-<timestamp>/`
+4. Cleans `tests/scenarios/` (previous tests are in backup)
+5. Uses optimized prompts from `prompts/` to generate high-quality tests
+6. Creates all necessary YAML files for complete coverage
 
-✨ **Diferencias entre los dos comandos**:
+✨ **Differences between the two commands**:
 
-| Comando | Claude Mode | Tokens | Calidad | Tests Min | Cuándo usar |
+| Command | Claude Mode | Tokens | Quality | Min Tests | When to use |
 |---------|-------------|--------|---------|-----------|-------------|
-| `generate:tests` | Base Claude | Menos ⚡ | Buena ✓ | 10-25 | Desarrollo rápido, iteración |
-| `generate:tests:qa` | qa-expert agent | Más 💰 | Excelente ✓✓✓ | 20-30 | Producción, cobertura exhaustiva |
+| `generate:tests` | Base Claude | Less ⚡ | Good ✓ | 10-25 | Rapid development, iteration |
+| `generate:tests:qa` | qa-expert agent | More 💰 | Excellent ✓✓✓ | 20-30 | Production, exhaustive coverage |
 
-📋 **Tipos de tests generados**:
-- `happy-path-*.yaml` - Flujos exitosos
-- `edge-case-*.yaml` - Casos límite
-- `error-*.yaml` - Manejo de errores
-- `validation-*.yaml` - Validación de datos
-- `interruption-*.yaml` - Interrupciones de usuario
-- `p0-smoke-*.yaml` - Tests críticos (solo QA mode)
-- `p1-*, p2-*, p3-*` - Clasificación por prioridad (solo QA mode)
+📋 **Types of generated tests**:
+- `happy-path-*.yaml` - Successful flows
+- `edge-case-*.yaml` - Edge cases
+- `error-*.yaml` - Error handling
+- `validation-*.yaml` - Data validation
+- `interruption-*.yaml` - User interruptions
+- `p0-smoke-*.yaml` - Critical tests (QA mode only)
+- `p1-*, p2-*, p3-*` - Priority classification (QA mode only)
 
-🔒 **Seguridad**:
-- Validación de inputs para prevenir command injection
-- Protección contra path traversal
-- Backup automático antes de eliminar archivos
-- Comandos ejecutados con `spawn` (no shell injection)
+🔒 **Security**:
+- Input validation to prevent command injection
+- Path traversal protection
+- Automatic backup before deleting files
+- Commands executed with `spawn` (no shell injection)
 
-⚠️ **Requisitos previos**:
-- Claude Code CLI instalado: `npm install -g @anthropic-ai/claude-code`
-- Autenticado en Claude Code: `claude auth login`
-- Para `generate:tests:qa`: agente qa-expert configurado globalmente
+⚠️ **Prerequisites**:
+- Claude Code CLI installed: `npm install -g @anthropic-ai/claude-code`
+- Authenticated in Claude Code: `claude auth login`
+- For `generate:tests:qa`: qa-expert agent configured globally
 
-🔍 **Verificar instalación**:
+🔍 **Verify installation**:
 ```bash
 npm run check:claude-cli
 ```
 
-Este comando verifica que Claude Code CLI esté correctamente instalado y configurado.
-Si falla, sigue las instrucciones en [CLAUDE_CLI_SETUP.md](./CLAUDE_CLI_SETUP.md).
+This command verifies that Claude Code CLI is correctly installed and configured.
+If it fails, follow the instructions in [CLAUDE_CLI_SETUP.md](./CLAUDE_CLI_SETUP.md).
 
-💾 **Recuperar tests anteriores**:
-Si necesitas restaurar tests de un backup:
+💾 **Recover previous tests**:
+If you need to restore tests from a backup:
 ```bash
-# Listar backups disponibles
+# List available backups
 ls -la tests/scenarios-backup-*
 
-# Restaurar desde un backup específico
+# Restore from specific backup
 cp tests/scenarios-backup-2025-11-12T02-47-50/*.yaml tests/scenarios/
 ```
 
-## 📝 Crear Tests
+## 📝 Creating Tests
 
-### Dos Enfoques de Testing
+### Two Testing Approaches
 
-#### 🔄 Simulación Directa (`npm run simulate`)
-Ejecuta conversaciones completas multi-turno. El usuario simulado (LLM) interactúa con tu agente por varios turnos, luego se evalúa toda la conversación.
+#### 🔄 Direct Simulation (`npm run simulate`)
+Executes complete multi-turn conversations. The simulated user (LLM) interacts with your agent for several turns, then the entire conversation is evaluated.
 
-**Cuándo usar**: Desarrollo, iteración de prompts, testing de flujos conversacionales completos
+**When to use**: Development, prompt iteration, testing complete conversational flows
 
-#### 💾 Tests Persistentes (`npm run create` + `npm run run`)
-Crea tests de un solo turno guardados en ElevenLabs. El agente responde UNA vez y se compara contra ejemplos.
+#### 💾 Persistent Tests (`npm run create` + `npm run run`)
+Creates single-turn tests saved in ElevenLabs. The agent responds ONCE and is compared against examples.
 
-**Cuándo usar**: CI/CD, testing automatizado, validación de regresión
+**When to use**: CI/CD, automated testing, regression validation
 
-⚠️ **IMPORTANTE**: NO mezcles ambos enfoques en el mismo test.
+⚠️ **IMPORTANT**: DO NOT mix both approaches in the same test.
 
-### Formato YAML
+### YAML Format
 
 ```yaml
-name: "Nombre del Test"
-description: "Qué valida este test"
+name: "Test Name"
+description: "What this test validates"
 agent_id: "${ELEVENLABS_AGENT_ID}"
-type: "llm"  # Solo para tests persistentes
+type: "llm"  # Only for persistent tests
 
 simulated_user:
-  # IMPORTANTE: prompt debe ser un STRING simple
-  prompt: "Comportamiento del usuario simulado..."
-  first_message: "Hola"
-  language: "es"
-  temperature: 0.4  # Opcional: 0.0-1.0
+  # IMPORTANT: prompt must be a simple STRING
+  prompt: "Simulated user behavior..."
+  first_message: "Hello"
+  language: "en"
+  temperature: 0.4  # Optional: 0.0-1.0
 
-# OPCIÓN 1: Para simulación directa (conversación completa)
+# OPTION 1: For direct simulation (complete conversation)
 evaluation_criteria:
   - id: "criterion-1"
-    name: "Criterio de Éxito"
-    prompt: "Evalúa si el agente cumplió con..."
+    name: "Success Criterion"
+    prompt: "Evaluate if the agent fulfilled..."
     use_knowledge_base: false
 
-# OPCIÓN 2: Para tests persistentes (un solo turno)
-success_condition: "El agente debe..."
+# OPTION 2: For persistent tests (single turn)
+success_condition: "The agent must..."
 success_examples:
-  - "Respuesta apropiada ejemplo 1"
+  - "Appropriate response example 1"
 failure_examples:
-  - "Respuesta inapropiada ejemplo 1"
+  - "Inappropriate response example 1"
 
 dynamic_variables:
-  nombre_cliente: "María González"
-  documento: "1234567"
+  customer_name: "Maria Gonzalez"
+  document: "1234567"
 ```
 
-**📖 Ver plantilla completa**: `tests/template.yaml`
+**📖 See complete template**: `tests/template.yaml`
 
-### 3 Tests de Ejemplo Incluidos
+### 3 Example Tests Included
 
-- `happy-path.yaml`: Flujo exitoso completo
-- `invalid-data.yaml`: Manejo de datos inválidos
-- `callback-scheduling.yaml`: Agendamiento de callbacks
+- `happy-path.yaml`: Complete successful flow
+- `invalid-data.yaml`: Invalid data handling
+- `callback-scheduling.yaml`: Callback scheduling
 
-## 🔄 Flujos de Trabajo
+## 🔄 Workflows
 
-### Desarrollo Rápido
+### Rapid Development
 
 ```bash
-# 1. Crea tu test YAML en tests/scenarios/
-# 2. Ejecuta simulación
+# 1. Create your YAML test in tests/scenarios/
+# 2. Execute simulation
 npm run simulate
 
-# 3. Revisa resultados en results/
-# 4. Itera ajustando el YAML
+# 3. Review results in results/
+# 4. Iterate adjusting the YAML
 ```
 
-### Producción/CI
+### Production/CI
 
 ```bash
-# 1. Crea tests persistentes una vez
+# 1. Create persistent tests once
 npm run create
 
-# 2. Guarda los test IDs
-# 3. Ejecuta en CI/CD
+# 2. Save the test IDs
+# 3. Execute in CI/CD
 npm run run -- --agent $AGENT_ID --tests $TEST_IDS
 
-# 4. Verifica resultados
+# 4. Verify results
 ```
 
-## 📊 Resultados
+## 📊 Results
 
 ### Console Output
 
 ```
-✅ Validación Exitosa - Happy Path (6/6 criterios, 12500ms)
-❌ Manejo de Datos Inválidos (4/5 criterios, 15200ms)
+✅ Successful Validation - Happy Path (6/6 criteria, 12500ms)
+❌ Invalid Data Handling (4/5 criteria, 15200ms)
 ```
 
 ### JSON (`results/test-results-*.json`)
@@ -291,152 +339,152 @@ npm run run -- --agent $AGENT_ID --tests $TEST_IDS
 
 ### Markdown (`results/report-*.md`)
 
-Reporte completo con:
-- Resumen ejecutivo
-- Tabla de tests
-- Transcripciones completas
-- Criterios y rationales
+Complete report with:
+- Executive summary
+- Test table
+- Complete transcriptions
+- Criteria and rationales
 
-## 🏗️ Estructura del Proyecto
+## 🏗️ Project Structure
 
 ```
-testingElevenLabs/
+conversational-agent-testing/
 ├── src/
-│   ├── api/elevenlabs-client.ts      # Cliente API
+│   ├── api/elevenlabs-client.ts      # API client
 │   ├── testing/
-│   │   ├── test-runner.ts            # Ejecutor
-│   │   └── reporter.ts               # Reportes
-│   ├── types/index.ts                # Tipos TS
+│   │   ├── test-runner.ts            # Test runner
+│   │   └── reporter.ts               # Reports
+│   ├── types/index.ts                # TS types
 │   └── index.ts                      # CLI
 ├── tests/
-│   ├── template.yaml                 # Plantilla
+│   ├── template.yaml                 # Template
 │   └── scenarios/                    # Tests
-└── results/                          # Resultados
+└── results/                          # Results
 ```
 
-## 🔧 Configuración Avanzada
+## 🔧 Advanced Configuration
 
-### Variables Dinámicas
+### Dynamic Variables
 
-Personaliza tests sin duplicar:
+Customize tests without duplicating:
 
 ```yaml
 dynamic_variables:
-  nombre_cliente: "Juan"
-  monto: "1000000"
+  customer_name: "Juan"
+  amount: "1000000"
 ```
 
 ### Tool Mocking
 
-Simula herramientas externas:
+Simulate external tools:
 
 ```yaml
 tool_mock_config:
-  consultar_db:
+  query_db:
     return_value: "OK"
     should_fail: false
 ```
 
-## 🔒 Seguridad y Mejoras
+## 🔒 Security and Improvements
 
-### Mejoras de Seguridad Implementadas
+### Implemented Security Improvements
 
-Este framework incluye múltiples capas de seguridad para proteger contra vulnerabilidades comunes:
+This framework includes multiple security layers to protect against common vulnerabilities:
 
-#### ✅ Prevención de Command Injection
-- Uso de `spawn()` con array de argumentos (no shell execution)
-- Validación estricta de todos los inputs
-- `shell: false` para prevenir metacaracteres maliciosos
+#### ✅ Command Injection Prevention
+- Use of `spawn()` with argument array (no shell execution)
+- Strict validation of all inputs
+- `shell: false` to prevent malicious metacharacters
 
-#### ✅ Prevención de Path Traversal
-- Validación de agent IDs con regex: `/^[a-zA-Z0-9_-]{1,100}$/`
-- Detección de patrones de traversal: `..`, rutas absolutas, drive letters
-- Máximo 100 caracteres para prevenir buffer overflow
+#### ✅ Path Traversal Prevention
+- Agent ID validation with regex: `/^[a-zA-Z0-9_-]{1,100}$/`
+- Detection of traversal patterns: `..`, absolute paths, drive letters
+- Maximum 100 characters to prevent buffer overflow
 
-#### ✅ Protección de Datos
-- Backup automático antes de eliminar archivos
-- `.gitignore` configurado para evitar commits de datos sensibles
-- Archivos de agente excluidos del control de versiones
+#### ✅ Data Protection
+- Automatic backup before deleting files
+- `.gitignore` configured to avoid commits of sensitive data
+- Agent files excluded from version control
 
-### Tests de Validación
+### Validation Tests
 
-Para verificar que las medidas de seguridad funcionan correctamente:
+To verify that security measures work correctly:
 
 ```bash
 node scripts/test-validation.js
 ```
 
-Esto ejecuta 6 tests de seguridad:
-1. ✅ Bloqueo de path traversal en agent ID
-2. ✅ Rechazo de caracteres inválidos
-3. ✅ Validación de agent ID requerido
-4. ✅ Aceptación de agent IDs válidos
-5. ✅ Bloqueo de path traversal en rutas de archivos
-6. ✅ Aceptación de rutas relativas válidas
+This runs 6 security tests:
+1. ✅ Block path traversal in agent ID
+2. ✅ Reject invalid characters
+3. ✅ Required agent ID validation
+4. ✅ Accept valid agent IDs
+5. ✅ Block path traversal in file paths
+6. ✅ Accept valid relative paths
 
-### Documentación de Mejoras
+### Improvement Documentation
 
-Para detalles completos sobre las mejoras de seguridad y optimización:
+For complete details on security and optimization improvements:
 
 📄 **[SECURITY_AND_OPTIMIZATION_IMPROVEMENTS.md](./SECURITY_AND_OPTIMIZATION_IMPROVEMENTS.md)**
 
-Incluye:
-- Análisis detallado de vulnerabilidades corregidas
-- Comparativas antes/después
-- Métricas de impacto
-- Recomendaciones futuras
+Includes:
+- Detailed analysis of fixed vulnerabilities
+- Before/after comparisons
+- Impact metrics
+- Future recommendations
 
 ## 🐛 Troubleshooting
 
-### Error: ELEVENLABS_API_KEY no encontrada
+### Error: ELEVENLABS_API_KEY not found
 
 ```bash
 cat .env | grep ELEVENLABS_API_KEY
 ```
 
-### Error: ELEVENLABS_AGENT_ID inválido
+### Error: Invalid ELEVENLABS_AGENT_ID
 
-Si ves este error, tu agent ID contiene caracteres no permitidos. Solo se aceptan:
-- Letras (A-Z, a-z)
-- Números (0-9)
-- Guiones (-)
-- Guiones bajos (_)
-- Máximo 100 caracteres
+If you see this error, your agent ID contains characters not allowed. Only accepts:
+- Letters (A-Z, a-z)
+- Numbers (0-9)
+- Hyphens (-)
+- Underscores (_)
+- Maximum 100 characters
 
-Ejemplo válido: `agent_1401k6d9rrrzecdbww6x3jdyybx7`
+Valid example: `agent_1401k6d9rrrzecdbww6x3jdyybx7`
 
-### Error 422 al crear tests
+### Error 422 when creating tests
 
-Verifica que `agent_id` sea correcto y el agente exista.
+Verify that `agent_id` is correct and the agent exists.
 
 ### Error: spawn claude ENOENT
 
-Claude Code CLI no está instalado o no está en el PATH.
+Claude Code CLI is not installed or not in PATH.
 
-**Solución rápida:**
+**Quick solution:**
 
 ```bash
-# 1. Verificar el problema
+# 1. Verify the problem
 npm run check:claude-cli
 
-# 2. Instalar Claude Code CLI
+# 2. Install Claude Code CLI
 npm install -g @anthropic-ai/claude-code
 
-# 3. Autenticar
+# 3. Authenticate
 claude auth login
 
-# 4. Verificar instalación
+# 4. Verify installation
 claude --version
 
-# 5. Ejecutar verificación nuevamente
+# 5. Run verification again
 npm run check:claude-cli
 ```
 
-**Importante**: No confundir Claude Code Desktop (aplicación de escritorio) con Claude Code CLI (comando de terminal). Los scripts necesitan el CLI instalado globalmente.
+**Important**: Don't confuse Claude Code Desktop (desktop application) with Claude Code CLI (terminal command). Scripts need the CLI installed globally.
 
-Para más detalles, ver [CLAUDE_CLI_SETUP.md](./CLAUDE_CLI_SETUP.md)
+For more details, see [CLAUDE_CLI_SETUP.md](./CLAUDE_CLI_SETUP.md)
 
-### Tests lentos
+### Slow tests
 
 Reduce `new_turns_limit`:
 
@@ -444,25 +492,34 @@ Reduce `new_turns_limit`:
 new_turns_limit: 20
 ```
 
-### Recuperar tests eliminados accidentalmente
+### Recover accidentally deleted tests
 
-Los tests se respaldan automáticamente antes de regenerar:
+Tests are automatically backed up before regenerating:
 
 ```bash
-# Ver backups disponibles
+# View available backups
 ls -la tests/scenarios-backup-*
 
-# Restaurar desde backup más reciente
+# Restore from most recent backup
 LATEST_BACKUP=$(ls -td tests/scenarios-backup-* | head -1)
 cp $LATEST_BACKUP/*.yaml tests/scenarios/
 ```
 
-## 🔗 Enlaces
+## 🔗 Links
 
-- [Documentación ElevenLabs](https://elevenlabs.io/docs)
+- [ElevenLabs Documentation](https://elevenlabs.io/docs)
 - [API Reference - Tests](https://elevenlabs.io/docs/api-reference/tests/create)
 - [API Reference - Simulate](https://elevenlabs.io/docs/api-reference/agents/simulate-conversation)
 
+## 🗺️ Roadmap
+
+### Planned Features
+- 💬 **Chat provider support**: Integration with OpenAI, Anthropic, and other chat providers
+- 🔌 **Plugin system**: Extensible architecture for custom providers
+- 📈 **Advanced analytics**: Performance metrics and trend analysis
+- 🌐 **Multi-language support**: Testing in multiple languages
+- 🎯 **A/B testing**: Compare agent versions
+
 ---
 
-**Desarrollado para testing automatizado de agentes de ElevenLabs** 🚀
+**Developed by [Banana-Script](https://github.com/Banana-Script)** 🍌

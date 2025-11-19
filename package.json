@@ -1,9 +1,17 @@
 {
-  "name": "elevenlabs-testing-framework",
+  "name": "conversational-agent-testing",
   "version": "1.0.0",
-  "description": "Framework de testing automatizado para agentes de ElevenLabs con comparación de modelos",
+  "description": "Toolkit for evaluating and testing conversational AI agents (voice & chat) across multiple providers",
   "main": "dist/index.js",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Banana-Script/conversational-agent-testing.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Banana-Script/conversational-agent-testing/issues"
+  },
+  "homepage": "https://github.com/Banana-Script/conversational-agent-testing#readme",
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/index.ts",
@@ -14,19 +22,24 @@
     "report": "tsx src/index.ts report",
     "download-agent": "tsx src/index.ts download-agent",
     "download": "tsx src/index.ts download-agent",
+    "copy-agent": "tsx src/index.ts copy-agent",
     "generate:tests": "node scripts/generate-tests-base.js",
     "generate:tests:qa": "node scripts/generate-tests-qa.js",
     "check:claude-cli": "node scripts/check-claude-cli.js",
     "test": "echo \"Error: no test runner\" && exit 1"
   },
   "keywords": [
-    "elevenlabs",
-    "testing",
-    "ai",
     "conversational-ai",
-    "voice-agents"
+    "testing",
+    "ai-agents",
+    "voice-agents",
+    "chat-agents",
+    "elevenlabs",
+    "testing-framework",
+    "test-automation",
+    "ai-testing"
   ],
-  "author": "",
+  "author": "Banana-Script",
   "license": "MIT",
   "dependencies": {
     "axios": "^1.6.7",
