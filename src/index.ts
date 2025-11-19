@@ -380,57 +380,97 @@ program
 
 /**
  * Comando: download-agent
- * Descarga la configuración completa de un agente
+ * Descarga la configuración completa de un agente/assistant
  */
 program
   .command('download-agent')
-  .description('Descarga la configuración completa de un agente')
-  .option('-a, --agent <agent-id>', 'ID del agente a descargar')
+  .description('Descarga la configuración completa de un agente/assistant')
+  .option('-a, --agent <agent-id>', 'ID del agente/assistant a descargar')
   .option('-o, --output <directory>', 'Directorio de salida', './agents')
+  .option('-p, --provider <provider>', 'Provider: elevenlabs o vapi')
   .action(async (options) => {
     console.log(chalk.blue.bold('\n📥 Descargando configuración del agente...\n'));
 
-    // Si no se especifica el agent ID, usar el del .env
-    const agentId = options.agent || process.env.ELEVENLABS_AGENT_ID;
+    // Determinar provider desde CLI o env
+    const provider = (options.provider || process.env.TEST_PROVIDER || 'elevenlabs').toLowerCase();
 
-    // Validar que el agent ID no esté vacío
-    if (!agentId || agentId.trim() === '') {
-      console.error(chalk.red('❌ Error: El ID del agente está vacío'));
-      console.error(chalk.yellow('\n💡 Asegúrate de:'));
-      console.error(chalk.yellow('   1. Tener ELEVENLABS_AGENT_ID configurado en .env'));
-      console.error(chalk.yellow('   2. O usar: npm run download-agent -- --agent <id>\n'));
+    if (provider !== 'elevenlabs' && provider !== 'vapi') {
+      console.error(chalk.red(`❌ Error: Provider inválido "${provider}"`));
+      console.error(chalk.yellow('💡 Usa: elevenlabs o vapi\n'));
       process.exit(1);
     }
 
-    let apiKey: string;
-    try {
-      apiKey = getElevenLabsApiKey();
-    } catch (error) {
-      handleMissingEnvVar(error);
+    // Si no se especifica el agent ID, usar el del .env según provider
+    let agentId: string;
+    if (provider === 'vapi') {
+      agentId = options.agent || process.env.VAPI_ASSISTANT_ID || '';
+    } else {
+      agentId = options.agent || process.env.ELEVENLABS_AGENT_ID || '';
     }
 
-    const spinner = ora('Obteniendo configuración del agente...').start();
+    // Validar que el agent ID no esté vacío
+    if (!agentId || agentId.trim() === '') {
+      console.error(chalk.red('❌ Error: El ID del agente/assistant está vacío'));
+      console.error(chalk.yellow('\n💡 Asegúrate de:'));
+      if (provider === 'vapi') {
+        console.error(chalk.yellow('   1. Tener VAPI_ASSISTANT_ID configurado en .env'));
+        console.error(chalk.yellow('   2. O usar: npm run download -- --provider vapi --agent <id>\n'));
+      } else {
+        console.error(chalk.yellow('   1. Tener ELEVENLABS_AGENT_ID configurado en .env'));
+        console.error(chalk.yellow('   2. O usar: npm run download -- --agent <id>\n'));
+      }
+      process.exit(1);
+    }
+
+    const spinner = ora(`Obteniendo configuración del ${provider} ${provider === 'vapi' ? 'assistant' : 'agent'}...`).start();
 
     try {
-      const client = new ElevenLabsClient({ apiKey });
+      let agentConfig: any;
 
-      // Obtener configuración del agente
-      spinner.text = 'Descargando configuración del agente...';
-      const agentConfig = await client.getAgent(agentId);
+      if (provider === 'vapi') {
+        // Usar Vapi
+        const { VapiClient } = await import('./api/vapi-client.js');
+
+        const apiKey = process.env.VAPI_API_KEY;
+        if (!apiKey) {
+          spinner.fail();
+          console.error(chalk.red('❌ Error: VAPI_API_KEY no configurado en .env\n'));
+          process.exit(1);
+        }
+
+        const client = new VapiClient({ apiKey });
+        spinner.text = 'Descargando configuración del assistant...';
+        agentConfig = await client.getAssistant(agentId);
+      } else {
+        // Usar ElevenLabs
+        let apiKey: string;
+        try {
+          apiKey = getElevenLabsApiKey();
+        } catch (error) {
+          handleMissingEnvVar(error);
+        }
+
+        const client = new ElevenLabsClient({ apiKey });
+        spinner.text = 'Descargando configuración del agente...';
+        agentConfig = await client.getAgent(agentId);
+      }
+
+      spinner.succeed('Configuración descargada');
 
       // Crear directorio de salida si no existe
       const { mkdir, writeFile } = await import('fs/promises');
       await mkdir(options.output, { recursive: true });
 
-      // Generar nombres de archivo simples usando solo el agent_id
+      // Generar nombres de archivo
       const filename = `${agentId}.json`;
       const filepath = `${options.output}/${filename}`;
 
-      // Extraer el prompt a un archivo separado
+      // Extraer el prompt a un archivo separado (solo para ElevenLabs)
       let promptPath = null;
       let modifiedConfig = { ...agentConfig };
 
       if (
+        provider === 'elevenlabs' &&
         agentConfig.conversation_config?.agent?.prompt?.prompt &&
         typeof agentConfig.conversation_config.agent.prompt.prompt === 'string'
       ) {
@@ -457,7 +497,7 @@ program
         };
       }
 
-      // Guardar configuración modificada
+      // Guardar configuración
       await writeFile(filepath, JSON.stringify(modifiedConfig, null, 2), 'utf-8');
 
       spinner.succeed('Configuración descargada exitosamente');
@@ -466,9 +506,10 @@ program
       if (promptPath) {
         console.log(chalk.green(`✓ Prompt extraído en: ${promptPath}`));
       }
-      console.log(chalk.cyan('\n📋 Resumen del agente:\n'));
+      console.log(chalk.cyan(`\n📋 Resumen del ${provider === 'vapi' ? 'assistant' : 'agente'}:\n`));
       console.log(chalk.gray(`  Nombre: ${agentConfig.name || 'N/A'}`));
-      console.log(chalk.gray(`  ID: ${agentConfig.agent_id || agentId}`));
+      console.log(chalk.gray(`  ID: ${agentConfig.agent_id || agentConfig.id || agentId}`));
+      console.log(chalk.gray(`  Provider: ${provider}`));
       console.log(chalk.gray(`  Timestamp: ${new Date().toLocaleString()}`));
       console.log();
 

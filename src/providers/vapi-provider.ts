@@ -9,7 +9,7 @@ import { VapiClient } from '../api/vapi-client.js';
 import { VapiAdapter } from '../adapters/vapi-adapter.js';
 import { VapiTestSuiteManager } from '../vapi/suite-manager.js';
 import type { TestDefinition, TestResult } from '../types/index.js';
-import type { VapiConfig } from '../types/vapi.types.js';
+import type { VapiConfig, VapiTest } from '../types/vapi.types.js';
 
 export class VapiProvider extends BaseTestProvider {
   readonly name = 'vapi';
@@ -168,7 +168,7 @@ export class VapiProvider extends BaseTestProvider {
 
     try {
       // Crear todos los tests
-      const vapiTests = [];
+      const vapiTests: Array<{ vapiTest: VapiTest; originalTest: TestDefinition }> = [];
       for (const test of tests) {
         const assistantId = this.client.getAssistantId(test.vapi?.assistant_id);
         const vapiConfig = this.adapter.convertTestDefinition(test, assistantId);

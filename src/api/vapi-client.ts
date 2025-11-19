@@ -3,7 +3,7 @@
  * Documentación: https://docs.vapi.ai
  */
 
-import { Vapi } from '@vapi-ai/server-sdk';
+import { VapiClient as VapiSDK } from '@vapi-ai/server-sdk';
 import type {
   VapiConfig,
   VapiTestConfig,
@@ -17,7 +17,7 @@ import type {
 } from '../types/vapi.types.js';
 
 export class VapiClient {
-  private sdk: Vapi;
+  private sdk: VapiSDK;
   private apiKey: string;
   private assistantId?: string;
 
@@ -26,7 +26,7 @@ export class VapiClient {
     this.assistantId = config.assistantId;
 
     // Inicializar SDK de Vapi
-    this.sdk = new Vapi({
+    this.sdk = new VapiSDK({
       token: this.apiKey,
       ...(config.baseURL && { environment: config.baseURL })
     });
@@ -34,151 +34,86 @@ export class VapiClient {
 
   /**
    * Lista todos los test suites
+   * NOTA: Esta funcionalidad requiere API actualizada de Vapi
    */
   async listTestSuites(): Promise<VapiTestSuite[]> {
-    try {
-      // El SDK de Vapi maneja la paginación automáticamente
-      const response = await this.sdk.testSuites.list();
-      return response as VapiTestSuite[];
-    } catch (error) {
-      throw this.handleError(error, 'Failed to list test suites');
-    }
+    throw new Error('Test Suites API not yet implemented in current Vapi SDK version');
   }
 
   /**
    * Obtiene un test suite por ID
+   * NOTA: Esta funcionalidad requiere API actualizada de Vapi
    */
   async getTestSuite(suiteId: string): Promise<VapiTestSuite> {
-    try {
-      const suite = await this.sdk.testSuites.get(suiteId);
-      return suite as VapiTestSuite;
-    } catch (error) {
-      throw this.handleError(error, `Failed to get test suite ${suiteId}`);
-    }
+    throw new Error('Test Suites API not yet implemented in current Vapi SDK version');
   }
 
   /**
    * Crea un nuevo test suite
+   * NOTA: Esta funcionalidad requiere API actualizada de Vapi
    */
   async createTestSuite(request: CreateTestSuiteRequest): Promise<VapiTestSuite> {
-    try {
-      const suite = await this.sdk.testSuites.create({
-        name: request.name,
-        description: request.description,
-      });
-      return suite as VapiTestSuite;
-    } catch (error) {
-      throw this.handleError(error, 'Failed to create test suite');
-    }
+    throw new Error('Test Suites API not yet implemented in current Vapi SDK version');
   }
 
   /**
    * Busca un test suite por nombre
+   * NOTA: Esta funcionalidad requiere API actualizada de Vapi
    */
   async findTestSuiteByName(name: string): Promise<VapiTestSuite | null> {
-    try {
-      const suites = await this.listTestSuites();
-      return suites.find(s => s.name === name) || null;
-    } catch (error) {
-      throw this.handleError(error, `Failed to find test suite by name: ${name}`);
-    }
+    throw new Error('Test Suites API not yet implemented in current Vapi SDK version');
   }
 
   /**
    * Lista todos los tests de un suite
+   * NOTA: Esta funcionalidad requiere API actualizada de Vapi
    */
   async listTests(suiteId: string): Promise<VapiTest[]> {
-    try {
-      const response = await this.sdk.testSuites.listTests(suiteId);
-      return response as VapiTest[];
-    } catch (error) {
-      throw this.handleError(error, `Failed to list tests for suite ${suiteId}`);
-    }
+    throw new Error('Test Suites API not yet implemented in current Vapi SDK version');
   }
 
   /**
    * Crea un nuevo test en un suite
+   * NOTA: Esta funcionalidad requiere API actualizada de Vapi
    */
   async createTest(suiteId: string, testConfig: VapiTestConfig): Promise<VapiTest> {
-    try {
-      const test = await this.sdk.testSuites.createTest(suiteId, {
-        type: testConfig.type,
-        assistant: testConfig.assistant,
-        script: testConfig.script,
-        evaluationPlan: {
-          rubric: testConfig.evaluationPlan.rubric,
-        },
-        attempts: testConfig.attempts || 1,
-        name: testConfig.name,
-        description: testConfig.description,
-        variableValues: testConfig.variableValues,
-      });
-      return test as VapiTest;
-    } catch (error) {
-      throw this.handleError(error, `Failed to create test in suite ${suiteId}`);
-    }
+    throw new Error('Test Suites API not yet implemented in current Vapi SDK version');
   }
 
   /**
    * Actualiza un test existente
+   * NOTA: Esta funcionalidad requiere API actualizada de Vapi
    */
   async updateTest(
     suiteId: string,
     testId: string,
     testConfig: Partial<VapiTestConfig>
   ): Promise<VapiTest> {
-    try {
-      const test = await this.sdk.testSuites.updateTest(suiteId, testId, {
-        type: testConfig.type,
-        assistant: testConfig.assistant,
-        script: testConfig.script,
-        evaluationPlan: testConfig.evaluationPlan ? {
-          rubric: testConfig.evaluationPlan.rubric,
-        } : undefined,
-        attempts: testConfig.attempts,
-        name: testConfig.name,
-        description: testConfig.description,
-        variableValues: testConfig.variableValues,
-      });
-      return test as VapiTest;
-    } catch (error) {
-      throw this.handleError(error, `Failed to update test ${testId}`);
-    }
+    throw new Error('Test Suites API not yet implemented in current Vapi SDK version');
   }
 
   /**
    * Elimina un test
+   * NOTA: Esta funcionalidad requiere API actualizada de Vapi
    */
   async deleteTest(suiteId: string, testId: string): Promise<void> {
-    try {
-      await this.sdk.testSuites.deleteTest(suiteId, testId);
-    } catch (error) {
-      throw this.handleError(error, `Failed to delete test ${testId}`);
-    }
+    throw new Error('Test Suites API not yet implemented in current Vapi SDK version');
   }
 
   /**
    * Ejecuta un test suite
+   * NOTA: Esta funcionalidad requiere API actualizada de Vapi
    */
   async runTestSuite(suiteId: string): Promise<VapiTestRun> {
-    try {
-      const run = await this.sdk.testSuites.run(suiteId);
-      return run as VapiTestRun;
-    } catch (error) {
-      throw this.handleError(error, `Failed to run test suite ${suiteId}`);
-    }
+    throw new Error('Test Suites API not yet implemented in current Vapi SDK version');
   }
 
   /**
    * Obtiene el estado de una ejecución de test
+   * NOTA: Esta funcionalidad requiere API actualizada de Vapi
    */
   async getTestRun(runId: string): Promise<VapiTestRun> {
-    try {
-      const run = await this.sdk.testSuiteRuns.get(runId);
-      return run as VapiTestRun;
-    } catch (error) {
-      throw this.handleError(error, `Failed to get test run ${runId}`);
-    }
+    throw new Error('Test Suites API not yet implemented in current Vapi SDK version');
   }
 
   /**
@@ -307,5 +242,31 @@ export class VapiClient {
       throw new Error('Assistant ID not provided and no default configured');
     }
     return assistantId;
+  }
+
+  /**
+   * Obtiene la configuración completa de un assistant
+   */
+  async getAssistant(assistantId: string): Promise<any> {
+    try {
+      const assistant = await this.sdk.assistants.get({ id: assistantId });
+      return assistant;
+    } catch (error) {
+      throw this.handleError(error, `Failed to get assistant ${assistantId}`);
+    }
+  }
+
+  /**
+   * Lista todos los assistants
+   */
+  async listAssistants(options?: { limit?: number }): Promise<any[]> {
+    try {
+      const assistants = await this.sdk.assistants.list({
+        limit: options?.limit,
+      });
+      return assistants as any[];
+    } catch (error) {
+      throw this.handleError(error, 'Failed to list assistants');
+    }
   }
 }
