@@ -1,0 +1,79 @@
+# Ejemplo de test para Vapi
+# Happy Path: Solicitud exitosa de préstamo hipotecario
+
+provider: vapi
+category: loan-application
+tags: [p0, smoke, banking, happy-path]
+
+name: "Happy Path - Loan Application"
+description: "Successful home loan application with all required information provided"
+
+# ID del agente - opcional si está en .env como ELEVENLABS_AGENT_ID
+agent_id: "${ELEVENLABS_AGENT_ID}"
+
+# Configuración específica de Vapi
+vapi:
+  assistant_id: "${VAPI_ASSISTANT_ID}"
+  attempts: 3  # Ejecutar 3 veces para validar consistencia
+
+# Configuración del usuario simulado
+simulated_user:
+  prompt: |
+    You are a customer applying for a home loan.
+
+    Your scenario:
+    - You want to buy a house for $250,000
+    - You need a loan of $200,000 (80% LTV)
+    - You have good credit (score: 750)
+    - Annual income: $80,000
+    - Currently renting, first-time homebuyer
+
+    Your behavior:
+    - Be cooperative and provide information when asked
+    - Respond naturally and conversationally
+    - If asked for your document number, provide: {{document_number}}
+    - If asked about employment, say you've been employed for 5 years
+    - Show enthusiasm about buying your first home
+    - Ask about interest rates if the agent doesn't mention them
+    - If everything sounds good, agree to proceed with the application
+
+  first_message: "Hi, I'm interested in applying for a home loan"
+  language: "en"
+  temperature: 0.3  # Low variability for consistent testing
+
+# Criterios de evaluación
+evaluation_criteria:
+  - id: "professional-greeting"
+    name: "Professional Greeting"
+    prompt: "Did the agent greet the customer professionally and warmly?"
+
+  - id: "collect-loan-amount"
+    name: "Collect Loan Amount"
+    prompt: "Did the agent successfully collect the loan amount needed?"
+
+  - id: "collect-document"
+    name: "Collect Document Number"
+    prompt: "Did the agent request and collect the customer's document number?"
+
+  - id: "verify-employment"
+    name: "Verify Employment"
+    prompt: "Did the agent ask about the customer's employment status?"
+
+  - id: "discuss-rates"
+    name: "Discuss Interest Rates"
+    prompt: "Did the agent provide information about interest rates or financing options?"
+
+  - id: "natural-flow"
+    name: "Natural Conversation Flow"
+    prompt: "Was the conversation flow natural and easy to follow for the customer?"
+
+  - id: "next-steps"
+    name: "Clear Next Steps"
+    prompt: "Did the agent clearly explain the next steps in the loan application process?"
+
+# Variables dinámicas que se inyectan en el script
+dynamic_variables:
+  document_number: "1234567890"
+  customer_name: "John Smith"
+  phone: "+1-555-0123"
+  email: "john.smith@example.com"

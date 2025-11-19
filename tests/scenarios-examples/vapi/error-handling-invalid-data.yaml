@@ -1,0 +1,62 @@
+# Ejemplo de test para Vapi
+# Error Handling: Manejo de datos inválidos
+
+provider: vapi
+category: error-handling
+tags: [p1, error, validation, data-quality]
+
+name: "Error Handling - Invalid Document Number"
+description: "Tests agent's ability to detect and handle invalid document numbers gracefully"
+
+agent_id: "${ELEVENLABS_AGENT_ID}"
+
+vapi:
+  assistant_id: "${VAPI_ASSISTANT_ID}"
+  attempts: 2
+
+simulated_user:
+  prompt: |
+    You are a customer applying for a loan, but you initially provide INVALID data.
+
+    Your scenario:
+    - When asked for document number, first provide: "ABC123XYZ" (invalid format)
+    - The agent should detect this is invalid and ask for a valid one
+    - Then provide the correct one: {{valid_document}}
+    - Act slightly confused when told your document number is invalid
+    - Ask what the correct format should be
+    - Cooperate and provide the correct number when asked again
+
+    Testing the agent's error handling and user guidance capabilities.
+
+  first_message: "I need to apply for a personal loan"
+  language: "en"
+  temperature: 0.4
+
+evaluation_criteria:
+  - id: "detect-invalid-data"
+    name: "Detect Invalid Data"
+    prompt: "Did the agent detect that 'ABC123XYZ' is not a valid document number format?"
+
+  - id: "explain-error"
+    name: "Explain Error"
+    prompt: "Did the agent explain why the document number was invalid?"
+
+  - id: "provide-guidance"
+    name: "Provide Guidance"
+    prompt: "Did the agent provide clear guidance on the correct format for the document number?"
+
+  - id: "maintain-patience"
+    name: "Maintain Patient Tone"
+    prompt: "Did the agent maintain a patient and helpful tone despite the error?"
+
+  - id: "successful-recovery"
+    name: "Successful Recovery"
+    prompt: "Did the agent successfully collect the valid document number after the error?"
+
+  - id: "no-frustration"
+    name: "No Customer Frustration"
+    prompt: "Did the agent handle the situation without causing customer frustration?"
+
+dynamic_variables:
+  valid_document: "9876543210"
+  customer_name: "Maria Garcia"

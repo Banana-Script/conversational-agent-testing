@@ -189,7 +189,14 @@ export class VapiClient {
     const timeout = options.timeout || 300000;  // 5 minutos
     const startTime = Date.now();
 
-    while (true) {
+    const TERMINAL_STATES = new Set(['completed', 'failed', 'cancelled', 'timeout']);
+    const VALID_STATES = new Set(['pending', 'running', 'completed', 'failed', 'cancelled', 'timeout']);
+    const MAX_ITERATIONS = Math.ceil(timeout / interval);
+    let iterations = 0;
+
+    while (iterations < MAX_ITERATIONS) {
+      iterations++;
+
       const run = await this.getTestRun(runId);
 
       // Notificar progreso si hay callback
@@ -197,20 +204,27 @@ export class VapiClient {
         options.onProgress(run.status);
       }
 
+      // Validar estado
+      if (!VALID_STATES.has(run.status)) {
+        console.warn(`Unexpected test run status: ${run.status}, continuing...`);
+      }
+
       // Si completó (exitoso o fallido), retornar
-      if (run.status === 'completed' || run.status === 'failed') {
+      if (TERMINAL_STATES.has(run.status)) {
         return run;
       }
 
       // Verificar timeout
       const elapsed = Date.now() - startTime;
       if (elapsed > timeout) {
-        throw new Error(`Test run polling timeout after ${timeout}ms`);
+        throw new Error(`Test run polling timeout after ${timeout}ms. Last status: ${run.status}`);
       }
 
       // Esperar antes del siguiente poll
       await this.sleep(interval);
     }
+
+    throw new Error(`Polling exceeded maximum iterations (${MAX_ITERATIONS})`);
   }
 
   /**
@@ -240,22 +254,48 @@ export class VapiClient {
    * Maneja errores de la API de Vapi
    */
   private handleError(error: any, context: string): Error {
+    // Prepare error details for debugging
+    const errorDetails: any = {
+      context,
+      timestamp: new Date().toISOString(),
+    };
+
     if (error.response) {
       // Error de respuesta HTTP
       const status = error.response.status;
       const data = error.response.data;
 
+      errorDetails.statusCode = status;
+      errorDetails.responseData = data;
+      errorDetails.url = error.response.config?.url;
+      errorDetails.method = error.response.config?.method?.toUpperCase();
+
       const message = data?.message || data?.error || 'Unknown API error';
-      return new Error(`${context}: ${message} (HTTP ${status})`);
+      const fullMessage = `${context}: ${message} (HTTP ${status})`;
+
+      const err = new Error(fullMessage);
+      (err as any).details = errorDetails;
+      return err;
     }
 
     if (error.request) {
       // Error de red (no se recibió respuesta)
-      return new Error(`${context}: Network error - no response received`);
+      errorDetails.request = {
+        url: error.config?.url,
+        method: error.config?.method?.toUpperCase(),
+        timeout: error.config?.timeout,
+      };
+
+      const err = new Error(`${context}: Network error - no response received`);
+      (err as any).details = errorDetails;
+      return err;
     }
 
     // Otro tipo de error
-    return new Error(`${context}: ${error.message || 'Unknown error'}`);
+    const err = new Error(`${context}: ${error.message || 'Unknown error'}`);
+    (err as any).details = errorDetails;
+    (err as any).originalError = error;
+    return err;
   }
 
   /**

@@ -20,6 +20,7 @@ export class VapiTestSuiteManager {
   private cache: VapiSuiteCache = {};
   private cacheLoaded: boolean = false;
   private defaultSuite: string;
+  private pendingSuiteCreations = new Map<string, Promise<string>>();
 
   constructor(client: VapiClient, defaultSuite: string = 'conversational-agent-testing') {
     this.client = client;
@@ -70,10 +71,18 @@ export class VapiTestSuiteManager {
    * 2. Si no existe, consulta API de Vapi
    * 3. Si no existe en Vapi, crea nuevo
    * 4. Guarda en caché
+   *
+   * Usa mutex para prevenir race conditions en creación concurrente
    */
   async getOrCreateSuite(suiteName: string): Promise<string> {
     // Asegurar que el caché esté cargado
     await this.ensureCacheLoaded();
+
+    // Check if already being created (prevent race condition)
+    const pending = this.pendingSuiteCreations.get(suiteName);
+    if (pending) {
+      return pending;
+    }
 
     // 1. Buscar en caché local
     if (this.cache[suiteName]) {
@@ -83,6 +92,23 @@ export class VapiTestSuiteManager {
       return this.cache[suiteName].id;
     }
 
+    // 2 & 3. Buscar en API o crear (con lock para prevenir duplicados)
+    const creationPromise = this.createSuiteWithLock(suiteName);
+    this.pendingSuiteCreations.set(suiteName, creationPromise);
+
+    try {
+      const suiteId = await creationPromise;
+      return suiteId;
+    } finally {
+      this.pendingSuiteCreations.delete(suiteName);
+    }
+  }
+
+  /**
+   * Crea un suite con lock para prevenir duplicados
+   * @private
+   */
+  private async createSuiteWithLock(suiteName: string): Promise<string> {
     // 2. Buscar en Vapi API
     const existingSuite = await this.client.findTestSuiteByName(suiteName);
     if (existingSuite) {
@@ -246,10 +272,29 @@ export class VapiTestSuiteManager {
   private async loadCache(): Promise<void> {
     try {
       const content = await fs.readFile(CACHE_FILE, 'utf-8');
-      this.cache = JSON.parse(content);
+
+      // Parse with error handling
+      try {
+        const parsed = JSON.parse(content);
+
+        // Validate cache structure
+        if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+          throw new Error('Invalid cache structure: expected object');
+        }
+
+        this.cache = parsed as VapiSuiteCache;
+      } catch (parseError: any) {
+        console.warn(`Cache file corrupted (${parseError.message}), resetting cache`);
+        this.cache = {};
+        // Save empty cache to fix corrupted file
+        await this.saveCache();
+      }
     } catch (error: any) {
       if (error.code === 'ENOENT') {
         // Archivo no existe, inicializar caché vacío
+        this.cache = {};
+      } else if (error.message?.includes('corrupted')) {
+        // Already handled above
         this.cache = {};
       } else {
         // Otro error, re-throw

@@ -1,0 +1,63 @@
+# Ejemplo de test para Vapi
+# Callback Scheduling: Agendamiento de llamadas de seguimiento
+
+provider: vapi
+category: callback-scheduling
+tags: [p2, scheduling, customer-service]
+
+name: "Callback Scheduling - Request Follow-up Call"
+description: "Customer requests a callback to discuss loan options later"
+
+agent_id: "${ELEVENLABS_AGENT_ID}"
+
+vapi:
+  assistant_id: "${VAPI_ASSISTANT_ID}"
+  attempts: 1
+
+simulated_user:
+  prompt: |
+    You are a busy customer interested in a loan but don't have time right now.
+
+    Your scenario:
+    - You're interested in a business loan
+    - You're currently at work and can't talk in detail
+    - Request a callback for tomorrow at 2 PM
+    - Provide your phone number: {{phone_number}}
+    - Confirm the callback time when the agent repeats it
+    - Thank the agent and end the call
+
+    Be polite but brief - you're in a hurry.
+
+  first_message: "Hi, I'm interested in a business loan but I'm at work right now. Can someone call me back tomorrow?"
+  language: "en"
+  temperature: 0.5
+
+evaluation_criteria:
+  - id: "acknowledge-request"
+    name: "Acknowledge Callback Request"
+    prompt: "Did the agent acknowledge the customer's request for a callback?"
+
+  - id: "collect-phone"
+    name: "Collect Phone Number"
+    prompt: "Did the agent collect the customer's phone number for the callback?"
+
+  - id: "confirm-time"
+    name: "Confirm Callback Time"
+    prompt: "Did the agent confirm the requested callback time (tomorrow at 2 PM)?"
+
+  - id: "repeat-details"
+    name: "Repeat Callback Details"
+    prompt: "Did the agent repeat back the callback details for confirmation?"
+
+  - id: "professional-closure"
+    name: "Professional Call Closure"
+    prompt: "Did the agent close the call professionally and courteously?"
+
+  - id: "respect-time"
+    name: "Respect Customer's Time"
+    prompt: "Did the agent keep the interaction brief, respecting that the customer was busy?"
+
+dynamic_variables:
+  phone_number: "+1-555-9876"
+  customer_name: "Alex Johnson"
+  callback_time: "tomorrow at 2 PM"

@@ -43,6 +43,8 @@ export class VapiAdapter {
     user: SimulatedUserConfigYAML,
     variables?: Record<string, any>
   ): string {
+    const MAX_SCRIPT_LENGTH = 10000; // Vapi's documented limit
+
     let script = `# Simulated User Test Script\n\n`;
 
     // Configuración de idioma
@@ -84,7 +86,18 @@ export class VapiAdapter {
       script += `- Preferred behavior model: ${user.llm}\n`;
     }
 
-    return script.trim();
+    const trimmedScript = script.trim();
+
+    // Validate script length
+    if (trimmedScript.length > MAX_SCRIPT_LENGTH) {
+      throw new Error(
+        `Generated script exceeds Vapi's limit of ${MAX_SCRIPT_LENGTH} characters ` +
+        `(current: ${trimmedScript.length}). ` +
+        `Please simplify the test configuration, particularly the simulated_user.prompt field.`
+      );
+    }
+
+    return trimmedScript;
   }
 
   /**
