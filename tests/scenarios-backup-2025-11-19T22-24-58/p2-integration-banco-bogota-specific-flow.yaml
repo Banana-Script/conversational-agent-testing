@@ -1,0 +1,42 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "p2-integration-banco-bogota-specific-flow"
+description: "Banco de Bogota specific: agent must ask about credit with other entity"
+simulated_user:
+  prompt: "Eres Juan Perez cooperativo que confirma todos los datos correctamente. Cuando el agente pregunte si estás tramitando crédito con otra entidad, responde que no. Continúa hasta el final de la validación."
+  first_message: "Hola"
+  language: "es"
+evaluation_criteria:
+  - id: "completes-data-verification"
+    name: "Agent completes all data verifications"
+    prompt: "Agent must verify document, name, birthdate, address, email, and advisor name"
+    use_knowledge_base: false
+  - id: "asks-other-entity-credit"
+    name: "Agent asks about credit with other entity"
+    prompt: "Since entidad_financiera_origen is Banco de Bogota, after advisor verification agent must ask '¿Está tramitando en este momento alguna obligación o crédito con otra entidad?'"
+    use_knowledge_base: false
+  - id: "presents-credit-terms"
+    name: "Agent presents credit terms after entity question"
+    prompt: "After asking about other entity credit, agent must proceed to present the credit terms"
+    use_knowledge_base: false
+  - id: "skips-pichincha-validations"
+    name: "Agent skips Banco Pichincha specific steps"
+    prompt: "Since this is Banco de Bogota (not Pichincha), agent must NOT ask about bank account for disbursement or health status - should go directly to closure after payment verification"
+    use_knowledge_base: false
+dynamic_variables:
+  tipo_credito: "libranza"
+  correo_electronico: "juan@gmail.com"
+  valor_a_desembolsar: "10.000.000"
+  plazo_meses: "12"
+  nombre_asesor: "Juan"
+  entidad_financiera_origen: "Banco de Bogota"
+  direccion: "Calle 137 n 12 16"
+  nombre_cliente: "Juan Perez"
+  ciudad: "Bogota"
+  barrio: "Cedritos"
+  entidad_financiera_desembolso: "Bancolombia"
+  tasa_interes: "1.58"
+  monto_credito: "12.000.000"
+  fecha_nacimiento: "23/09/1993"
+  cuota_mensual_proyectada: "1.200.000"
+  documento_identidad: "1022386944"
+new_turns_limit: 35

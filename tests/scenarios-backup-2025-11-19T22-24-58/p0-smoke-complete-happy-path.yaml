@@ -1,0 +1,46 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "p0-smoke-complete-happy-path"
+description: "End-to-end validation of complete verification flow with all valid data and cooperative user"
+simulated_user:
+  prompt: "Simula un cliente colombiano llamado Juan Perez que responde de manera cooperativa y precisa a todas las preguntas de verificación. Proporciona todos los datos correctamente: documento 1022386944 (últimos 3 dígitos: 944), nombre completo Juan Perez, fecha de nacimiento 23 de septiembre de 1993, dirección Calle 137 número 12 16 en el barrio Cedritos de Bogotá, correo juan@gmail.com, confirma que el asesor Juan es correcto, está de acuerdo con las condiciones del crédito, no ha realizado pagos indebidos, confirma la cuenta de Bancolombia. Usa lenguaje natural colombiano."
+  first_message: "Hola, buenas"
+  language: "es"
+evaluation_criteria:
+  - id: "identity-confirmation"
+    name: "Agent confirms client identity"
+    prompt: "Agent must ask if they are speaking with Juan Perez and proceed only if confirmed"
+    use_knowledge_base: false
+  - id: "data-verification-sequence"
+    name: "Agent verifies all required fields in order"
+    prompt: "Agent must request verification of: cédula (last 3 digits: 944), full name, birthdate, address (with barrio Cedritos and ciudad Bogotá), email, and advisor name Juan - in that sequential order without skipping valid fields"
+    use_knowledge_base: false
+  - id: "credit-terms-presentation"
+    name: "Agent presents complete credit terms"
+    prompt: "Agent must present: monto 12.000.000, plazo 12 meses, tasa 1.58%, cuota mensual 1.200.000, valor a desembolsar 10.000.000"
+    use_knowledge_base: false
+  - id: "no-invalid-data-mention"
+    name: "Agent NEVER mentions missing or unavailable data"
+    prompt: "Agent must NOT say phrases like 'no está disponible', 'omitiremos esa verificación', 'no tengo ese dato', or similar. Must silently skip invalid fields"
+    use_knowledge_base: false
+  - id: "professional-closure"
+    name: "Agent closes professionally"
+    prompt: "Agent must end with a professional closing mentioning Sofía Sierra from SOIC and thanking the client"
+    use_knowledge_base: false
+dynamic_variables:
+  tipo_credito: "libranza"
+  correo_electronico: "juan@gmail.com"
+  valor_a_desembolsar: "10.000.000"
+  plazo_meses: "12"
+  nombre_asesor: "Juan"
+  entidad_financiera_origen: "Banco de Bogota"
+  direccion: "Calle 137 n 12 16"
+  nombre_cliente: "Juan Perez"
+  ciudad: "Bogota"
+  barrio: "Cedritos"
+  entidad_financiera_desembolso: "Bancolombia"
+  tasa_interes: "1.58"
+  monto_credito: "12.000.000"
+  fecha_nacimiento: "23/09/1993"
+  cuota_mensual_proyectada: "1.200.000"
+  documento_identidad: "1022386944"
+new_turns_limit: 30

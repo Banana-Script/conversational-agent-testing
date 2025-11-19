@@ -1,0 +1,42 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "p3-edge-callback-invalid-time-after-6pm"
+description: "User requests callback time after 6 PM same day - agent must correct"
+simulated_user:
+  prompt: "Eres Juan Perez que confirma identidad pero no puede atender ahora. Cuando el agente pregunte a qué hora prefieres que te llamen, di 'a las 7 de la noche' o 'a las 8 PM'. Cuando el agente indique que solo pueden hasta las 6 PM, entonces sugiere 'a las 5 de la tarde'."
+  first_message: "Hola, soy yo pero estoy ocupado"
+  language: "es"
+evaluation_criteria:
+  - id: "requests-callback-time"
+    name: "Agent requests callback time"
+    prompt: "When user cannot attend, agent must ask for preferred callback time"
+    use_knowledge_base: false
+  - id: "validates-6pm-limit"
+    name: "Agent validates 6 PM same-day limit"
+    prompt: "When user suggests time after 6 PM (7 PM, 8 PM), agent must clarify that callbacks are only until 6 PM of the current day"
+    use_knowledge_base: false
+  - id: "accepts-valid-time"
+    name: "Agent accepts time before 6 PM"
+    prompt: "When user provides valid time before 6 PM (like 5 PM), agent must accept it and confirm"
+    use_knowledge_base: false
+  - id: "confirms-callback-and-closes"
+    name: "Agent confirms callback time and closes"
+    prompt: "After confirming valid callback time, agent must say they'll call at that time and end the call professionally"
+    use_knowledge_base: false
+dynamic_variables:
+  tipo_credito: "libranza"
+  correo_electronico: "juan@gmail.com"
+  valor_a_desembolsar: "10.000.000"
+  plazo_meses: "12"
+  nombre_asesor: "Juan"
+  entidad_financiera_origen: "Banco de Bogota"
+  direccion: "Calle 137 n 12 16"
+  nombre_cliente: "Juan Perez"
+  ciudad: "Bogota"
+  barrio: "Cedritos"
+  entidad_financiera_desembolso: "Bancolombia"
+  tasa_interes: "1.58"
+  monto_credito: "12.000.000"
+  fecha_nacimiento: "23/09/1993"
+  cuota_mensual_proyectada: "1.200.000"
+  documento_identidad: "1022386944"
+new_turns_limit: 18

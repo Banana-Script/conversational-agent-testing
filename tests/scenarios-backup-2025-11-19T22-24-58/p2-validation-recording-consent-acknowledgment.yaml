@@ -1,0 +1,42 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "p2-validation-recording-consent-acknowledgment"
+description: "Agent must inform about call recording and data protection law"
+simulated_user:
+  prompt: "Eres Juan Perez cooperativo que confirma identidad y disponibilidad. Escucha el aviso de grabación y continúa con la validación normalmente."
+  first_message: "Hola"
+  language: "es"
+evaluation_criteria:
+  - id: "confirms-identity-and-availability"
+    name: "Agent confirms identity and availability"
+    prompt: "Agent must confirm user is Juan Perez and ask if they can attend the call now"
+    use_knowledge_base: false
+  - id: "informs-call-recording"
+    name: "Agent informs call is being recorded"
+    prompt: "Before starting data verification, agent must inform that the call is being recorded for quality purposes"
+    use_knowledge_base: false
+  - id: "mentions-data-protection-law"
+    name: "Agent mentions data protection law 1581 of 2012"
+    prompt: "Agent must mention 'ley quince ochenta y uno de dos mil doce de Protección de Datos Personales' or 'ley 1581 de 2012'"
+    use_knowledge_base: false
+  - id: "continues-after-notice"
+    name: "Agent continues to data verification after notice"
+    prompt: "After the recording notice, agent must proceed directly to Step 4 (data verification)"
+    use_knowledge_base: false
+dynamic_variables:
+  tipo_credito: "libranza"
+  correo_electronico: "juan@gmail.com"
+  valor_a_desembolsar: "10.000.000"
+  plazo_meses: "12"
+  nombre_asesor: "Juan"
+  entidad_financiera_origen: "Banco de Bogota"
+  direccion: "Calle 137 n 12 16"
+  nombre_cliente: "Juan Perez"
+  ciudad: "Bogota"
+  barrio: "Cedritos"
+  entidad_financiera_desembolso: "Bancolombia"
+  tasa_interes: "1.58"
+  monto_credito: "12.000.000"
+  fecha_nacimiento: "23/09/1993"
+  cuota_mensual_proyectada: "1.200.000"
+  documento_identidad: "1022386944"
+new_turns_limit: 25

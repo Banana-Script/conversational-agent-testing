@@ -1,0 +1,42 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "p2-boundary-birthdate-format-variations"
+description: "User provides birthdate in different format - agent must accept"
+simulated_user:
+  prompt: "Eres Juan Perez cooperativo. Cuando el agente pregunte por tu fecha de nacimiento, responde en un formato diferente: 'el veintitrés de septiembre del noventa y tres' o '23 de septiembre de 1993'. Confirma los demás datos correctamente."
+  first_message: "Hola, buenos días"
+  language: "es"
+evaluation_criteria:
+  - id: "requests-birthdate"
+    name: "Agent requests birthdate"
+    prompt: "Agent must ask user to confirm their birthdate"
+    use_knowledge_base: false
+  - id: "accepts-verbal-format"
+    name: "Agent accepts verbal date format"
+    prompt: "Agent must accept when user provides date in natural language format (e.g., 'veintitrés de septiembre del noventa y tres')"
+    use_knowledge_base: false
+  - id: "no-format-correction"
+    name: "Agent does NOT ask user to change format"
+    prompt: "Agent should NOT tell user to provide the date in a different format - must accept natural Colombian date expressions"
+    use_knowledge_base: false
+  - id: "continues-to-next-field"
+    name: "Agent continues to address verification"
+    prompt: "After accepting birthdate, agent must continue to address verification"
+    use_knowledge_base: false
+dynamic_variables:
+  tipo_credito: "libranza"
+  correo_electronico: "juan@gmail.com"
+  valor_a_desembolsar: "10.000.000"
+  plazo_meses: "12"
+  nombre_asesor: "Juan"
+  entidad_financiera_origen: "Banco de Bogota"
+  direccion: "Calle 137 n 12 16"
+  nombre_cliente: "Juan Perez"
+  ciudad: "Bogota"
+  barrio: "Cedritos"
+  entidad_financiera_desembolso: "Bancolombia"
+  tasa_interes: "1.58"
+  monto_credito: "12.000.000"
+  fecha_nacimiento: "23/09/1993"
+  cuota_mensual_proyectada: "1.200.000"
+  documento_identidad: "1022386944"
+new_turns_limit: 25

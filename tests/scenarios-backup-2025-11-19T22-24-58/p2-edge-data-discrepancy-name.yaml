@@ -1,0 +1,42 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "p2-edge-data-discrepancy-name"
+description: "User provides different name than stored - agent continues without flagging explicitly"
+simulated_user:
+  prompt: "Eres una persona que confirma ser Juan Perez al inicio, pero cuando te preguntan por tu nombre completo, dices 'Carlos Rodríguez' (un nombre diferente). Continúa cooperando con el resto de la validación normalmente."
+  first_message: "Hola"
+  language: "es"
+evaluation_criteria:
+  - id: "agent-asks-for-name"
+    name: "Agent requests name confirmation"
+    prompt: "Agent must ask user to confirm their full name"
+    use_knowledge_base: false
+  - id: "continues-after-discrepancy"
+    name: "Agent continues flow after name discrepancy"
+    prompt: "When user provides a different name (Carlos Rodríguez instead of Juan Perez), agent must continue with the next verification step WITHOUT explicitly mentioning the discrepancy to the user"
+    use_knowledge_base: false
+  - id: "no-explicit-discrepancy-mention"
+    name: "Agent does NOT tell user about data mismatch"
+    prompt: "Agent must NOT say things like 'ese no es el nombre que tengo registrado' or 'hay una diferencia'. Agent should note it internally but continue professionally"
+    use_knowledge_base: false
+  - id: "continues-full-verification"
+    name: "Agent continues with remaining verifications"
+    prompt: "After the name discrepancy, agent must continue requesting birthdate, address, email, and other remaining verifications"
+    use_knowledge_base: false
+dynamic_variables:
+  tipo_credito: "libranza"
+  correo_electronico: "juan@gmail.com"
+  valor_a_desembolsar: "10.000.000"
+  plazo_meses: "12"
+  nombre_asesor: "Juan"
+  entidad_financiera_origen: "Banco de Bogota"
+  direccion: "Calle 137 n 12 16"
+  nombre_cliente: "Juan Perez"
+  ciudad: "Bogota"
+  barrio: "Cedritos"
+  entidad_financiera_desembolso: "Bancolombia"
+  tasa_interes: "1.58"
+  monto_credito: "12.000.000"
+  fecha_nacimiento: "23/09/1993"
+  cuota_mensual_proyectada: "1.200.000"
+  documento_identidad: "1022386944"
+new_turns_limit: 30

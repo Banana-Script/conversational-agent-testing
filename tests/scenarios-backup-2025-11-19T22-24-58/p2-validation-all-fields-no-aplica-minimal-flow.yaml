@@ -1,0 +1,50 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "p2-validation-all-fields-no-aplica-minimal-flow"
+description: "Most personal data fields are No aplica - agent must handle minimal verification flow"
+simulated_user:
+  prompt: "Eres Juan Perez cooperativo. Confirma identidad. Nota: muchos campos son 'No aplica' (documento, fecha nacimiento, dirección, correo, asesor) así que el agente debe saltar directamente a presentar condiciones del crédito. Acepta las condiciones."
+  first_message: "Hola"
+  language: "es"
+evaluation_criteria:
+  - id: "confirms-identity"
+    name: "Agent confirms identity"
+    prompt: "Agent must confirm user is Juan Perez"
+    use_knowledge_base: false
+  - id: "skips-document-verification"
+    name: "Agent skips document (No aplica)"
+    prompt: "Agent must NOT ask for document verification since documento_identidad is 'No aplica'"
+    use_knowledge_base: false
+  - id: "asks-for-name-only"
+    name: "Agent asks only for name (valid field)"
+    prompt: "Agent should ask for full name since nombre_cliente is the only valid personal data field"
+    use_knowledge_base: false
+  - id: "skips-other-personal-fields"
+    name: "Agent skips birthdate, address, email, advisor"
+    prompt: "Agent must NOT ask for birthdate, address, email, or advisor since all are 'No aplica'"
+    use_knowledge_base: false
+  - id: "presents-credit-terms"
+    name: "Agent presents credit terms directly"
+    prompt: "After name verification, agent must go directly to credit terms presentation (Step 5)"
+    use_knowledge_base: false
+  - id: "never-mentions-missing"
+    name: "Agent NEVER mentions missing/unavailable data"
+    prompt: "Agent must NOT say anything about omitting verifications or not having data available"
+    use_knowledge_base: false
+dynamic_variables:
+  tipo_credito: "libranza"
+  correo_electronico: "No aplica"
+  valor_a_desembolsar: "10.000.000"
+  plazo_meses: "12"
+  nombre_asesor: "No aplica"
+  entidad_financiera_origen: "Banco de Bogota"
+  direccion: "No aplica"
+  nombre_cliente: "Juan Perez"
+  ciudad: "No aplica"
+  barrio: "No aplica"
+  entidad_financiera_desembolso: "Bancolombia"
+  tasa_interes: "1.58"
+  monto_credito: "12.000.000"
+  fecha_nacimiento: "No aplica"
+  cuota_mensual_proyectada: "1.200.000"
+  documento_identidad: "No aplica"
+new_turns_limit: 25

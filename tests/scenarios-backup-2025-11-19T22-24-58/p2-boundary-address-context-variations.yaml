@@ -1,0 +1,38 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "p2-boundary-address-context-variations"
+description: "Address question varies based on available ciudad/barrio data"
+simulated_user:
+  prompt: "Eres Juan Perez cooperativo. Cuando el agente pregunte por tu dirección, confirma 'Calle 137 número 12 16'. Nota: tienes barrio Cedritos y ciudad Bogotá registrados, así que el agente debe mencionarlos en la pregunta."
+  first_message: "Hola"
+  language: "es"
+evaluation_criteria:
+  - id: "mentions-barrio-and-ciudad"
+    name: "Agent mentions both barrio and ciudad in address question"
+    prompt: "Since both barrio (Cedritos) and ciudad (Bogotá) are valid, agent must mention both when asking for address confirmation: 'dirección en el barrio Cedritos de la ciudad de Bogotá'"
+    use_knowledge_base: false
+  - id: "does-not-reveal-full-address"
+    name: "Agent does NOT reveal the stored address"
+    prompt: "Agent must NOT say the complete stored address (Calle 137 n 12 16) - only mentions barrio and ciudad, then asks user to provide the address"
+    use_knowledge_base: false
+  - id: "accepts-user-address"
+    name: "Agent accepts user's address response"
+    prompt: "When user provides address, agent must accept it and continue to next verification"
+    use_knowledge_base: false
+dynamic_variables:
+  tipo_credito: "libranza"
+  correo_electronico: "juan@gmail.com"
+  valor_a_desembolsar: "10.000.000"
+  plazo_meses: "12"
+  nombre_asesor: "Juan"
+  entidad_financiera_origen: "Banco de Bogota"
+  direccion: "Calle 137 n 12 16"
+  nombre_cliente: "Juan Perez"
+  ciudad: "Bogota"
+  barrio: "Cedritos"
+  entidad_financiera_desembolso: "Bancolombia"
+  tasa_interes: "1.58"
+  monto_credito: "12.000.000"
+  fecha_nacimiento: "23/09/1993"
+  cuota_mensual_proyectada: "1.200.000"
+  documento_identidad: "1022386944"
+new_turns_limit: 25

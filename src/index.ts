@@ -23,26 +23,30 @@ program
 
 /**
  * Comando: simulate
- * Ejecuta tests usando simulación directa (sin guardarlos en ElevenLabs)
+ * Ejecuta tests usando simulación directa (multi-provider)
  */
 program
   .command('simulate')
-  .description('Ejecuta tests usando simulación directa')
+  .description('Ejecuta tests usando simulación directa (multi-provider)')
   .option('-d, --dir <directory>', 'Directorio de tests', './tests/scenarios')
   .option('-o, --output <directory>', 'Directorio de resultados', './results')
   .action(async (options) => {
     console.log(chalk.blue.bold('\n🧪 Ejecutando simulaciones...\n'));
 
-    let apiKey: string;
-    try {
-      apiKey = getElevenLabsApiKey();
-    } catch (error) {
-      handleMissingEnvVar(error);
-    }
-
     const spinner = ora('Inicializando...').start();
 
     try {
+      // Crear cliente de ElevenLabs para backward compatibility
+      // pero el TestRunner usará multi-provider automáticamente
+      let apiKey: string;
+      try {
+        apiKey = getElevenLabsApiKey();
+      } catch (error) {
+        // Si no hay API key de ElevenLabs, usar string vacío
+        // El TestRunner manejará providers según los tests
+        apiKey = '';
+      }
+
       const client = new ElevenLabsClient({ apiKey });
       const runner = new TestRunner(client, options.dir);
       const reporter = new Reporter(options.output);
@@ -51,33 +55,9 @@ program
       const tests = await runner.loadAllTests();
       spinner.succeed(`${tests.length} tests cargados`);
 
-      console.log(chalk.cyan('\nEjecutando simulaciones:\n'));
-
-      const allResults = [];
-
-      for (const test of tests) {
-        const testSpinner = ora(`Ejecutando "${test.name}"...`).start();
-
-        try {
-          const result = await runner.runSimulation(test);
-          allResults.push(result);
-
-          const status = result.success ? '✅ Exitoso' : '❌ Fallido';
-          const criteriaResults = Object.values(
-            result.simulation_response.analysis.evaluation_criteria_results
-          );
-          const passed = criteriaResults.filter((c) => c.result === 'success').length;
-          const total = criteriaResults.length;
-
-          testSpinner.succeed(
-            `${status} - "${test.name}" (${passed}/${total} criterios, ${result.execution_time_ms}ms)`
-          );
-        } catch (error) {
-          testSpinner.fail(
-            `Error ejecutando "${test.name}": ${error instanceof Error ? error.message : String(error)}`
-          );
-        }
-      }
+      // Usar runAllTests que maneja multi-provider automáticamente
+      console.log(chalk.cyan('\nEjecutando simulaciones con multi-provider:\n'));
+      const allResults = await runner.runAllTests();
 
       // Guardar resultados
       console.log(chalk.cyan('\n💾 Guardando resultados...\n'));

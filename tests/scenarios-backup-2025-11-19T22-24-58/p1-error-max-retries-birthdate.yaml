@@ -1,0 +1,42 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "p1-error-max-retries-birthdate"
+description: "Agent must close after 1 failed retry for birthdate verification"
+simulated_user:
+  prompt: "Eres Juan Perez cooperativo que confirma identidad, documento (últimos 3: 944), y nombre correctamente. PERO cuando el agente pregunte por tu fecha de nacimiento, responde 'no recuerdo' o da una fecha incorrecta. Después del primer intento de insistencia del agente, sigue sin proporcionar la fecha correcta."
+  first_message: "Hola"
+  language: "es"
+evaluation_criteria:
+  - id: "requests-birthdate"
+    name: "Agent requests birthdate"
+    prompt: "After name verification, agent must request date of birth"
+    use_knowledge_base: false
+  - id: "makes-one-retry"
+    name: "Agent makes exactly 1 retry for birthdate"
+    prompt: "When user doesn't provide birthdate correctly, agent must insist once (only 1 retry per prompt rules)"
+    use_knowledge_base: false
+  - id: "closes-after-one-retry"
+    name: "Agent closes after 1 failed retry"
+    prompt: "After first retry fails, agent must go to Step 10 closure immediately"
+    use_knowledge_base: false
+  - id: "no-further-verification"
+    name: "Agent does NOT continue to address or other fields"
+    prompt: "Agent must NOT ask for address, email, or any other verification after failed birthdate retries"
+    use_knowledge_base: false
+dynamic_variables:
+  tipo_credito: "libranza"
+  correo_electronico: "juan@gmail.com"
+  valor_a_desembolsar: "10.000.000"
+  plazo_meses: "12"
+  nombre_asesor: "Juan"
+  entidad_financiera_origen: "Banco de Bogota"
+  direccion: "Calle 137 n 12 16"
+  nombre_cliente: "Juan Perez"
+  ciudad: "Bogota"
+  barrio: "Cedritos"
+  entidad_financiera_desembolso: "Bancolombia"
+  tasa_interes: "1.58"
+  monto_credito: "12.000.000"
+  fecha_nacimiento: "23/09/1993"
+  cuota_mensual_proyectada: "1.200.000"
+  documento_identidad: "1022386944"
+new_turns_limit: 20

@@ -1,0 +1,42 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "p3-ambiguity-credit-terms-partial-understanding"
+description: "User understands some terms but has questions about others"
+simulated_user:
+  prompt: "Eres Juan Perez cooperativo que confirma todos los datos personales. Cuando el agente presente las condiciones del crédito, di que entiendes el monto y el plazo, pero pregunta qué significa la tasa de interés o pide que te expliquen mejor la cuota mensual. Luego acepta las condiciones."
+  first_message: "Hola"
+  language: "es"
+evaluation_criteria:
+  - id: "presents-all-terms"
+    name: "Agent presents all credit terms"
+    prompt: "Agent must present monto, plazo, tasa, cuota mensual, and valor a desembolsar"
+    use_knowledge_base: false
+  - id: "handles-clarification-request"
+    name: "Agent handles request for clarification"
+    prompt: "When user asks for explanation about a specific term, agent should acknowledge the question"
+    use_knowledge_base: false
+  - id: "refers-to-advisor-for-details"
+    name: "Agent refers detailed questions to advisor"
+    prompt: "For complex explanations about terms, agent should indicate that the advisor or executive can provide more details, but still ask if user accepts the conditions as presented"
+    use_knowledge_base: false
+  - id: "continues-after-clarification"
+    name: "Agent continues to next step"
+    prompt: "After handling clarification, agent must continue to payment verification step"
+    use_knowledge_base: false
+dynamic_variables:
+  tipo_credito: "libranza"
+  correo_electronico: "juan@gmail.com"
+  valor_a_desembolsar: "10.000.000"
+  plazo_meses: "12"
+  nombre_asesor: "Juan"
+  entidad_financiera_origen: "Banco de Bogota"
+  direccion: "Calle 137 n 12 16"
+  nombre_cliente: "Juan Perez"
+  ciudad: "Bogota"
+  barrio: "Cedritos"
+  entidad_financiera_desembolso: "Bancolombia"
+  tasa_interes: "1.58"
+  monto_credito: "12.000.000"
+  fecha_nacimiento: "23/09/1993"
+  cuota_mensual_proyectada: "1.200.000"
+  documento_identidad: "1022386944"
+new_turns_limit: 30

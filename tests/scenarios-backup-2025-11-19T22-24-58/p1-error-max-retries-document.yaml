@@ -1,0 +1,46 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "p1-error-max-retries-document"
+description: "Critical: Agent must close call after 2 failed attempts to get document verification"
+simulated_user:
+  prompt: "Eres Juan Perez que confirma ser la persona correcta, pero cuando te preguntan por los últimos 3 dígitos del documento, responde de manera evasiva o incorrecta las primeras 2 veces (por ejemplo: 'no recuerdo', 'creo que es 123', 'no estoy seguro'). Después del segundo intento, el agente debe cerrar la llamada."
+  first_message: "Sí, soy yo"
+  language: "es"
+evaluation_criteria:
+  - id: "first-retry-attempt"
+    name: "Agent makes first retry after no response"
+    prompt: "When user doesn't provide the document digits correctly the first time, agent must insist once asking again for the last 3 digits"
+    use_knowledge_base: false
+  - id: "second-retry-attempt"
+    name: "Agent makes second (final) retry"
+    prompt: "When user fails to provide correct information after first retry, agent must insist a second time"
+    use_knowledge_base: false
+  - id: "closure-after-two-retries"
+    name: "Agent closes call after 2 failed attempts"
+    prompt: "After the second failed attempt to get document digits, agent must go directly to Step 10 (closure for failed attempts) mentioning the verification is important, will escalate, and an advisor will contact them. Must NOT continue asking other questions"
+    use_knowledge_base: false
+  - id: "escalation-message"
+    name: "Agent mentions escalation and advisor contact"
+    prompt: "In the closure message, agent must mention that the situation will be escalated and an advisor will contact the client"
+    use_knowledge_base: false
+  - id: "no-more-than-two-retries"
+    name: "Agent does NOT ask more than 2 times"
+    prompt: "Agent must NOT ask for the document digits more than 2 times total (initial question + 2 retries = 3 mentions max)"
+    use_knowledge_base: false
+dynamic_variables:
+  tipo_credito: "libranza"
+  correo_electronico: "juan@gmail.com"
+  valor_a_desembolsar: "10.000.000"
+  plazo_meses: "12"
+  nombre_asesor: "Juan"
+  entidad_financiera_origen: "Banco de Bogota"
+  direccion: "Calle 137 n 12 16"
+  nombre_cliente: "Juan Perez"
+  ciudad: "Bogota"
+  barrio: "Cedritos"
+  entidad_financiera_desembolso: "Bancolombia"
+  tasa_interes: "1.58"
+  monto_credito: "12.000.000"
+  fecha_nacimiento: "23/09/1993"
+  cuota_mensual_proyectada: "1.200.000"
+  documento_identidad: "1022386944"
+new_turns_limit: 20
