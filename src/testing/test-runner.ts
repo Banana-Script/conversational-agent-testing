@@ -4,6 +4,8 @@ import { parse as parseYAML } from 'yaml';
 import { ElevenLabsClient } from '../api/elevenlabs-client.js';
 import { TestDefinitionSchema, TestValidationError } from '../validation/schemas.js';
 import { validateFilePath } from '../utils/path-validator.js';
+import { ProviderFactory, type ProviderType, type ProviderConfig } from '../adapters/provider-factory.js';
+import type { TestProvider } from '../providers/base-provider.js';
 import type {
   TestDefinition,
   TestResult,
@@ -11,15 +13,43 @@ import type {
 } from '../types/index.js';
 
 /**
- * Clase para ejecutar tests de agentes de ElevenLabs
+ * Clase para ejecutar tests con soporte multi-provider
+ * Soporta ElevenLabs y Vapi
  */
 export class TestRunner {
-  private client: ElevenLabsClient;
+  private client: ElevenLabsClient;  // Mantenido para backward compatibility
   private testsDir: string;
+  private providers: Map<ProviderType, TestProvider>;
 
   constructor(client: ElevenLabsClient, testsDir: string = './tests/scenarios') {
     this.client = client;
     this.testsDir = testsDir;
+
+    // Inicializar providers disponibles
+    this.providers = new Map();
+    this.initializeProviders();
+  }
+
+  /**
+   * Inicializa los providers disponibles
+   */
+  private initializeProviders(): void {
+    try {
+      const config: ProviderConfig = {
+        elevenlabs: {
+          apiKey: process.env.ELEVENLABS_API_KEY || '',
+        },
+        vapi: {
+          apiKey: process.env.VAPI_API_KEY || '',
+          assistantId: process.env.VAPI_ASSISTANT_ID,
+          defaultSuite: process.env.VAPI_DEFAULT_SUITE,
+        },
+      };
+
+      this.providers = ProviderFactory.createAll(config);
+    } catch (error: any) {
+      console.warn('Warning: Some providers could not be initialized:', error.message);
+    }
   }
 
   /**
@@ -82,7 +112,79 @@ export class TestRunner {
   }
 
   /**
+   * Determina qué provider usar para un test
+   */
+  private getProviderForTest(test: TestDefinition): TestProvider {
+    const providerType = ProviderFactory.determineProvider(test.provider);
+
+    const provider = this.providers.get(providerType);
+    if (!provider) {
+      throw new Error(
+        `Provider "${providerType}" not available. ` +
+        `Available providers: ${Array.from(this.providers.keys()).join(', ')}`
+      );
+    }
+
+    return provider;
+  }
+
+  /**
+   * Ejecuta un test usando el provider apropiado
+   */
+  async runTest(test: TestDefinition): Promise<TestResult> {
+    const provider = this.getProviderForTest(test);
+    return provider.executeTest(test);
+  }
+
+  /**
+   * Ejecuta todos los tests usando sus providers respectivos
+   */
+  async runAllTests(): Promise<TestResult[]> {
+    const tests = await this.loadAllTests();
+
+    // Agrupar por provider para eficiencia
+    const testsByProvider = new Map<ProviderType, TestDefinition[]>();
+
+    for (const test of tests) {
+      const providerType = ProviderFactory.determineProvider(test.provider);
+
+      if (!testsByProvider.has(providerType)) {
+        testsByProvider.set(providerType, []);
+      }
+
+      testsByProvider.get(providerType)!.push(test);
+    }
+
+    const allResults: TestResult[] = [];
+
+    // Ejecutar tests de cada provider
+    for (const [providerType, providerTests] of testsByProvider) {
+      const provider = this.providers.get(providerType);
+
+      if (!provider) {
+        console.warn(`Provider "${providerType}" not available, skipping ${providerTests.length} tests`);
+        continue;
+      }
+
+      console.log(`\n=== Ejecutando ${providerTests.length} tests con ${providerType} ===`);
+
+      const results = await provider.executeBatch(providerTests);
+      allResults.push(...results);
+    }
+
+    return allResults;
+  }
+
+  /**
+   * Lista providers disponibles
+   */
+  listAvailableProviders(): ProviderType[] {
+    return Array.from(this.providers.keys());
+  }
+
+  /**
    * Ejecuta un test usando simulación directa
+   * @deprecated Usar runTest() para soporte multi-provider
    */
   async runSimulation(test: TestDefinition): Promise<TestResult> {
     const startTime = Date.now();
