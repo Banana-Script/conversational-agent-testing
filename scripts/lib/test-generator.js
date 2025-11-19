@@ -25,10 +25,41 @@ config();
 export class TestGenerator {
   constructor(mode = 'base') {
     this.mode = mode; // 'base' or 'qa'
-    this.agentId = this.validateAgentId(process.env.ELEVENLABS_AGENT_ID);
+
+    // Determinar provider desde env o default
+    this.provider = (process.env.TEST_PROVIDER || 'elevenlabs').toLowerCase();
+    if (this.provider !== 'elevenlabs' && this.provider !== 'vapi') {
+      throw new Error(`Provider inválido: ${this.provider}. Usa 'elevenlabs' o 'vapi'`);
+    }
+
+    // Obtener agent ID según provider
+    this.agentId = this.getAgentIdForProvider();
+
     this.scenariosDir = './tests/scenarios';
     this.agentsDir = './agents';
     this.backupDir = './tests/scenarios-backup';
+  }
+
+  /**
+   * Gets agent ID based on provider
+   * @returns {string} Agent ID
+   * @throws {Error} If agent ID not found
+   */
+  getAgentIdForProvider() {
+    let agentId;
+    if (this.provider === 'vapi') {
+      agentId = process.env.VAPI_ASSISTANT_ID;
+      if (!agentId) {
+        throw new Error('VAPI_ASSISTANT_ID no encontrada en .env');
+      }
+    } else {
+      agentId = process.env.ELEVENLABS_AGENT_ID;
+      if (!agentId) {
+        throw new Error('ELEVENLABS_AGENT_ID no encontrada en .env');
+      }
+    }
+
+    return this.validateAgentId(agentId);
   }
 
   /**
@@ -94,10 +125,11 @@ export class TestGenerator {
     const paths = this.getAgentPaths();
 
     if (!existsSync(paths.json) || !existsSync(paths.md)) {
-      console.log(chalk.yellow('⚠️  Archivos del agente no encontrados. Descargando configuración...'));
+      console.log(chalk.yellow(`⚠️  Archivos del ${this.provider} ${this.provider === 'vapi' ? 'assistant' : 'agente'} no encontrados. Descargando configuración...`));
 
       try {
-        await this.executeCommand('npm', ['run', 'download'], { stdio: 'inherit' });
+        // Pasar provider al comando download
+        await this.executeCommand('npm', ['run', 'download', '--', '--provider', this.provider], { stdio: 'inherit' });
       } catch (error) {
         console.error(chalk.red('\n❌ Error descargando configuración del agente'));
         throw error;
@@ -190,6 +222,20 @@ export class TestGenerator {
     promptTemplate = promptTemplate
       .replace(/\$\{agentJsonPath\}/g, paths.json)
       .replace(/\$\{agentMdPath\}/g, paths.md);
+
+    // Replace template reference based on provider
+    const templateFile = this.provider === 'vapi' ? 'template-vapi.yaml' : 'template.yaml';
+    promptTemplate = promptTemplate.replace(
+      /@\.\/tests\/template\.yaml/g,
+      `@./tests/${templateFile}`
+    );
+
+    // Add provider context to the prompt
+    if (this.provider === 'vapi') {
+      promptTemplate = `# IMPORTANT: Generate tests for VAPI provider\n` +
+        `Use the Vapi-specific template structure with provider: vapi field.\n\n` +
+        promptTemplate;
+    }
 
     return promptTemplate;
   }
@@ -292,8 +338,10 @@ export class TestGenerator {
     const prompt = this.loadOptimizedPrompt();
 
     console.log(chalk.cyan('\n🚀 Ejecutando Claude Code...\n'));
+    console.log(chalk.gray(`   Provider: ${this.provider}`));
     console.log(chalk.gray(`   Modo: ${this.mode === 'qa' ? 'QA Expert (agente especializado)' : 'Base Claude'}`));
-    console.log(chalk.gray(`   Agente: ${this.agentId}`));
+    console.log(chalk.gray(`   ${this.provider === 'vapi' ? 'Assistant' : 'Agente'}: ${this.agentId}`));
+    console.log(chalk.gray(`   Template: tests/${this.provider === 'vapi' ? 'template-vapi.yaml' : 'template.yaml'}`));
 
     if (this.mode === 'qa') {
       console.log(chalk.yellow('   ⚠️  Nota: Este modo consume más tokens pero genera tests de mayor calidad\n'));
@@ -436,7 +484,7 @@ export class TestGenerator {
   async generate() {
     try {
       console.log(chalk.blue.bold(
-        `\n🤖 Generando test cases con Claude Code (${this.mode === 'qa' ? 'QA Expert' : 'base'})...\n`
+        `\n🤖 Generando test cases para ${this.provider.toUpperCase()} con Claude Code (${this.mode === 'qa' ? 'QA Expert' : 'base'})...\n`
       ));
 
       // Step 1: Ensure agent files exist
