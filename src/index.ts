@@ -465,36 +465,68 @@ program
       const filename = `${agentId}.json`;
       const filepath = `${options.output}/${filename}`;
 
-      // Extraer el prompt a un archivo separado (solo para ElevenLabs)
+      // Extraer el prompt a un archivo separado
       let promptPath = null;
       let modifiedConfig = { ...agentConfig };
 
-      if (
-        provider === 'elevenlabs' &&
-        agentConfig.conversation_config?.agent?.prompt?.prompt &&
-        typeof agentConfig.conversation_config.agent.prompt.prompt === 'string'
-      ) {
-        const promptContent = agentConfig.conversation_config.agent.prompt.prompt;
-        const promptFilename = `${agentId}.md`;
-        promptPath = `${options.output}/${promptFilename}`;
+      if (provider === 'elevenlabs') {
+        // ElevenLabs: prompt en conversation_config.agent.prompt.prompt
+        if (
+          agentConfig.conversation_config?.agent?.prompt?.prompt &&
+          typeof agentConfig.conversation_config.agent.prompt.prompt === 'string'
+        ) {
+          const promptContent = agentConfig.conversation_config.agent.prompt.prompt;
+          const promptFilename = `${agentId}.md`;
+          promptPath = `${options.output}/${promptFilename}`;
 
-        // Guardar prompt en archivo markdown
-        await writeFile(promptPath, promptContent, 'utf-8');
+          // Guardar prompt en archivo markdown
+          await writeFile(promptPath, promptContent, 'utf-8');
 
-        // Modificar la configuración para que referencie el archivo
-        modifiedConfig = {
-          ...agentConfig,
-          conversation_config: {
-            ...agentConfig.conversation_config,
-            agent: {
-              ...agentConfig.conversation_config.agent,
-              prompt: {
-                ...agentConfig.conversation_config.agent.prompt,
-                prompt: `[PROMPT_EXTRAIDO] Ver archivo: ${promptFilename}`,
+          // Modificar la configuración para que referencie el archivo
+          modifiedConfig = {
+            ...agentConfig,
+            conversation_config: {
+              ...agentConfig.conversation_config,
+              agent: {
+                ...agentConfig.conversation_config.agent,
+                prompt: {
+                  ...agentConfig.conversation_config.agent.prompt,
+                  prompt: `[PROMPT_EXTRAIDO] Ver archivo: ${promptFilename}`,
+                },
               },
             },
-          },
-        };
+          };
+        }
+      } else if (provider === 'vapi') {
+        // Vapi: prompt en model.messages array (role: system)
+        if (agentConfig.model?.messages && Array.isArray(agentConfig.model.messages)) {
+          const systemMessage = agentConfig.model.messages.find((msg: any) => msg.role === 'system');
+          if (systemMessage && typeof systemMessage.content === 'string') {
+            const promptContent = systemMessage.content;
+            const promptFilename = `${agentId}.md`;
+            promptPath = `${options.output}/${promptFilename}`;
+
+            // Guardar prompt en archivo markdown
+            await writeFile(promptPath, promptContent, 'utf-8');
+
+            // Modificar la configuración para que referencie el archivo
+            modifiedConfig = {
+              ...agentConfig,
+              model: {
+                ...agentConfig.model,
+                messages: agentConfig.model.messages.map((msg: any) => {
+                  if (msg.role === 'system') {
+                    return {
+                      ...msg,
+                      content: `[PROMPT_EXTRAIDO] Ver archivo: ${promptFilename}`,
+                    };
+                  }
+                  return msg;
+                }),
+              },
+            };
+          }
+        }
       }
 
       // Guardar configuración
