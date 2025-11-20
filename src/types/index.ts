@@ -123,6 +123,12 @@ export interface TestDefinition {
   vapi?: {
     assistant_id?: string;  // Opcional, usa env var si no se especifica
     attempts?: number;      // 1-5, default: 1
+    persistent_eval?: boolean;  // false (default): transiente, true: persistente
+    max_conversation_tokens?: number;  // Default: 4000
+    conversation_turns?: Array<{  // Conversación manual (opcional)
+      role: 'user' | 'assistant';
+      message: string;
+    }>;
   };
 }
 
@@ -134,6 +140,10 @@ export interface TestResult {
   success: boolean;
   simulation_response: SimulationResponse;
   execution_time_ms: number;
+  // Vapi-specific fields (opcionales)
+  vapi_eval_run_id?: string;
+  vapi_cost?: number;
+  error?: string;
 }
 
 // Configuración del cliente API

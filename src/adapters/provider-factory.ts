@@ -5,6 +5,7 @@
 
 import { ElevenLabsProvider } from '../providers/elevenlabs-provider.js';
 import { VapiProvider } from '../providers/vapi-provider.js';
+import { ChatBasedVapiProvider } from '../providers/chat-based-vapi-provider.js';
 import type { TestProvider } from '../providers/base-provider.js';
 import type { ElevenLabsConfig } from '../types/index.js';
 import type { VapiConfig } from '../types/vapi.types.js';
@@ -67,8 +68,10 @@ export class ProviderFactory {
 
   /**
    * Crea provider de Vapi
+   * Si VAPI_USE_CHAT_API=true, usa ChatBasedVapiProvider (Chat API + Claude Code)
+   * Si VAPI_USE_CHAT_API=false o no está definido, usa VapiProvider (Evals API)
    */
-  private static createVapiProvider(config?: VapiConfig): VapiProvider {
+  private static createVapiProvider(config?: VapiConfig): VapiProvider | ChatBasedVapiProvider {
     if (!config) {
       // Intentar cargar desde variables de entorno
       const apiKey = process.env.VAPI_API_KEY;
@@ -79,10 +82,30 @@ export class ProviderFactory {
       config = {
         apiKey,
         assistantId: process.env.VAPI_ASSISTANT_ID,
-        defaultSuite: process.env.VAPI_DEFAULT_SUITE || 'conversational-agent-testing',
       };
     }
 
+    // Determinar si usar Chat API con Claude Code
+    const useChatApi = process.env.VAPI_USE_CHAT_API === 'true';
+
+    if (useChatApi) {
+      console.log('[ProviderFactory] Using ChatBasedVapiProvider (Chat API + OpenAI)');
+      return new ChatBasedVapiProvider({
+        apiKey: config.apiKey,
+        assistantId: config.assistantId,
+        verbose: process.env.VAPI_VERBOSE === 'true',
+        generatorModel: process.env.VAPI_EVAL_GENERATOR_MODEL,
+        judgeModel: process.env.VAPI_EVAL_JUDGE_MODEL,
+        temperature: process.env.VAPI_EVAL_TEMPERATURE
+          ? parseFloat(process.env.VAPI_EVAL_TEMPERATURE)
+          : undefined,
+        maxTokens: process.env.VAPI_MAX_CONVERSATION_TOKENS
+          ? parseInt(process.env.VAPI_MAX_CONVERSATION_TOKENS, 10)
+          : undefined,
+      });
+    }
+
+    console.log('[ProviderFactory] Using VapiProvider (Evals API)');
     return new VapiProvider(config);
   }
 

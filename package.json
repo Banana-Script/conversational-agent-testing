@@ -26,7 +26,12 @@
     "generate:tests": "node scripts/generate-tests-base.js",
     "generate:tests:qa": "node scripts/generate-tests-qa.js",
     "check:claude-cli": "node scripts/check-claude-cli.js",
-    "test": "echo \"Error: no test runner\" && exit 1"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "test:unit": "vitest run --exclude '**/*.integration.test.ts'",
+    "test:integration": "vitest run --include '**/*.integration.test.ts'"
   },
   "keywords": [
     "conversational-ai",
@@ -42,19 +47,25 @@
   "author": "Banana-Script",
   "license": "MIT",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.70.0",
     "@vapi-ai/server-sdk": "^0.11.0",
     "axios": "^1.6.7",
     "axios-retry": "^4.5.0",
     "chalk": "^5.3.0",
     "commander": "^12.0.0",
     "dotenv": "^16.4.1",
+    "openai": "^6.9.1",
     "ora": "^8.0.1",
     "yaml": "^2.3.4",
     "zod": "^4.1.12"
   },
   "devDependencies": {
     "@types/node": "^20.11.16",
+    "@vitest/coverage-v8": "^4.0.12",
+    "@vitest/ui": "^4.0.12",
+    "happy-dom": "^20.0.10",
     "tsx": "^4.7.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vitest": "^4.0.12"
   }
 }

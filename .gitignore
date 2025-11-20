@@ -38,13 +38,20 @@ Thumbs.db
 # Test results (opcional, puedes querer commitearlos)
 # results/
 
+# Test coverage
+coverage/
+.nyc_output/
+*.lcov
+
 # Temporary files
 *.tmp
 *.temp
 results/
 tests/scenarios/*
+tests/scenarios-backup-*/
+.tmp/
 
-# Vapi cache (auto-generated suite mappings)
+# Vapi cache (auto-generated suite mappings and conversations)
 .vapi-suites.json
 
 # Agent configurations (may contain sensitive data)

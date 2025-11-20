@@ -1,154 +1,233 @@
 /**
- * Tipos para integración con Vapi
- * Basado en documentación de Vapi API: https://docs.vapi.ai
+ * Tipos para integración con Vapi Evals API
+ * Documentación: https://docs.vapi.ai
+ *
+ * NOTA: Test Suites solo existen en la UI de Vapi, no en la API.
+ * Esta implementación usa Evals API que sí está disponible vía REST.
  */
 
-// Configuración del cliente Vapi
+import type { Vapi } from '@vapi-ai/server-sdk';
+
+// ============================================================================
+// RE-EXPORTS DEL SDK DE VAPI
+// ============================================================================
+
+// Eval types
+export type Eval = Vapi.Eval;
+export type CreateEvalDto = Vapi.CreateEvalDto;
+export type UpdateEvalDto = Vapi.UpdateEvalDto;
+export type EvalType = Vapi.EvalType;
+
+// Eval Run types
+export type EvalRun = Vapi.EvalRun;
+export type CreateEvalRunDto = Vapi.CreateEvalRunDto;
+export type EvalRunResult = Vapi.EvalRunResult;
+export type EvalRunResultMessagesItem = Vapi.EvalRunResultMessagesItem;
+
+// Eval Message types
+export type CreateEvalDtoMessagesItem = Vapi.CreateEvalDtoMessagesItem;
+export type ChatEvalUserMessageMock = Vapi.ChatEvalUserMessageMock;
+export type ChatEvalAssistantMessageMock = Vapi.ChatEvalAssistantMessageMock;
+export type ChatEvalAssistantMessageEvaluation = Vapi.ChatEvalAssistantMessageEvaluation;
+export type ChatEvalSystemMessageMock = Vapi.ChatEvalSystemMessageMock;
+export type ChatEvalToolResponseMessageMock = Vapi.ChatEvalToolResponseMessageMock;
+export type ChatEvalToolResponseMessageEvaluation = Vapi.ChatEvalToolResponseMessageEvaluation;
+
+// Judge Plan types (para checkpoints de evaluación)
+export type ChatEvalAssistantMessageEvaluationJudgePlan = Vapi.ChatEvalAssistantMessageEvaluationJudgePlan;
+
+// Target types
+export type CreateEvalRunDtoTarget = Vapi.CreateEvalRunDtoTarget;
+
+// Pagination types
+export type EvalPaginatedResponse = Vapi.EvalPaginatedResponse;
+export type EvalRunPaginatedResponse = Vapi.EvalRunPaginatedResponse;
+
+// ============================================================================
+// CONFIGURACIÓN DE CLIENTE
+// ============================================================================
+
 export interface VapiConfig {
   apiKey: string;
   baseURL?: string;
   assistantId?: string;
-  defaultSuite?: string;
 }
 
-// Configuración de test para Vapi
+// ============================================================================
+// OPCIONES DE EVAL
+// ============================================================================
+
+/**
+ * Opciones para configurar la ejecución de un Eval
+ */
+export interface VapiEvalOptions {
+  /** Si true, el eval se guarda en Vapi y puede reutilizarse. Si false, es transiente (recomendado). */
+  persistent?: boolean;
+
+  /** Máximo de tokens para generar la conversación completa (default: 4000) */
+  maxConversationTokens?: number;
+
+  /** Modelo a usar para generar la conversación (default: gpt-4o) */
+  generatorModel?: string;
+
+  /** Modelo a usar para los AI judges en checkpoints (default: gpt-4o) */
+  judgeModel?: string;
+
+  /** Temperature para generación de conversación (default: 0.3) */
+  temperature?: number;
+}
+
+// ============================================================================
+// CONFIGURACIÓN DE TEST PARA VAPI
+// ============================================================================
+
+/**
+ * Configuración de test adaptada para Vapi Evals
+ * Se convierte desde nuestro YAML a CreateEvalDto
+ */
 export interface VapiTestConfig {
-  type: 'chat' | 'voice';
-  assistant: string;  // Assistant ID
-  script: string;     // Free-form script for simulated user (max 10,000 chars)
-  evaluationPlan: {
-    rubric: string[];  // Array of evaluation questions
-  };
-  attempts?: number;  // 1-5, number of times to run the test
-  name?: string;
-  description?: string;
-  variableValues?: Record<string, any>;  // Dynamic variables
-}
-
-// Test Suite
-export interface VapiTestSuite {
-  id: string;
+  /** Nombre del test */
   name: string;
-  description?: string;
-  createdAt: string;
-  updatedAt?: string;
-}
 
-// Test dentro de un suite
-export interface VapiTest {
-  id: string;
-  testSuiteId: string;
-  name: string;
+  /** Descripción opcional */
   description?: string;
-  type: 'chat' | 'voice';
-  assistant: string;
-  script: string;
-  evaluationPlan: {
-    rubric: string[];
-  };
-  attempts: number;
+
+  /** ID del assistant de Vapi a testear */
+  assistantId: string;
+
+  /** Número de intentos (1-5). Se ejecuta manualmente en loop. */
+  attempts?: number;
+
+  /**
+   * Turnos de conversación manuales (opcional)
+   * Si no se provee, se genera automáticamente desde simulatedUserPrompt
+   */
+  conversationTurns?: ConversationTurn[];
+
+  /**
+   * Prompt del usuario simulado para generar conversación automáticamente
+   * Solo se usa si conversationTurns no está definido
+   */
+  simulatedUserPrompt?: string;
+
+  /** Primer mensaje del usuario (requerido si se usa generación automática) */
+  firstMessage?: string;
+
+  /** Criterios de evaluación (se convierten en checkpoints) */
+  evaluationCriteria: EvaluationCriterion[];
+
+  /** Variables dinámicas para interpolar en mensajes */
   variableValues?: Record<string, any>;
-  createdAt: string;
+
+  /** Opciones de eval */
+  evalOptions?: VapiEvalOptions;
 }
 
-// Resultado de evaluación de un criterio de rubric
-export interface VapiRubricResult {
-  question: string;
+/**
+ * Turno de conversación manual
+ */
+export interface ConversationTurn {
+  role: 'user' | 'assistant';
+  message: string;
+}
+
+/**
+ * Criterio de evaluación
+ * Se convierte en un checkpoint con AI judge
+ */
+export interface EvaluationCriterion {
+  id: string;
+  name: string;
+  prompt: string;  // Pregunta de evaluación
+}
+
+// ============================================================================
+// RESULTADOS DE EVAL
+// ============================================================================
+
+/**
+ * Resultado de un criterio de evaluación
+ */
+export interface VapiCriterionResult {
+  criterionId: string;
+  criterionName: string;
   passed: boolean;
-  reasoning: string;
+  reasoning?: string;  // Del AI judge si está disponible
 }
 
-// Resultado de un intento individual de test
-export interface VapiTestAttempt {
+/**
+ * Resultado de un intento individual de eval
+ */
+export interface VapiEvalAttempt {
   attemptNumber: number;
-  status: 'passed' | 'failed';
-  transcript: string;  // Full conversation transcript
-  evaluationResults: {
-    rubric: VapiRubricResult[];
-  };
-  duration?: number;  // Duration in milliseconds
-  startedAt?: string;
-  completedAt?: string;
+  evalRunId: string;
+  status: 'pass' | 'fail';
+
+  /** Conversación completa que ocurrió */
+  conversation: Array<{
+    role: string;
+    content: string;
+    timestamp?: string;
+  }>;
+
+  /** Resultados de cada criterio de evaluación */
+  criteriaResults: VapiCriterionResult[];
+
+  /** Duración en milisegundos */
+  duration: number;
+
+  /** Timestamps */
+  startedAt: string;
+  completedAt: string;
+
+  /** Razón de finalización */
+  endedReason?: string;
+
+  /** Costo de la ejecución en USD */
+  cost?: number;
 }
 
-// Resultado de un test (con múltiples intentos)
+/**
+ * Resultado agregado de un test con múltiples intentos
+ */
 export interface VapiTestResult {
-  testId: string;
   testName: string;
-  attempts: VapiTestAttempt[];
+  assistantId: string;
+  attempts: VapiEvalAttempt[];
   overallStatus: 'passed' | 'failed';
+  passRate: number;  // 0.0 - 1.0
+  totalDuration: number;
+  totalCost?: number;
 }
 
-// Test Run (ejecución de un test suite)
-export interface VapiTestRun {
-  id: string;
-  testSuiteId: string;
-  status: 'pending' | 'running' | 'completed' | 'failed';
-  tests: VapiTestResult[];
-  startedAt?: string;
-  completedAt?: string;
-  duration?: number;
-}
+// ============================================================================
+// OPCIONES DE POLLING
+// ============================================================================
 
-// Suite cache entry (para .vapi-suites.json)
-export interface VapiSuiteCacheEntry {
-  id: string;
-  name: string;
-  created_at: string;
-  last_used: string;
-  tests_count?: number;
-  tags?: string[];
-}
-
-// Cache file structure
-export interface VapiSuiteCache {
-  [suiteName: string]: VapiSuiteCacheEntry;
-}
-
-// Opciones para polling de test runs
+/**
+ * Opciones para polling de eval runs
+ */
 export interface VapiPollOptions {
-  interval?: number;   // Polling interval in ms (default: 2000)
-  timeout?: number;    // Timeout in ms (default: 300000 = 5 min)
-  onProgress?: (status: string) => void;  // Callback for status updates
+  /** Intervalo de polling en ms (default: 2000) */
+  interval?: number;
+
+  /** Timeout total en ms (default: 300000 = 5 min) */
+  timeout?: number;
+
+  /** Callback para actualizaciones de progreso */
+  onProgress?: (status: string) => void;
 }
 
-// Request para crear test suite
-export interface CreateTestSuiteRequest {
-  name: string;
-  description?: string;
-}
+// ============================================================================
+// ERRORES
+// ============================================================================
 
-// Request para crear test
-export interface CreateTestRequest extends VapiTestConfig {
-  // Hereda todos los campos de VapiTestConfig
-}
-
-// Request para ejecutar test suite
-export interface RunTestSuiteRequest {
-  testSuiteId: string;
-}
-
-// Response de listado de suites
-export interface ListTestSuitesResponse {
-  testSuites: VapiTestSuite[];
-  pagination?: {
-    hasMore: boolean;
-    nextCursor?: string;
-  };
-}
-
-// Response de listado de tests
-export interface ListTestsResponse {
-  tests: VapiTest[];
-  pagination?: {
-    hasMore: boolean;
-    nextCursor?: string;
-  };
-}
-
-// Error de Vapi API
+/**
+ * Error de Vapi API
+ */
 export interface VapiError {
   message: string;
   code?: string;
   details?: any;
+  statusCode?: number;
 }

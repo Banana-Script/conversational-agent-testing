@@ -42,7 +42,6 @@ export class TestRunner {
         vapi: {
           apiKey: process.env.VAPI_API_KEY || '',
           assistantId: process.env.VAPI_ASSISTANT_ID,
-          defaultSuite: process.env.VAPI_DEFAULT_SUITE,
         },
       };
 
