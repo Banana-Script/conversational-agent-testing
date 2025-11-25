@@ -1,0 +1,28 @@
+name: "Basic Greeting Test"
+description: "Test that Viernes agent greets professionally"
+
+agent_id: "111"
+provider: "viernes"
+
+viernes:
+  organization_id: 69
+  agent_id: 111
+  platform: "whatsapp"
+  max_turns: 3
+  conversation_timeout: 120
+  webhook_timeout: 60
+
+simulated_user:
+  prompt: |
+    You are a customer. Respond briefly in Spanish.
+    Be polite. Keep responses to 1 sentence.
+  first_message: "Hola"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 80
+
+evaluation_criteria:
+  - id: "greeting"
+    name: "Professional Greeting"
+    prompt: "Did the agent greet the user professionally?"

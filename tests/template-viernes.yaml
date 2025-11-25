@@ -1,0 +1,190 @@
+# ============================================================================
+# VIERNES TEST TEMPLATE
+# ============================================================================
+# Template para crear tests del provider Viernes
+# Viernes simula conversaciones con agentes usando usuarios LLM y evalúa
+# automáticamente contra criterios personalizados
+#
+# Documentación completa: docs/providers/viernes.md
+# API Reference: SIMULATION_API_REFERENCE.md
+# ============================================================================
+
+name: "Viernes Example Test"
+description: "Template para tests de Viernes provider"
+
+# ============================================================================
+# CONFIGURACIÓN DEL AGENTE
+# ============================================================================
+
+# ID del agente (será convertido a número)
+agent_id: "111"
+
+# Provider a usar (REQUERIDO para Viernes)
+provider: "viernes"
+
+# ============================================================================
+# CONFIGURACIÓN ESPECÍFICA DE VIERNES
+# ============================================================================
+
+viernes:
+  # ID de la organización (REQUERIDO)
+  # También puede venir de VIERNES_ORGANIZATION_ID env var
+  organization_id: 69
+
+  # ID del agente (opcional, override del agent_id de arriba)
+  # Útil si quieres probar diferentes agentes con el mismo test
+  agent_id: 111
+
+  # Plataforma de conversación
+  # Opciones: whatsapp, telegram, facebook, instagram, web, api
+  # Default: whatsapp
+  platform: "whatsapp"
+
+  # Número máximo de turnos en la conversación
+  # Default: 10
+  max_turns: 5
+
+  # Timeout total de la conversación en segundos
+  # Default: 300 (5 minutos)
+  conversation_timeout: 180
+
+  # Timeout por mensaje individual en segundos
+  # Default: 120 (2 minutos)
+  webhook_timeout: 60
+
+# ============================================================================
+# CONFIGURACIÓN DEL USUARIO SIMULADO
+# ============================================================================
+# Esta sección usa el formato estándar del framework
+# ViernesAdapter la convierte automáticamente al formato de la API de Viernes
+
+simulated_user:
+  # Descripción del comportamiento del usuario
+  # Sé específico sobre personalidad, tono, idioma, y respuestas esperadas
+  prompt: |
+    Eres un cliente interesado en servicios.
+    Responde brevemente en español.
+    Sé amable y cooperativo.
+    Si te preguntan tu nombre, di "María López".
+    Si te piden aceptar términos, responde "Acepto".
+    Mantén respuestas cortas (1-2 oraciones).
+
+  # Primer mensaje del usuario (inicia la conversación)
+  first_message: "Hola, quiero información"
+
+  # Idioma de la conversación (código ISO)
+  language: "es"
+
+  # Modelo LLM para el usuario simulado
+  # Opciones: gpt-4o-mini, gpt-4o, ollama/llama3.2, ollama/llama3.1
+  # Recomendado para desarrollo: gpt-4o-mini (rápido y económico)
+  # Recomendado para producción: gpt-4o (mayor calidad)
+  # Gratis: ollama/llama3.2 o ollama/llama3.1 (requiere Ollama local)
+  llm: "gpt-4o-mini"
+
+  # Temperature para generación de respuestas (0.0-1.0)
+  # Más bajo = más determinístico
+  # Más alto = más creativo/variado
+  # Default: 0.7
+  temperature: 0.3
+
+  # Máximo de tokens por respuesta del usuario
+  # Default: 150
+  max_tokens: 100
+
+# ============================================================================
+# CRITERIOS DE EVALUACIÓN
+# ============================================================================
+# El framework convierte automáticamente este formato al de Viernes:
+# - 'name' → 'goal'
+# - 'prompt' → 'evaluation_prompt'
+
+evaluation_criteria:
+  - id: "greeting"
+    name: "Professional Greeting"
+    prompt: "Did the agent greet the user professionally and warmly?"
+
+  - id: "collect-info"
+    name: "Information Collection"
+    prompt: "Did the agent ask for and gather necessary customer information?"
+
+  - id: "provide-value"
+    name: "Value Provision"
+    prompt: "Did the agent provide relevant and helpful information to the customer?"
+
+# ============================================================================
+# GUÍA DE USO
+# ============================================================================
+#
+# 1. SELECCIÓN DE MODELO
+#    - Desarrollo/Testing: gpt-4o-mini (rápido, económico)
+#    - Producción: gpt-4o (mejor calidad)
+#    - Gratis: ollama/llama3.2 (requiere Ollama instalado)
+#
+# 2. DISEÑO DE PERSONA
+#    ✅ Bueno:
+#       - Específico sobre comportamiento
+#       - Incluye idioma
+#       - Pre-define respuestas a preguntas comunes
+#       - Especifica longitud de respuestas
+#    ❌ Malo:
+#       - "Un cliente" (muy vago)
+#       - Sin contexto ni personalidad
+#
+# 3. NÚMERO DE TURNOS
+#    - Validación rápida: 2-3 turnos
+#    - Flujo estándar: 5-7 turnos
+#    - End-to-end completo: 10-15 turnos
+#    - Stress test: 20+ turnos
+#
+# 4. TIMEOUTS
+#    - conversation_timeout = max_turns × avg_response_time × 2
+#    - webhook_timeout = avg_response_time + 10s buffer
+#
+# 5. PLATAFORMAS
+#    - whatsapp: Conversaciones de WhatsApp
+#    - telegram: Mensajes de Telegram
+#    - facebook: Facebook Messenger
+#    - instagram: Instagram DM
+#    - web: Chat web
+#    - api: Integración directa API
+#
+# 6. CRITERIOS DE EVALUACIÓN
+#    - Mínimo recomendado: 3-5 criterios por test
+#    - Sé específico en los prompts de evaluación
+#    - Usa preguntas claras que puedan responderse sí/no
+#
+# ============================================================================
+# EJEMPLOS DE EJECUCIÓN
+# ============================================================================
+#
+# # Test básico
+# npm run simulate tests/my-viernes-test.yaml
+#
+# # Con variables de entorno
+# VIERNES_ORGANIZATION_ID=69 npm run simulate tests/my-viernes-test.yaml
+#
+# # Múltiples tests
+# npm run simulate tests/viernes/*.yaml
+#
+# ============================================================================
+# ERRORES COMUNES
+# ============================================================================
+#
+# 1. "organization_id is required"
+#    → Asegúrate de tener VIERNES_ORGANIZATION_ID en .env
+#    → O especifica organization_id en viernes.organization_id
+#
+# 2. "agent_id must be a valid number"
+#    → agent_id debe ser numérico, no string
+#    → Usa 111 en lugar de "mi-agente"
+#
+# 3. Timeout
+#    → Aumenta conversation_timeout
+#    → O reduce max_turns
+#
+# 4. "Model unavailable"
+#    → Si usas ollama/*, asegúrate de tener Ollama corriendo
+#    → Alternativa: usa gpt-4o-mini
+#
+# ============================================================================

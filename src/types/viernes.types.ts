@@ -1,0 +1,104 @@
+/**
+ * Viernes API Type Definitions
+ */
+
+// Configuration
+export interface ViernesConfig {
+  apiKey?: string;
+  baseURL?: string;
+  organizationId?: string;
+}
+
+// Simulated User Config (API format)
+export interface ViernesSimulatedUserConfig {
+  persona: string;
+  model: 'gpt-4o-mini' | 'gpt-4o' | 'ollama/llama3.2' | 'ollama/llama3.1';
+  temperature: number;
+  initial_message: string;
+  max_tokens: number;
+  provider?: 'openai' | 'ollama' | null;
+}
+
+// Evaluation Criterion (API format)
+export interface ViernesEvaluationCriterion {
+  id: string;
+  goal: string;
+  evaluation_prompt: string;
+}
+
+// Request
+export interface ViernesSimulationRequest {
+  organization_id: number;
+  agent_id: number;
+  platform: 'whatsapp' | 'telegram' | 'facebook' | 'instagram' | 'web' | 'api';
+  simulated_user_config: ViernesSimulatedUserConfig;
+  max_turns?: number;
+  conversation_timeout?: number;
+  webhook_timeout?: number;
+  evaluation_criteria?: ViernesEvaluationCriterion[];
+}
+
+// Transcript Turn
+export interface ViernesTranscriptTurn {
+  role: 'user' | 'agent';
+  message: string;
+  time_in_call_secs: number;
+  tokens_used?: {
+    prompt_tokens: number;
+    response_tokens: number;
+  };
+  timestamp: string;
+  tool_calls?: any[];
+  tool_results?: any[];
+  interrupted?: boolean;
+  message_id?: string;
+}
+
+// Evaluation Result
+export interface ViernesEvaluationResult {
+  criterion_id: string;
+  success: boolean;
+  rationale: string;
+  score: number;
+}
+
+// Quality Metrics
+export interface ViernesQualityMetrics {
+  avg_response_time_secs: number;
+  total_tokens_used?: number;
+  total_turns: number;
+  user_turns: number;
+  agent_turns: number;
+  conversation_duration_secs: number;
+  tool_calls_count: number;
+}
+
+// Analysis
+export interface ViernesAnalysis {
+  call_successful: 'success' | 'failed';
+  transcript_summary?: string;
+  quality_metrics: ViernesQualityMetrics;
+  evaluation_criteria_results: ViernesEvaluationResult[];
+  agent_performance_score: number;
+}
+
+// Response
+export interface ViernesSimulationResponse {
+  simulation_id: string;
+  organization_id: number;
+  agent_id: number;
+  platform: string;
+  status: 'completed' | 'failed' | 'timeout';
+  duration_secs: number;
+  transcript: ViernesTranscriptTurn[];
+  analysis: ViernesAnalysis;
+  metadata?: Record<string, any>;
+  error?: string;
+}
+
+// Health Check Response
+export interface ViernesHealthResponse {
+  status: 'healthy' | 'unhealthy';
+  service: string;
+  version: string;
+}

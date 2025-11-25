@@ -43,6 +43,11 @@ export class TestRunner {
           apiKey: process.env.VAPI_API_KEY || '',
           assistantId: process.env.VAPI_ASSISTANT_ID,
         },
+        viernes: {
+          apiKey: process.env.VIERNES_API_KEY,
+          baseURL: process.env.VIERNES_BASE_URL,
+          organizationId: process.env.VIERNES_ORGANIZATION_ID,
+        },
       };
 
       this.providers = ProviderFactory.createAll(config);

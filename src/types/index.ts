@@ -115,7 +115,7 @@ export interface TestDefinition {
   type?: 'llm' | 'tool';
 
   // Multi-provider support
-  provider?: 'elevenlabs' | 'vapi';  // default: 'elevenlabs'
+  provider?: 'elevenlabs' | 'vapi' | 'viernes';  // default: 'elevenlabs'
   category?: string;  // Para agrupar tests en suites (Vapi)
   tags?: string[];    // Para filtrado y organización
 
@@ -129,6 +129,16 @@ export interface TestDefinition {
       role: 'user' | 'assistant';
       message: string;
     }>;
+  };
+
+  // Viernes-specific configuration
+  viernes?: {
+    organization_id?: number;  // Requerido: ID de la organización
+    agent_id?: number;         // Opcional: Override del agent_id
+    platform?: 'whatsapp' | 'telegram' | 'facebook' | 'instagram' | 'web' | 'api';
+    max_turns?: number;        // Máximo de turnos en la conversación
+    conversation_timeout?: number;  // Timeout total en segundos
+    webhook_timeout?: number;       // Timeout por mensaje en segundos
   };
 }
 

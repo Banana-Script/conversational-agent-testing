@@ -71,6 +71,33 @@ export const TestDefinitionSchema = z.object({
   success_examples: z.array(z.string()).optional(),
   failure_examples: z.array(z.string()).optional(),
   type: z.enum(['llm', 'tool']).optional(),
+
+  // Multi-provider support
+  provider: z.enum(['elevenlabs', 'vapi', 'viernes']).optional(),
+  category: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+
+  // Vapi-specific configuration
+  vapi: z.object({
+    assistant_id: z.string().optional(),
+    attempts: z.number().min(1).max(5).optional(),
+    persistent_eval: z.boolean().optional(),
+    max_conversation_tokens: z.number().optional(),
+    conversation_turns: z.array(z.object({
+      role: z.enum(['user', 'assistant']),
+      message: z.string(),
+    })).optional(),
+  }).optional(),
+
+  // Viernes-specific configuration
+  viernes: z.object({
+    organization_id: z.number().optional(),
+    agent_id: z.number().optional(),
+    platform: z.enum(['whatsapp', 'telegram', 'facebook', 'instagram', 'web', 'api']).optional(),
+    max_turns: z.number().optional(),
+    conversation_timeout: z.number().optional(),
+    webhook_timeout: z.number().optional(),
+  }).optional(),
 }).refine(
   (data) => {
     // Validar que no se mezclen ambos enfoques

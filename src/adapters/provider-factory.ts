@@ -6,14 +6,16 @@
 import { ElevenLabsProvider } from '../providers/elevenlabs-provider.js';
 import { VapiProvider } from '../providers/vapi-provider.js';
 import { ChatBasedVapiProvider } from '../providers/chat-based-vapi-provider.js';
+import { ViernesProvider } from '../providers/viernes-provider.js';
 import type { TestProvider } from '../providers/base-provider.js';
 import type { ElevenLabsConfig } from '../types/index.js';
 import type { VapiConfig } from '../types/vapi.types.js';
+import type { ViernesConfig } from '../types/viernes.types.js';
 
 /**
  * Tipo de provider soportado
  */
-export type ProviderType = 'elevenlabs' | 'vapi';
+export type ProviderType = 'elevenlabs' | 'vapi' | 'viernes';
 
 /**
  * Configuración para crear un provider
@@ -21,6 +23,7 @@ export type ProviderType = 'elevenlabs' | 'vapi';
 export interface ProviderConfig {
   elevenlabs?: ElevenLabsConfig;
   vapi?: VapiConfig;
+  viernes?: ViernesConfig;
 }
 
 /**
@@ -40,6 +43,9 @@ export class ProviderFactory {
 
       case 'vapi':
         return this.createVapiProvider(config.vapi);
+
+      case 'viernes':
+        return this.createViernesProvider(config.viernes);
 
       default:
         throw new Error(`Unknown provider type: ${type}`);
@@ -110,6 +116,27 @@ export class ProviderFactory {
   }
 
   /**
+   * Crea provider de Viernes
+   */
+  private static createViernesProvider(config?: ViernesConfig): ViernesProvider {
+    if (!config) {
+      // Intentar cargar desde variables de entorno
+      const organizationId = process.env.VIERNES_ORGANIZATION_ID;
+      if (!organizationId) {
+        throw new Error('VIERNES_ORGANIZATION_ID not found in environment');
+      }
+
+      config = {
+        apiKey: process.env.VIERNES_API_KEY,
+        baseURL: process.env.VIERNES_BASE_URL,
+        organizationId,
+      };
+    }
+
+    return new ViernesProvider(config);
+  }
+
+  /**
    * Determina el provider a usar basado en:
    * 1. Campo provider del test
    * 2. Variable de entorno TEST_PROVIDER
@@ -132,7 +159,7 @@ export class ProviderFactory {
    * Verifica si un string es un provider válido
    */
   private static isValidProvider(provider: string): provider is ProviderType {
-    return provider === 'elevenlabs' || provider === 'vapi';
+    return provider === 'elevenlabs' || provider === 'vapi' || provider === 'viernes';
   }
 
   /**
@@ -152,6 +179,12 @@ export class ProviderFactory {
       providers.set('vapi', this.createVapiProvider(config.vapi));
     } catch (error) {
       // Vapi no configurado, ignorar
+    }
+
+    try {
+      providers.set('viernes', this.createViernesProvider(config.viernes));
+    } catch (error) {
+      // Viernes no configurado, ignorar
     }
 
     if (providers.size === 0) {
@@ -188,6 +221,19 @@ export class ProviderFactory {
 
       if (provider.isConfigured()) {
         available.push('vapi');
+      }
+    } catch (error) {
+      // Not available
+    }
+
+    // Check Viernes
+    try {
+      const provider = config?.viernes
+        ? new ViernesProvider(config.viernes)
+        : this.createViernesProvider();
+
+      if (provider.isConfigured()) {
+        available.push('viernes');
       }
     } catch (error) {
       // Not available
