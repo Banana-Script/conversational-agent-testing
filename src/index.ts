@@ -29,9 +29,17 @@ program
   .command('simulate')
   .description('Ejecuta tests usando simulación directa (multi-provider)')
   .option('-d, --dir <directory>', 'Directorio de tests', './tests/scenarios')
+  .option('-f, --file <file>', 'Archivo YAML individual a ejecutar')
   .option('-o, --output <directory>', 'Directorio de resultados', './results')
+  .option('-v, --verbose', 'Modo verbose: muestra detalles de llamados HTTP')
   .action(async (options) => {
     console.log(chalk.blue.bold('\n🧪 Ejecutando simulaciones...\n'));
+
+    // Enable verbose mode if requested
+    if (options.verbose) {
+      process.env.VERBOSE_HTTP = 'true';
+      console.log(chalk.yellow('🔍 Modo verbose activado - se mostrarán detalles de llamados HTTP\n'));
+    }
 
     const spinner = ora('Inicializando...').start();
 
@@ -52,12 +60,62 @@ program
       const reporter = new Reporter(options.output);
 
       spinner.text = 'Cargando tests...';
-      const tests = await runner.loadAllTests();
-      spinner.succeed(`${tests.length} tests cargados`);
+      let tests;
 
-      // Usar runAllTests que maneja multi-provider automáticamente
+      // Si se especifica un archivo, cargar solo ese test
+      if (options.file) {
+        const { resolve, isAbsolute, join, normalize } = await import('path');
+        const { existsSync } = await import('fs');
+
+        let filePath: string;
+
+        // Si es ruta absoluta, usar tal cual
+        if (isAbsolute(options.file)) {
+          filePath = options.file;
+        }
+        // Si el archivo existe tal cual (ruta relativa completa), usar directamente
+        else if (existsSync(options.file)) {
+          filePath = options.file;
+        }
+        // Si no existe, asumir que es solo el nombre y concatenar con directorio
+        else {
+          filePath = join(options.dir || './tests/scenarios', options.file);
+        }
+
+        const test = await runner.loadTest(filePath);
+        tests = [test];
+        spinner.succeed(`1 test cargado: ${test.name}`);
+      } else {
+        // Cargar todos los tests del directorio
+        tests = await runner.loadAllTests();
+        spinner.succeed(`${tests.length} tests cargados`);
+      }
+
+      // Ejecutar tests con multi-provider
       console.log(chalk.cyan('\nEjecutando simulaciones con multi-provider:\n'));
-      const allResults = await runner.runAllTests();
+
+      // Agrupar por provider para eficiencia
+      const { ProviderFactory } = await import('./adapters/provider-factory.js');
+      const testsByProvider = new Map();
+
+      for (const test of tests) {
+        const providerType = ProviderFactory.determineProvider(test.provider);
+
+        if (!testsByProvider.has(providerType)) {
+          testsByProvider.set(providerType, []);
+        }
+
+        testsByProvider.get(providerType).push(test);
+      }
+
+      const allResults = [];
+
+      // Ejecutar tests de cada provider
+      for (const [providerType, providerTests] of testsByProvider) {
+        console.log(`\n=== Ejecutando ${providerTests.length} tests con ${providerType} ===`);
+        const results = await runner.runTestsWithProvider(providerType, providerTests);
+        allResults.push(...results);
+      }
 
       // Guardar resultados
       console.log(chalk.cyan('\n💾 Guardando resultados...\n'));

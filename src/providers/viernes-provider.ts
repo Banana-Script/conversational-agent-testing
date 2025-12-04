@@ -28,6 +28,7 @@ export class ViernesProvider extends BaseTestProvider {
   async executeTest(test: TestDefinition): Promise<TestResult> {
     this.validateTest(test);
 
+    console.log(`[Viernes] Starting test: ${test.name}`);
     const startTime = Date.now();
 
     try {
@@ -37,8 +38,8 @@ export class ViernesProvider extends BaseTestProvider {
       // Convert test to Viernes API format
       const request = this.adapter.convertTestDefinition(test, organizationId, agentId);
 
-      // Execute simulation
-      const response = await this.client.simulateConversation(
+      // Execute simulation with queue handling
+      const response = await this.client.simulateConversationWithQueue(
         request,
         (status) => console.log(`[Viernes] ${status}`)
       );
@@ -49,6 +50,7 @@ export class ViernesProvider extends BaseTestProvider {
       const result = this.adapter.convertToTestResult(response, test);
       result.execution_time_ms = executionTime;
 
+      console.log(`[Viernes] Completed test: ${test.name} (${executionTime}ms)`);
       return result;
     } catch (error: any) {
       const executionTime = Date.now() - startTime;
@@ -127,36 +129,44 @@ export class ViernesProvider extends BaseTestProvider {
   }
 
   /**
-   * Execute multiple tests sequentially
+   * Execute multiple tests with concurrency support
+   * Concurrency limit is controlled by the ViernesQueue (default: 3)
+   * Tests are processed in parallel up to the configured limit
+   * Uses Promise.allSettled to ensure one test failure doesn't affect others
    */
   async executeBatch(tests: TestDefinition[]): Promise<TestResult[]> {
-    const results: TestResult[] = [];
+    console.log(`[Viernes] Executing ${tests.length} tests with max 3 concurrent simulations`);
 
-    for (const test of tests) {
-      try {
-        const result = await this.executeTest(test);
-        results.push(result);
-      } catch (error: any) {
-        results.push({
-          test_name: test.name,
-          agent_id: test.agent_id,
-          timestamp: new Date().toISOString(),
-          success: false,
-          simulation_response: {
-            simulated_conversation: [],
-            analysis: {
-              evaluation_criteria_results: {},
-              data_collection_results: {},
-              call_success: false,
-              transcript_summary: `Error: ${error.message}`,
-            },
-          },
-          execution_time_ms: 0,
-        });
+    // Execute all tests concurrently - the queue will handle concurrency limits
+    const promises = tests.map((test) => this.executeTest(test));
+
+    // Use allSettled to ensure error isolation - one test failure won't affect others
+    const results = await Promise.allSettled(promises);
+
+    return results.map((result, idx) => {
+      if (result.status === 'fulfilled') {
+        return result.value;
       }
-    }
 
-    return results;
+      // Handle rejected promise - create error result
+      const error = result.reason;
+      return {
+        test_name: tests[idx].name,
+        agent_id: tests[idx].agent_id,
+        timestamp: new Date().toISOString(),
+        success: false,
+        simulation_response: {
+          simulated_conversation: [],
+          analysis: {
+            evaluation_criteria_results: {},
+            data_collection_results: {},
+            call_success: false,
+            transcript_summary: `Error: ${error instanceof Error ? error.message : String(error)}`,
+          },
+        },
+        execution_time_ms: 0,
+      };
+    });
   }
 
   /**

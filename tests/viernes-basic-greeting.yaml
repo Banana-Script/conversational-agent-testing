@@ -18,7 +18,7 @@ simulated_user:
     Be polite. Keep responses to 1 sentence.
   first_message: "Hola"
   language: "es"
-  llm: "gpt-4o-mini"
+  llm: "gpt-5-mini"
   temperature: 0.3
   max_tokens: 80
 

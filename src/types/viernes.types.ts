@@ -82,13 +82,57 @@ export interface ViernesAnalysis {
   agent_performance_score: number;
 }
 
+// Simulation Status Type
+export type ViernesSimulationStatus =
+  | 'pending'    // En cola, no iniciado
+  | 'running'    // En progreso
+  | 'completed'  // Finalizado exitosamente
+  | 'failed'     // Error durante ejecución
+  | 'error'      // Error de sistema
+  | 'timeout';   // Excedió límite de tiempo
+
+// Progress Tracking
+export interface ViernesSimulationProgress {
+  current_turn: number;
+  total_turns: number;
+  elapsed_seconds: number;
+}
+
+// Start Response (202 Accepted)
+export interface ViernesSimulationStartResponse {
+  simulation_id: string;
+  status: 'pending';
+  message: string;
+}
+
+// Status Polling Response
+export interface ViernesSimulationStatusResponse {
+  simulation_id: string;
+  status: ViernesSimulationStatus;
+  progress: ViernesSimulationProgress | null;
+  results: ViernesSimulationResponse | null;
+  error: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// Concurrency Error (429)
+export interface ViernesConcurrencyError {
+  error: 'concurrency_limit_exceeded';
+  message: string;
+  limits: {
+    global: string;
+    per_organization: string;
+  };
+}
+
 // Response
 export interface ViernesSimulationResponse {
   simulation_id: string;
   organization_id: number;
   agent_id: number;
   platform: string;
-  status: 'completed' | 'failed' | 'timeout';
+  status: ViernesSimulationStatus;
   duration_secs: number;
   transcript: ViernesTranscriptTurn[];
   analysis: ViernesAnalysis;

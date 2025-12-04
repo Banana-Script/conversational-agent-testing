@@ -187,6 +187,20 @@ export class TestRunner {
   }
 
   /**
+   * Ejecuta tests específicos con un provider específico
+   */
+  async runTestsWithProvider(providerType: ProviderType, tests: TestDefinition[]): Promise<TestResult[]> {
+    const provider = this.providers.get(providerType);
+
+    if (!provider) {
+      console.warn(`Provider "${providerType}" not available, skipping ${tests.length} tests`);
+      return [];
+    }
+
+    return provider.executeBatch(tests);
+  }
+
+  /**
    * Ejecuta un test usando simulación directa
    * @deprecated Usar runTest() para soporte multi-provider
    */

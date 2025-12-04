@@ -50,10 +50,28 @@ ELEVENLABS_AGENT_ID=your_agent_id
 Execute tests immediately using the simulation API:
 
 ```bash
+# Run all tests
 npm run simulate
+
+# Run a single test file
+npm run simulate -- -f tests/scenarios/happy-path-saludo-inicial.yaml
+
+# Run with verbose HTTP logging (debugging)
+npm run simulate -- --verbose
+
+# Combine options
+npm run simulate -- -f mytest.yaml --verbose
 ```
 
+**Options:**
+- `-d, --dir <directory>`: Test directory (default: `./tests/scenarios`)
+- `-f, --file <file>`: Execute a single test file
+- `-o, --output <directory>`: Results directory (default: `./results`)
+- `-v, --verbose`: Enable detailed HTTP request/response logging
+
 ✨ **When to use**: Rapid development, prompt iteration, ad-hoc testing
+
+📖 **Verbose Mode**: See [VERBOSE_MODE.md](./VERBOSE_MODE.md) for detailed debugging guide
 
 ### 2. Create Persistent Tests (`create`)
 

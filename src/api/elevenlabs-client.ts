@@ -57,6 +57,91 @@ export class ElevenLabsClient {
         );
       },
     });
+
+    // Add verbose logging interceptors
+    this.setupVerboseLogging();
+  }
+
+  /**
+   * Setup verbose logging interceptors for HTTP requests/responses
+   */
+  private setupVerboseLogging(): void {
+    const isVerbose = process.env.VERBOSE_HTTP === 'true';
+
+    if (!isVerbose) {
+      return;
+    }
+
+    // Request interceptor
+    this.axiosInstance.interceptors.request.use(
+      (config) => {
+        console.log('\n' + '='.repeat(80));
+        console.log('📤 HTTP REQUEST [ElevenLabs]');
+        console.log('='.repeat(80));
+        console.log(`Method: ${config.method?.toUpperCase()}`);
+        console.log(`URL: ${config.baseURL}${config.url}`);
+        console.log(`Headers:`, JSON.stringify(config.headers, null, 2));
+
+        if (config.data) {
+          console.log(`Body:`, JSON.stringify(config.data, null, 2));
+        }
+
+        console.log('='.repeat(80) + '\n');
+        return config;
+      },
+      (error) => {
+        console.error('❌ REQUEST ERROR:', error);
+        return Promise.reject(error);
+      }
+    );
+
+    // Response interceptor
+    this.axiosInstance.interceptors.response.use(
+      (response) => {
+        console.log('\n' + '='.repeat(80));
+        console.log('📥 HTTP RESPONSE [ElevenLabs]');
+        console.log('='.repeat(80));
+        console.log(`Status: ${response.status} ${response.statusText}`);
+        console.log(`URL: ${response.config.baseURL}${response.config.url}`);
+        console.log(`Headers:`, JSON.stringify(response.headers, null, 2));
+
+        if (response.data) {
+          // Truncate large responses
+          const dataStr = JSON.stringify(response.data, null, 2);
+          if (dataStr.length > 5000) {
+            console.log(`Body (truncated):`, dataStr.substring(0, 5000) + '\n... (truncated)');
+          } else {
+            console.log(`Body:`, dataStr);
+          }
+        }
+
+        console.log('='.repeat(80) + '\n');
+        return response;
+      },
+      (error) => {
+        console.log('\n' + '='.repeat(80));
+        console.log('❌ HTTP ERROR RESPONSE [ElevenLabs]');
+        console.log('='.repeat(80));
+
+        if (error.response) {
+          console.log(`Status: ${error.response.status} ${error.response.statusText}`);
+          console.log(`URL: ${error.config?.baseURL}${error.config?.url}`);
+          console.log(`Headers:`, JSON.stringify(error.response.headers, null, 2));
+
+          if (error.response.data) {
+            console.log(`Error Body:`, JSON.stringify(error.response.data, null, 2));
+          }
+        } else if (error.request) {
+          console.log('No response received');
+          console.log(`Request:`, error.request);
+        } else {
+          console.log(`Error:`, error.message);
+        }
+
+        console.log('='.repeat(80) + '\n');
+        return Promise.reject(error);
+      }
+    );
   }
 
   /**

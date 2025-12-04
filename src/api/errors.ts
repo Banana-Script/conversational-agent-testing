@@ -124,4 +124,41 @@ export class ViernesAPIError extends Error {
     // Solo errores 5xx son retryables
     return this.statusCode >= 500 && this.statusCode < 600;
   }
+
+  /**
+   * Check if error is a concurrency error (429)
+   */
+  isConcurrencyError(): boolean {
+    return this.statusCode === 429;
+  }
+
+  /**
+   * Check if error is simulation not found (404)
+   */
+  isSimulationNotFound(): boolean {
+    return this.statusCode === 404;
+  }
+
+  /**
+   * Check if error is timeout (408, 504)
+   */
+  isTimeout(): boolean {
+    return this.statusCode === 408 || this.statusCode === 504;
+  }
+
+  /**
+   * Get user-friendly error message
+   */
+  getUserMessage(): string {
+    if (this.isConcurrencyError()) {
+      return 'Too many active simulations. Waiting in queue...';
+    }
+    if (this.isSimulationNotFound()) {
+      return 'Simulation not found or expired (results expire after 1 hour).';
+    }
+    if (this.isTimeout()) {
+      return 'Simulation timeout. The simulation may still be running on server.';
+    }
+    return this.message;
+  }
 }
