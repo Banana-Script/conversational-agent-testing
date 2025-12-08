@@ -15,6 +15,7 @@ import type {
   ViernesSimulationResponse,
   ViernesEvaluationCriterion,
   ViernesSimulatedUserConfig,
+  ViernesExpectedStructuredDataField,
 } from '../types/viernes.types.js';
 
 export class ViernesAdapter {
@@ -35,7 +36,20 @@ export class ViernesAdapter {
       conversation_timeout: test.viernes?.conversation_timeout || 300,
       webhook_timeout: test.viernes?.webhook_timeout || 120,
       evaluation_criteria: this.convertEvaluationCriteria(test.evaluation_criteria),
+      expected_structured_data: this.convertExpectedStructuredData(test.expected_structured_data),
     };
+  }
+
+  /**
+   * Convert expected structured data from YAML to API format (pass-through)
+   */
+  private convertExpectedStructuredData(
+    data?: TestDefinition['expected_structured_data']
+  ): ViernesExpectedStructuredDataField[] | undefined {
+    if (!data || data.length === 0) {
+      return undefined;
+    }
+    return data as ViernesExpectedStructuredDataField[];
   }
 
   /**
@@ -120,10 +134,18 @@ export class ViernesAdapter {
     if (response.status !== 'completed') return false;
     if (response.analysis.call_successful !== 'success') return false;
 
+    // Check evaluation criteria results
     const results = response.analysis.evaluation_criteria_results;
-    if (!results || results.length === 0) return true; // No criteria = success
+    if (results && results.length > 0) {
+      if (!results.every(r => r.success)) return false;
+    }
 
-    return results.every(r => r.success);
+    // Check structured data evaluation
+    if (response.analysis.structured_data_evaluation) {
+      if (!response.analysis.structured_data_evaluation.all_passed) return false;
+    }
+
+    return true;
   }
 
   /**
@@ -132,17 +154,24 @@ export class ViernesAdapter {
   private convertToSimulationResponse(
     response: ViernesSimulationResponse
   ): SimulationResponse {
+    const analysis: SimulationResponse['analysis'] = {
+      evaluation_criteria_results: this.convertEvaluationResults(
+        response.analysis.evaluation_criteria_results
+      ),
+      data_collection_results: {},
+      call_success: response.analysis.call_successful === 'success',
+      transcript_summary: response.analysis.transcript_summary ||
+        `Simulation ${response.status}. Performance score: ${response.analysis.agent_performance_score}`,
+    };
+
+    // Include structured data evaluation if present
+    if (response.analysis.structured_data_evaluation) {
+      analysis.structured_data_evaluation = response.analysis.structured_data_evaluation;
+    }
+
     return {
       simulated_conversation: this.convertTranscript(response.transcript),
-      analysis: {
-        evaluation_criteria_results: this.convertEvaluationResults(
-          response.analysis.evaluation_criteria_results
-        ),
-        data_collection_results: {},
-        call_success: response.analysis.call_successful === 'success',
-        transcript_summary: response.analysis.transcript_summary ||
-          `Simulation ${response.status}. Performance score: ${response.analysis.agent_performance_score}`,
-      },
+      analysis,
     };
   }
 

@@ -113,6 +113,86 @@ evaluation_criteria:
     prompt: "Did the agent provide relevant and helpful information to the customer?"
 
 # ============================================================================
+# DATOS ESTRUCTURADOS ESPERADOS (STRUCTURED DATA)
+# ============================================================================
+# Esta sección define los campos estructurados que el LLM debe capturar
+# durante la conversación. Estos campos vienen del JSON response del LLM
+# (por ejemplo: funnel, priority, category, sentiment, response_type).
+#
+# El evaluador verificará que los campos esperados fueron capturados con
+# los valores correctos según el modo de comparación (match_mode).
+#
+# Campos soportados por el sistema:
+#   - funnel: Clasificación del lead en el CRM
+#   - priority: Nivel de prioridad del caso
+#   - category: Categoría de la conversación
+#   - sentiment: Sentimiento detectado del usuario
+#   - response_type: Tipo de respuesta del agente
+#   - confidence: Score de confianza del AI
+#   - intent: Intención detectada del usuario
+
+expected_structured_data:
+  # Ejemplo 1: Match exacto (case-insensitive)
+  - field_name: "funnel"
+    expected_value: "CRM - B2C - PERDIDO"
+    match_mode: "exact"           # exact | contains | regex | any_of
+    capture_strategy: "last"      # first | last | all
+    required: true                # Si es requerido, el test falla si no se captura
+    description: "Lead debe ser clasificado como perdido B2C"
+
+  # Ejemplo 2: Match con cualquiera de varios valores
+  # - field_name: "priority"
+  #   expected_value: ["high", "critical", "urgent"]
+  #   match_mode: "any_of"
+  #   capture_strategy: "last"
+  #   required: false
+  #   description: "Prioridad debe ser alta, crítica o urgente"
+
+  # Ejemplo 3: Match parcial (contains)
+  # - field_name: "category"
+  #   expected_value: "sales"
+  #   match_mode: "contains"
+  #   capture_strategy: "first"
+  #   required: true
+  #   description: "Categoría debe contener 'sales'"
+
+  # Ejemplo 4: Match con regex
+  # - field_name: "funnel"
+  #   expected_value: "CRM.*PERDIDO"
+  #   match_mode: "regex"
+  #   capture_strategy: "last"
+  #   required: true
+  #   description: "Funnel debe matchear patrón de lead perdido"
+
+# ============================================================================
+# MATCH MODES DISPONIBLES
+# ============================================================================
+#
+# exact:    Comparación exacta (case-insensitive)
+#           expected: "high" → captured: "HIGH" ✓
+#           expected: "high" → captured: "medium" ✗
+#
+# contains: El valor capturado debe contener el valor esperado
+#           expected: "sales" → captured: "B2C - sales - lead" ✓
+#           expected: "sales" → captured: "support" ✗
+#
+# regex:    El valor esperado es un patrón regex (case-insensitive)
+#           expected: "CRM.*LOST" → captured: "CRM - B2C - LOST" ✓
+#           expected: "^ERROR" → captured: "ERROR: timeout" ✓
+#
+# any_of:   El valor capturado debe coincidir con alguno de la lista
+#           expected: ["high", "critical"] → captured: "critical" ✓
+#           expected: ["high", "critical"] → captured: "low" ✗
+#
+# ============================================================================
+# CAPTURE STRATEGIES
+# ============================================================================
+#
+# first:    Usa el primer valor capturado en la conversación
+# last:     Usa el último valor capturado (default, recomendado)
+# all:      Verifica todos los valores capturados, pasa si ALGUNO coincide
+#
+# ============================================================================
 # GUÍA DE USO
 # ============================================================================
 #

@@ -26,6 +26,16 @@ export interface ViernesEvaluationCriterion {
   evaluation_prompt: string;
 }
 
+// Expected Structured Data Field (Request)
+export interface ViernesExpectedStructuredDataField {
+  field_name: string;
+  expected_value: string | string[];
+  match_mode?: 'exact' | 'contains' | 'regex' | 'any_of';
+  capture_strategy?: 'first' | 'last' | 'all';
+  required?: boolean;
+  description?: string;
+}
+
 // Request
 export interface ViernesSimulationRequest {
   organization_id: number;
@@ -36,6 +46,7 @@ export interface ViernesSimulationRequest {
   conversation_timeout?: number;
   webhook_timeout?: number;
   evaluation_criteria?: ViernesEvaluationCriterion[];
+  expected_structured_data?: ViernesExpectedStructuredDataField[];
 }
 
 // Transcript Turn
@@ -73,6 +84,29 @@ export interface ViernesQualityMetrics {
   tool_calls_count: number;
 }
 
+// Structured Data Field Result (Response)
+export interface ViernesFieldResult {
+  field_name: string;
+  expected_value: string | string[];
+  captured_value: string | null;
+  captured_from_turn: number | null;
+  match_mode: string;
+  success: boolean;
+  reason: string;
+}
+
+// Structured Data Evaluation (Response)
+export interface ViernesStructuredDataEvaluation {
+  total_fields: number;
+  passed_fields: number;
+  failed_fields: number;
+  missing_fields: number;
+  success_rate: number;
+  all_passed: boolean;
+  field_results: ViernesFieldResult[];
+  captured_data_summary: Record<string, Array<{ value: string; turn: number }>>;
+}
+
 // Analysis
 export interface ViernesAnalysis {
   call_successful: 'success' | 'failed';
@@ -80,6 +114,7 @@ export interface ViernesAnalysis {
   quality_metrics: ViernesQualityMetrics;
   evaluation_criteria_results: ViernesEvaluationResult[];
   agent_performance_score: number;
+  structured_data_evaluation?: ViernesStructuredDataEvaluation;
 }
 
 // Simulation Status Type

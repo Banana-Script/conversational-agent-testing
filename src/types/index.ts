@@ -62,12 +62,33 @@ export interface SimulationSpecification {
   new_turns_limit?: number;
 }
 
+// Structured Data Evaluation (from Viernes)
+export interface StructuredDataEvaluation {
+  total_fields: number;
+  passed_fields: number;
+  failed_fields: number;
+  missing_fields: number;
+  success_rate: number;
+  all_passed: boolean;
+  field_results: Array<{
+    field_name: string;
+    expected_value: string | string[];
+    captured_value: string | null;
+    captured_from_turn: number | null;
+    match_mode: string;
+    success: boolean;
+    reason: string;
+  }>;
+  captured_data_summary: Record<string, Array<{ value: string; turn: number }>>;
+}
+
 // Análisis de conversación simulada
 export interface SimulationAnalysis {
   evaluation_criteria_results: Record<string, EvaluationResult>; // Es un objeto, no array
   data_collection_results: Record<string, any>;
   call_success: boolean;
   transcript_summary: string;
+  structured_data_evaluation?: StructuredDataEvaluation;
 }
 
 // Respuesta de simulación
@@ -140,6 +161,16 @@ export interface TestDefinition {
     conversation_timeout?: number;  // Timeout total en segundos
     webhook_timeout?: number;       // Timeout por mensaje en segundos
   };
+
+  // Expected Structured Data (Viernes)
+  expected_structured_data?: Array<{
+    field_name: string;
+    expected_value: string | string[];
+    match_mode?: 'exact' | 'contains' | 'regex' | 'any_of';
+    capture_strategy?: 'first' | 'last' | 'all';
+    required?: boolean;
+    description?: string;
+  }>;
 }
 
 // Resultado de un test ejecutado
