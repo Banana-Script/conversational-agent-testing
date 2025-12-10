@@ -1,0 +1,70 @@
+name: "INFO-05: Programas Técnicos ETDH"
+description: "Valida información precisa sobre Técnico Laboral en Desarrollo de Software (ETDH): precio, duración, modalidad, diferencia con pregrado."
+
+agent_id: "125"
+provider: "viernes"
+
+viernes:
+  organization_id: 135
+  platform: "whatsapp"
+  max_turns: 5
+  conversation_timeout: 180
+  webhook_timeout: 60
+
+simulated_user:
+  prompt: |
+    Eres Kevin Ospina, 22 años, trabajador que quiere estudiar algo corto.
+
+    Tu objetivo: Trabajas y quieres estudiar algo relacionado con tecnología
+    pero que sea más corto que una carrera completa. Te interesa el técnico
+    en Desarrollo de Software.
+
+    Eres práctico y directo.
+
+    Estilo de comunicación:
+    - Responde en español colombiano informal
+    - Mantén respuestas CORTAS (10-15 palabras)
+    - Enfatiza que trabajas y necesitas algo corto
+
+    Datos a proporcionar:
+    - Si te preguntan nombre: "Kevin Ospina"
+    - Si te piden email: "kevin.ospina@gmail.com"
+    - Si preguntan por qué técnico: "trabajo y necesito algo más corto"
+
+    Comportamiento:
+    - Menciona que quieres algo más corto que carrera
+    - Pregunta por el técnico en Desarrollo de Software
+    - Pregunta cuánto dura
+    - Pregunta precio
+    - Pregunta diferencia con la Ingeniería
+
+  first_message: "Hola, trabajo y quiero estudiar. El técnico en Desarrollo de Software cuánto dura?"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 100
+
+evaluation_criteria:
+  - id: "program-identification"
+    name: "Identificación Correcta"
+    prompt: "¿María identificó correctamente el programa como 'Técnico Laboral como Auxiliar en Desarrollo de Software' o similar?"
+
+  - id: "price-accuracy"
+    name: "Precio Exacto"
+    prompt: "¿María proporcionó el precio exacto de $1,581,150?"
+
+  - id: "etdh-category"
+    name: "Categoría ETDH"
+    prompt: "¿María explicó que es un programa técnico laboral (ETDH), más corto que un pregrado?"
+
+  - id: "sede-correct"
+    name: "Sede Correcta"
+    prompt: "¿María indicó correctamente que está disponible en Medellín?"
+
+  - id: "modality-correct"
+    name: "Modalidad Correcta"
+    prompt: "¿María indicó correctamente que es modalidad presencial?"
+
+  - id: "differentiation"
+    name: "Diferenciación de Pregrado"
+    prompt: "Si el usuario preguntó, ¿María explicó la diferencia entre el técnico y la Ingeniería de Software (duración, nivel, enfoque)?"

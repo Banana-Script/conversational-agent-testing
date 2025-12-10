@@ -1,0 +1,69 @@
+# ============================================================================
+# TEST 11: Abandono en Medio del Flujo B2C
+# ============================================================================
+# Verifica que usuario que abandona DURANTE las preguntas de calificacion
+# B2C NO genera funnel B2C
+# ============================================================================
+
+name: "B2C Abandono Medio Flujo - Verificar NO funnel B2C"
+description: "Verifica que usuario que abandona durante preguntas B2C NO genera funnel B2C"
+
+agent_id: "126"
+provider: "viernes"
+
+viernes:
+  organization_id: 58
+  agent_id: 126
+  platform: "whatsapp"
+  max_turns: 8
+  conversation_timeout: 180
+  webhook_timeout: 60
+
+simulated_user:
+  prompt: |
+    Eres Andrea Torres, una persona que empieza interesada pero abandona rapidamente.
+    Responde en espanol, primero cooperativa y luego abandonando.
+
+    Cuando te pregunten por email: andrea.torres@mail.com
+    Cuando te pregunten nombre: Andrea Torres
+    Cuando pregunten si es empresa o persona natural: persona natural
+    Cuando pregunten si eres empleado o independiente: independiente
+
+    Si te preguntan sobre ingresos: como 5 millones
+
+    IMPORTANTE - Despues de responder 2-3 preguntas sobre calificacion B2C:
+    - En la siguiente pregunta responde: "Sabes que, ya no me interesa, gracias"
+    - Si siguen preguntando: "Ya me tengo que ir, adios"
+    - Abandona educadamente pero firmemente
+
+    Responde maximo 1-2 oraciones por mensaje.
+  first_message: "Hola, info de renting"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.5
+  max_tokens: 150
+
+evaluation_criteria:
+  - id: "no-b2c-funnel-on-abandon"
+    name: "Sin funnel B2C al abandonar"
+    prompt: "El agente NO genero un funnel B2C (PERDIDO, PROSPECTO CALIFICADO, etc.) cuando el usuario abandono?"
+
+  - id: "graceful-abandon-handling"
+    name: "Manejo elegante del abandono"
+    prompt: "El agente manejo el abandono de forma profesional sin forzar el flujo?"
+
+  - id: "no-partial-b2c-classification"
+    name: "Sin clasificacion B2C parcial"
+    prompt: "El agente NO intento clasificar al usuario en B2C basandose en informacion parcial?"
+
+  - id: "respectful-closure"
+    name: "Cierre respetuoso"
+    prompt: "El agente cerro la conversacion de forma respetuosa cuando el usuario quiso irse?"
+
+expected_structured_data:
+  - field_name: "funnel"
+    expected_value: "B2C"
+    match_mode: "contains"
+    capture_strategy: "last"
+    required: false
+    description: "El funnel NO debe contener B2C - test FALLA si genera cualquier funnel B2C al abandonar"

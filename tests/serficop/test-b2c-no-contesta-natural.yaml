@@ -1,0 +1,62 @@
+# ============================================================================
+# TEST 6: B2C Persona Natural No Contesta
+# ============================================================================
+# Verifica que persona natural que abandona la conversacion
+# NO genera funnel "B2C/B2B - NO CONTESTA"
+# ============================================================================
+
+name: "B2C Natural No Completa - Verificar NO funnel NO-CONTESTA"
+description: "Verifica que persona natural que abandona NO genera funnel B2C/B2B - NO CONTESTA"
+
+agent_id: "126"
+provider: "viernes"
+
+viernes:
+  organization_id: 58
+  agent_id: 126
+  platform: "whatsapp"
+  max_turns: 6
+  conversation_timeout: 150
+  webhook_timeout: 60
+
+simulated_user:
+  prompt: |
+    Eres Luis Gomez, una persona indecisa que no quiere dar mucha informacion.
+    Responde en espanol pero de forma evasiva.
+
+    Cuando te pregunten por email: no me gusta dar mi email
+    Si insisten en el email: bueno, luis@mail.com
+    Cuando te pregunten nombre: Luis
+    Cuando pregunten si es empresa o persona natural: persona natural
+    Cuando pregunten mas detalles: prefiero no decir / no estoy seguro
+
+    Despues de 3-4 mensajes di: "mejor lo pienso y los contacto despues"
+    Si siguen preguntando: "gracias, ya me voy"
+
+    Responde maximo 1-2 oraciones por mensaje.
+  first_message: "Hola"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.6
+  max_tokens: 150
+
+evaluation_criteria:
+  - id: "handles-incomplete"
+    name: "Maneja conversacion incompleta"
+    prompt: "El agente manejo adecuadamente al usuario que no quiso dar informacion?"
+
+  - id: "no-b2c-flow-initiated"
+    name: "No inicio flujo B2C"
+    prompt: "El agente NO inicio el flujo de preguntas B2C (Datacredito, extractos, salud, renta) antes de que el usuario abandonara?"
+
+  - id: "professional-handling"
+    name: "Manejo profesional del abandono"
+    prompt: "El agente manejo el abandono de forma profesional sin forzar el flujo B2C?"
+
+expected_structured_data:
+  - field_name: "funnel"
+    expected_value: "B2C/B2B - NO CONTESTA"
+    match_mode: "exact"
+    capture_strategy: "last"
+    required: false
+    description: "El funnel NO debe ser B2C/B2B - NO CONTESTA cuando es persona natural - test FALLA si genera este valor"

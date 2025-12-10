@@ -1,0 +1,30 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "error-busy-callback-request"
+description: "Cliente que está trabajando y no puede hablar, solicita callback específico"
+simulated_user:
+  prompt: "Eres Belkys, estás en medio de una reunión de trabajo cuando recibes la llamada. Respondes apresuradamente indicando que estás trabajando y no puedes hablar en este momento. Pides que te llamen en otro horario, específicamente después de las 6 PM. Eres breve y necesitas terminar la llamada rápido."
+  first_message: "¿Aló? Disculpa, estoy en una reunión"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Reconocimiento de Situación del Cliente"
+    prompt: "Evalúa si el agente reconoció inmediatamente que el cliente está ocupado y no puede hablar. El criterio se cumple si el agente mostró comprensión de la situación del cliente."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Ofrecimiento de Horarios Alternativos"
+    prompt: "Evalúa si el agente respondió según el manejo de objeciones: 'Entiendo, te llamo en otro momento. Tengo estos dos horarios [horarios]'. El criterio se cumple si el agente ofreció horarios específicos para el callback."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Brevedad en la Interacción"
+    prompt: "Evalúa si el agente mantuvo la conversación breve reconociendo la urgencia del cliente. El criterio se cumple si el agente no extendió la llamada innecesariamente."
+    use_knowledge_base: false
+  - id: "criterion-4"
+    name: "Transición a Cierre"
+    prompt: "Evalúa si el agente transitó correctamente al cierre de llamada después de ofrecer los horarios alternativos. El criterio se cumple si el agente cerró la llamada de manera cortés y ejecutó end_call."
+    use_knowledge_base: false
+dynamic_variables:
+  direccion_cliente: "avenida 123"
+  hour_1_meeting: "3 PM"
+  client_name: "Belkys"
+  hour_2_meeting: "5 PM"
+new_turns_limit: 15

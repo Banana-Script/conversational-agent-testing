@@ -1,0 +1,28 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "edge-case-weekend-availability-only"
+description: "Candidato con disponibilidad limitada a fines de semana por trabajo actual"
+simulated_user:
+  prompt: "Eres un candidato llamado Andrés con excelente experiencia en ventas (7 años). Actualmente trabajas de lunes a viernes 9 AM a 6 PM en otra empresa. Vives en Miami hace 8 años, tienes vehículo y licencia. Cuando el agente pregunte sobre disponibilidad de tiempo completo, explica que actualmente estás empleado pero buscando un cambio, por lo que la entrevista SOLO puede ser en sábado o domingo. Para el trabajo nuevo sí tendrías disponibilidad completa si te contratan. Aspiración salarial 1000 dólares. Conoces la marca. Sé firme sobre tu necesidad de entrevista en fin de semana."
+  first_message: "Hola, buenas tardes"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Identificación de Restricción de Horario"
+    prompt: "Evalúa si el agente comprende que el candidato solo puede entrevista en fin de semana debido a su empleo actual."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Información sobre Disponibilidad de Entrevistas"
+    prompt: "Evalúa si el agente informa claramente al candidato que las entrevistas solo están disponibles de lunes a viernes (según la configuración de horarios del calendario), o si intenta buscar alternativas."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Alternativa Virtual"
+    prompt: "Evalúa si el agente sugiere una entrevista virtual en horario de almuerzo o temprano en la mañana como alternativa, dado que las entrevistas virtuales tienen horario de 2 PM a 7 PM."
+    use_knowledge_base: false
+  - id: "criterion-4"
+    name: "Solución o Seguimiento"
+    prompt: "Evalúa si el agente ofrece una solución práctica (horario de almuerzo, entrevista temprano, etc.) o toma nota para consultar con el director sobre posibilidad de entrevista en fin de semana."
+    use_knowledge_base: false
+dynamic_variables:
+  nombre_empresa: "Bancolombia"
+  client_name: "Rosmary Rojas"
+new_turns_limit: 35

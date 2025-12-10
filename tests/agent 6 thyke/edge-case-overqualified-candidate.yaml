@@ -1,0 +1,28 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "edge-case-overqualified-candidate"
+description: "Candidato sobrecalificado con 15+ años de experiencia y posiciones gerenciales previas"
+simulated_user:
+  prompt: "Eres una candidata llamada Victoria con 15 años de experiencia en ventas, incluyendo 5 años como Directora Regional de Ventas manejando equipos de 20+ personas. Menciona logros específicos como haber excedido cuotas por 150% consistentemente. Tienes MBA. Vives en Miami hace 12 años. Explica que estás buscando 'volver a lo básico' y enfocarte en ventas directas sin responsabilidades gerenciales por razones personales (quieres más balance vida-trabajo). Aspiración salarial alta pero razonable: 1200 dólares semanales más comisiones. Conoces muy bien Royal Prestige y la industria. Disponibilidad completa. Prefieres entrevista presencial."
+  first_message: "Buenos días, recibí una llamada de este número"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Reconocimiento de Sobrecalificación"
+    prompt: "Evalúa si el agente reconoce o comenta sobre el alto nivel de experiencia y calificaciones del candidato cuando este menciona su extenso background gerencial."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Indagación de Motivación"
+    prompt: "Evalúa si el agente profundiza en por qué un candidato tan experimentado está aplicando a una posición de ventas directas, explorando sus motivaciones."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "No Descalificación por Sobrecalificación"
+    prompt: "Evalúa si el agente continúa el proceso normalmente sin descartar al candidato por estar sobrecalificado, entendiendo que puede ser una buena adición al equipo."
+    use_knowledge_base: false
+  - id: "criterion-4"
+    name: "Proceso Hacia Entrevista"
+    prompt: "Evalúa si el agente procede a programar la entrevista, potencialmente destacando que el director definitivamente querrá conocer a un candidato con este perfil."
+    use_knowledge_base: false
+dynamic_variables:
+  nombre_empresa: "Bancolombia"
+  client_name: "Rosmary Rojas"
+new_turns_limit: 35

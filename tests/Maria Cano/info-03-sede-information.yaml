@@ -1,0 +1,71 @@
+name: "INFO-03: Información Específica por Sede"
+description: "Valida información precisa sobre Fonoaudiología en sede Popayán: precio, duración, modalidad. Usuario específicamente pregunta por Popayán."
+
+agent_id: "125"
+provider: "viernes"
+
+viernes:
+  organization_id: 135
+  platform: "whatsapp"
+  max_turns: 5
+  conversation_timeout: 180
+  webhook_timeout: 60
+
+simulated_user:
+  prompt: |
+    Eres Mariana Castillo, 19 años, de Popayán.
+
+    Tu objetivo: Vives en Popayán y quieres estudiar Fonoaudiología en tu ciudad.
+    No quieres mudarte. Necesitas saber si FUMC tiene esa carrera en Popayán
+    y cuánto cuesta ahí.
+
+    Eres directa sobre tu ubicación.
+
+    Estilo de comunicación:
+    - Responde en español colombiano informal
+    - Mantén respuestas CORTAS (10-15 palabras)
+    - Enfatiza que quieres estudiar en Popayán específicamente
+
+    Datos a proporcionar:
+    - Si te preguntan nombre: "Mariana Castillo"
+    - Si te piden email: "mariana.castillo@gmail.com"
+    - Si preguntan dónde vives: "Popayán"
+    - Si preguntan si puedes ir a otra sede: "No, necesito quedarme en Popayán"
+
+    Comportamiento:
+    - Menciona Popayán desde el primer mensaje
+    - Pregunta por disponibilidad en Popayán
+    - Pregunta por el precio específico en Popayán
+    - Si está disponible, pregunta por duración
+    - Muestra interés si confirman disponibilidad
+
+  first_message: "Hola, vivo en Popayán. Fonoaudiología está disponible acá?"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 100
+
+evaluation_criteria:
+  - id: "availability-popayan"
+    name: "Disponibilidad en Popayán"
+    prompt: "¿María confirmó correctamente que Fonoaudiología está disponible en Popayán?"
+
+  - id: "price-popayan-accuracy"
+    name: "Precio Popayán Exacto"
+    prompt: "¿María proporcionó el precio exacto de Fonoaudiología en Popayán ($5,283,716)?"
+
+  - id: "duration-accuracy"
+    name: "Duración Correcta"
+    prompt: "Si mencionó duración, ¿indicó correctamente que es un programa de 8 semestres?"
+
+  - id: "modality-correct"
+    name: "Modalidad Correcta"
+    prompt: "¿María indicó correctamente que es modalidad presencial en Popayán?"
+
+  - id: "no-other-sedes-confusion"
+    name: "Sin Confusión de Sedes"
+    prompt: "¿María evitó confundir precios o información de otras sedes (Medellín, Cali, Neiva)?"
+
+  - id: "info-contextual"
+    name: "Información Contextual"
+    prompt: "¿María adaptó la información al contexto específico de Popayán sin mencionar innecesariamente otras sedes?"

@@ -1,0 +1,26 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "happy-path-family-presence-confirmation"
+description: "Cliente que confirma que su familia estará presente para recibir el regalo y la encuesta familiar"
+simulated_user:
+  prompt: "Eres Belkys, estás muy interesada en recibir el regalo. Cuando el agente menciona la importancia de estar con la familia para la encuesta de bienestar familiar, confirmas que tu esposo y tú estarán presentes. Eres entusiasta y cooperativa. Aceptas el horario propuesto y confirmas todos los detalles."
+  first_message: "¿Aló?"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Mención de Presencia Familiar"
+    prompt: "Evalúa si el agente mencionó la importancia de estar con la familia durante la visita para realizar una encuesta familiar de bienestar. El criterio se cumple si el agente explicó que es un regalo familiar y que se hará una encuesta."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Confirmación de Cita Detallada"
+    prompt: "Evalúa si el agente confirmó la cita con fecha y hora específica, recordando la importancia de la presencia familiar. El criterio se cumple si el agente dio detalles completos de la cita incluyendo el recordatorio familiar."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Tono Entusiasta y Positivo"
+    prompt: "Evalúa si el agente mantuvo un tono cordial y entusiasta durante la conversación, especialmente al hablar sobre el regalo y la visita familiar. El criterio se cumple si el agente transmitió entusiasmo por la entrega del regalo."
+    use_knowledge_base: false
+dynamic_variables:
+  direccion_cliente: "avenida 123"
+  hour_1_meeting: "3 PM"
+  client_name: "Belkys"
+  hour_2_meeting: "5 PM"
+new_turns_limit: 25

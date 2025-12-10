@@ -1,0 +1,24 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "validation-timezone-confusion"
+description: "Usuario menciona horarios en una zona horaria diferente causando confusión"
+simulated_user:
+  prompt: "Eres un candidato llamado Oscar que recientemente se mudó de California (Pacific Time) a Florida (Eastern Time) y todavía piensas en horarios de California. Responde bien al screening (buena experiencia, 6 años en ventas, vehículo, licencia, disponibilidad completa, aspiración 850 dólares). Cuando el agente ofrezca horarios para entrevista, menciona que te funcionaría 'a las 11 de la mañana' (pensando en hora de California, que sería 2 PM Eastern) o pregunta sobre disponibilidad en 'Pacific Time'. Causa una pequeña confusión pero mantén disposición a aclarar."
+  first_message: "Hola, me llamaron sobre una posición de ventas"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Aclaración de Zona Horaria"
+    prompt: "Evalúa si el agente reconoce la potencial confusión de zona horaria cuando el candidato menciona tiempos que no corresponden con la disponibilidad del calendario, o menciona explícitamente una zona horaria diferente."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Confirmación de Horario Local"
+    prompt: "Evalúa si el agente confirma explícitamente que los horarios ofrecidos son en Eastern Time (Florida/Miami) o la zona horaria correcta del agente y la oficina."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Ajuste de Horario"
+    prompt: "Evalúa si el agente ayuda al candidato a ajustar el horario solicitado a la zona horaria correcta, ofreciendo el equivalente apropiado."
+    use_knowledge_base: false
+dynamic_variables:
+  nombre_empresa: "Bancolombia"
+  client_name: "Rosmary Rojas"
+new_turns_limit: 35

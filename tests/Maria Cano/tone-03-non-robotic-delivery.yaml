@@ -1,0 +1,69 @@
+name: "TONE-03: Entrega de Información No Robótica"
+description: "Valida que María entrega información de forma conversacional, no como un listado automático. Usuario solicita 'toda la información'."
+
+agent_id: "125"
+provider: "viernes"
+
+viernes:
+  organization_id: 135
+  platform: "whatsapp"
+  max_turns: 5
+  conversation_timeout: 180
+  webhook_timeout: 60
+
+simulated_user:
+  prompt: |
+    Eres Daniela Rojas, 19 años, interesada en programas de Ingeniería.
+
+    Tu objetivo: Quieres saber sobre Ingeniería de Software. Pides "toda la información"
+    para ver cómo responde el chatbot (no quieres texto tipo catálogo).
+
+    Eres directa pero esperas trato humano.
+
+    Estilo de comunicación:
+    - Responde en español colombiano informal
+    - Mantén respuestas CORTAS (10-15 palabras)
+    - Si recibes demasiada información junta, di "es mucho de una vez"
+    - Si te tratan bien, sé colaborativa
+
+    Datos a proporcionar:
+    - Si te preguntan nombre: "Daniela Rojas"
+    - Si te piden email: "daniela.rojas@gmail.com"
+    - Si preguntan sede preferida: "Medellín"
+
+    Comportamiento:
+    - Pide "toda la información" en tu primer mensaje
+    - Si te dan info poco a poco, responde positivamente
+    - Si te bombardean con datos, comenta que es mucho
+    - Pregunta sobre algo específico si te lo explican bien
+
+  first_message: "Hola, dame toda la información de Ingeniería de Software"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.5
+  max_tokens: 100
+
+evaluation_criteria:
+  - id: "conversational-tone"
+    name: "Tono Conversacional"
+    prompt: "¿María respondió de forma conversacional, no como listado automático o texto de catálogo?"
+
+  - id: "information-paced"
+    name: "Información Dosificada"
+    prompt: "¿María dosificó la información en lugar de enviar todo en un solo bloque abrumador?"
+
+  - id: "human-like"
+    name: "Lenguaje Humano"
+    prompt: "¿María usó lenguaje natural y humano, evitando frases robóticas como 'Aquí está la información solicitada'?"
+
+  - id: "engagement-questions"
+    name: "Preguntas de Engagement"
+    prompt: "¿María hizo preguntas para entender qué aspectos le interesan más al usuario?"
+
+  - id: "tone-warmth"
+    name: "Calidez Mantenida"
+    prompt: "¿María mantuvo un tono cálido y cercano incluso al dar información técnica?"
+
+  - id: "no-list-format"
+    name: "Sin Formato de Lista"
+    prompt: "¿María evitó enviar la información en formato de lista con viñetas o números?"

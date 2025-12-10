@@ -1,0 +1,30 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "edge-case-no-address-later-callback"
+description: "Cliente no tiene la dirección disponible en el momento y solicita ser contactado después"
+simulated_user:
+  prompt: "Eres Belkys, estás interesada en el regalo pero cuando te preguntan por la dirección, indicas que no la tienes a la mano porque te acabas de mudar y no recuerdas el número exacto. Solicitas que te llamen más tarde o al día siguiente cuando tengas la información disponible. Eres educada pero firme en que necesitas tiempo para conseguir esos datos."
+  first_message: "¿Aló?"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Manejo de Dirección No Disponible"
+    prompt: "Evalúa si el agente manejó correctamente la situación cuando el cliente no tiene la dirección disponible. El criterio se cumple si el agente no insistió agresivamente y ofreció una alternativa como llamar después."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Opción de Contacto Posterior"
+    prompt: "Evalúa si el agente mencionó que pueden agendar la visita y llamar nuevamente para confirmar la dirección, como se indica en el prompt. El criterio se cumple si el agente ofreció esta posibilidad."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Intención de Seguimiento"
+    prompt: "Evalúa si el agente mostró disposición para hacer seguimiento posterior o programar un callback. El criterio se cumple si el agente no cerró la llamada abruptamente y mantuvo el interés del cliente."
+    use_knowledge_base: false
+  - id: "criterion-4"
+    name: "Agendamiento Preliminar"
+    prompt: "Evalúa si el agente intentó agendar un horario preliminar aunque la dirección no esté confirmada, o si estableció un momento para el callback. El criterio se cumple si hay algún tipo de compromiso temporal establecido."
+    use_knowledge_base: false
+dynamic_variables:
+  direccion_cliente: "avenida 123"
+  hour_1_meeting: "3 PM"
+  client_name: "Belkys"
+  hour_2_meeting: "5 PM"
+new_turns_limit: 25

@@ -1,0 +1,28 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "interruption-needs-to-leave"
+description: "Usuario necesita terminar la llamada abruptamente en medio del proceso"
+simulated_user:
+  prompt: "Eres una candidata llamada Diana que está respondiendo las preguntas iniciales cuando de repente (después de la pregunta 4 o 5) necesitas irte urgentemente. Menciona: 'Disculpa, tengo una emergencia, mi hijo se lastimó en la escuela y me están llamando. ¿Podemos continuar esto más tarde?' Sé genuinamente apresurada pero educada. Si el agente ofrece programar una llamada de seguimiento, acepta rápidamente y proporciona una hora que te funcione (mañana en la tarde). Mantén urgencia en tu tono."
+  first_message: "Hola, sí, apliqué para ventas"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Reconocimiento de Emergencia"
+    prompt: "Evalúa si el agente reconoce inmediatamente la situación de emergencia del candidato y no intenta continuar con más preguntas cuando la persona menciona la emergencia."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Oferta de Recontacto"
+    prompt: "Evalúa si el agente ofrece de manera proactiva y rápida la opción de volver a llamar más tarde o programar un momento más conveniente."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Eficiencia en el Cierre"
+    prompt: "Evalúa si el agente cierra la conversación rápidamente (en 1-2 turnos después de la emergencia), respetando la urgencia de la situación sin extender innecesariamente la llamada."
+    use_knowledge_base: false
+  - id: "criterion-4"
+    name: "Empatía y Profesionalismo"
+    prompt: "Evalúa si el agente muestra empatía hacia la situación de emergencia con frases como 'no te preocupes', 'espero que todo esté bien', manteniendo profesionalismo."
+    use_knowledge_base: false
+dynamic_variables:
+  nombre_empresa: "Bancolombia"
+  client_name: "Rosmary Rojas"
+new_turns_limit: 20

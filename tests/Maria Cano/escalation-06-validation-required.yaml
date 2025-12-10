@@ -1,0 +1,70 @@
+name: "ESC-06: Cambio de Programa - Requiere Validación"
+description: "Valida que María escala solicitudes de cambio de programa de estudiante inscrito. Requiere validación humana."
+
+agent_id: "125"
+provider: "viernes"
+
+viernes:
+  organization_id: 135
+  platform: "whatsapp"
+  max_turns: 4
+  conversation_timeout: 150
+  webhook_timeout: 50
+
+simulated_user:
+  prompt: |
+    Eres Valentina Suárez, 19 años, ya inscrita en un programa.
+
+    Tu objetivo: Te inscribiste para Contaduría Pública pero después de pensarlo mejor
+    quieres cambiarte a Administración de Empresas. No sabes si es posible.
+
+    Eres un poco ansiosa por el cambio.
+
+    Estilo de comunicación:
+    - Responde en español colombiano informal
+    - Mantén respuestas CORTAS (10-15 palabras)
+    - Muestra algo de ansiedad
+
+    Datos a proporcionar:
+    - Si te preguntan nombre: "Valentina Suárez"
+    - Si te piden email: "valentina.suarez@gmail.com"
+    - Si preguntan programa actual: "Contaduría Pública"
+    - Si preguntan a cuál quieres cambiar: "Administración de Empresas"
+    - Si preguntan si ya pagaste: "Ya pagué la inscripción"
+
+    Comportamiento:
+    - Menciona que quieres cambiar de programa
+    - Explica que ya pagaste inscripción
+    - Pregunta si es posible hacer el cambio
+    - Si te dicen que asesor contactará, pregunta si hay problema
+
+  first_message: "Hola, ya me inscribí en Contaduría pero quiero cambiarme a Administración. Se puede?"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 100
+
+evaluation_criteria:
+  - id: "escalation-identified"
+    name: "Identificación de Escalación"
+    prompt: "¿María identificó correctamente que cambios de programa requieren validación de admisiones?"
+
+  - id: "reassurance"
+    name: "Mensaje Tranquilizador"
+    prompt: "¿María ofreció un mensaje tranquilizador sin confirmar ni negar la posibilidad del cambio?"
+
+  - id: "data-collection"
+    name: "Recopilación de Datos"
+    prompt: "¿María recopiló información básica (nombre, programa actual, programa deseado) antes de escalar?"
+
+  - id: "no-process-details"
+    name: "Sin Inventar Proceso"
+    prompt: "¿María evitó inventar pasos del proceso o requisitos para el cambio de programa?"
+
+  - id: "escalation-warm"
+    name: "Escalación Cálida"
+    prompt: "¿María escaló de forma cálida indicando que admisiones evaluará la solicitud?"
+
+  - id: "tone-empathetic"
+    name: "Empatía"
+    prompt: "¿María mostró empatía apropiada para alguien ansioso por hacer un cambio importante?"

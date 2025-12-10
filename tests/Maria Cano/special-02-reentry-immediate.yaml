@@ -1,0 +1,75 @@
+name: "SPECIAL-02: Reingreso con Escalación Inmediata"
+description: "Valida que María identifica reingreso y escala INMEDIATAMENTE sin hacer preguntas de validación extensas. Caso crítico de escalación directa."
+
+agent_id: "125"
+provider: "viernes"
+
+viernes:
+  organization_id: 135
+  platform: "whatsapp"
+  max_turns: 3
+  conversation_timeout: 120
+  webhook_timeout: 45
+
+simulated_user:
+  prompt: |
+    Eres Diego Morales, 24 años, ex-estudiante de FUMC.
+
+    Tu objetivo: Fuiste estudiante de Ingeniería de Software en FUMC.
+    Estudiaste hasta 6to semestre hace 1 año y medio y lo dejaste por motivos
+    económicos. Ahora puedes volver y quieres reingreso.
+
+    Eres directo sobre tu situación.
+
+    Estilo de comunicación:
+    - Responde en español colombiano informal
+    - Mantén respuestas MUY CORTAS (8-12 palabras)
+    - Usa la palabra "reingreso" claramente
+
+    Datos a proporcionar:
+    - Si te preguntan nombre: "Diego Morales"
+    - Si te piden email: "diego.morales@gmail.com"
+    - Si preguntan programa: "Ingeniería de Software"
+    - Si preguntan hasta dónde estudiaste: "6to semestre"
+    - Si preguntan cuándo dejaste: "hace año y medio"
+
+    Comportamiento:
+    - Menciona "reingreso" en tu primer o segundo mensaje
+    - Si María hace muchas preguntas, recuérdale que necesitas reingreso
+    - Si María escala rápido, agradece
+    - Sé cooperativo si piden datos básicos (nombre, email)
+
+  first_message: "Hola, fui estudiante de Ingeniería acá. Quiero solicitar reingreso"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 90
+
+evaluation_criteria:
+  - id: "reentry-identified"
+    name: "Identificación Inmediata de Reingreso"
+    prompt: "¿María identificó inmediatamente en el primer o segundo mensaje que es un caso de reingreso?"
+
+  - id: "immediate-escalation"
+    name: "Escalación Inmediata"
+    prompt: "¿María escaló INMEDIATAMENTE a admisiones sin hacer preguntas de validación extensas?"
+
+  - id: "minimal-questions"
+    name: "Preguntas Mínimas"
+    prompt: "¿María limitó sus preguntas a datos básicos de contacto (nombre, email) sin preguntar detalles del proceso anterior?"
+
+  - id: "no-process-details"
+    name: "Sin Preguntar Detalles de Proceso"
+    prompt: "¿María evitó preguntar detalles como semestre cursado, motivo de retiro, tiempo fuera, promedio, etc.?"
+
+  - id: "tone-motivational"
+    name: "Tono Motivador"
+    prompt: "¿María mantuvo un tono motivador y empático apropiado para alguien que quiere regresar?"
+
+  - id: "escalation-message"
+    name: "Mensaje de Escalación Claro"
+    prompt: "¿María indicó claramente que admisiones o registro contactará para procesar el reingreso?"
+
+  - id: "tone-welcoming"
+    name: "Tono de Bienvenida"
+    prompt: "¿María dio un tono de bienvenida de regreso apropiado para ex-estudiante?"

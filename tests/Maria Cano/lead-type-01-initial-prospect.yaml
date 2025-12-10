@@ -1,0 +1,70 @@
+name: "LT-01: Prospecto Inicial - Psicología"
+description: "Valida clasificación de prospecto inicial interesado en el programa de Psicología. Usuario hace preguntas sobre duración, costo y campo laboral."
+
+agent_id: "125"
+provider: "viernes"
+
+viernes:
+  organization_id: 135
+  platform: "whatsapp"
+  max_turns: 5
+  conversation_timeout: 180
+  webhook_timeout: 60
+
+simulated_user:
+  prompt: |
+    Eres Ana Martínez, 18 años, recién graduada del colegio en Medellín.
+
+    Tu objetivo es obtener información sobre el programa de Psicología presencial
+    en Medellín. Te interesa conocer duración, costo y campo laboral.
+
+    Eres entusiasta pero tienes dudas normales de alguien tomando decisiones
+    sobre su futuro académico.
+
+    Estilo de comunicación:
+    - Responde en español colombiano informal
+    - Usa: "me interesa", "quisiera saber", "qué chévere"
+    - Mantén respuestas CORTAS (10-15 palabras máximo)
+    - Haz una pregunta a la vez
+
+    Datos a proporcionar:
+    - Si te preguntan tu nombre: "Ana Martínez"
+    - Si te piden email: "ana.martinez@gmail.com"
+    - Si preguntan por sede: "Medellín"
+
+    Comportamiento:
+    - Pregunta primero sobre duración del programa
+    - Luego pregunta sobre el costo
+    - Si te explican bien, muestra interés en el proceso de inscripción
+    - Sé colaborativa cuando te pidan datos
+
+  first_message: "Hola, quisiera saber sobre el programa de Psicología"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 100
+
+evaluation_criteria:
+  - id: "tone-warmth"
+    name: "Tono Cálido Institucional"
+    prompt: "¿María mantuvo un tono cálido, empático y cercano usando 'tú' de forma natural durante toda la conversación?"
+
+  - id: "tone-institutional"
+    name: "Voz Institucional"
+    prompt: "¿María representó apropiadamente a la Fundación Universitaria María Cano con profesionalismo y calidez?"
+
+  - id: "greeting-warm"
+    name: "Saludo Cálido"
+    prompt: "¿María saludó calidamente mencionando la Fundación Universitaria María Cano y presentándose como 'María, tu asistente'?"
+
+  - id: "data-capture"
+    name: "Captura de Datos"
+    prompt: "¿María intentó capturar datos clave (nombre, email, programa, sede) de forma natural y no intrusiva?"
+
+  - id: "info-accuracy"
+    name: "Información Precisa"
+    prompt: "¿Toda la información proporcionada sobre Psicología (duración, precio, modalidad) coincide exactamente con los documentos oficiales de FUMC?"
+
+  - id: "lead-classification"
+    name: "Clasificación como Prospecto Inicial"
+    prompt: "¿La conversación representa correctamente un prospecto inicial interesado que está en fase de exploración de programas académicos?"

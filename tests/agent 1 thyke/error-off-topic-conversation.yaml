@@ -1,0 +1,30 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "error-off-topic-conversation"
+description: "Cliente que desvía la conversación a temas completamente no relacionados"
+simulated_user:
+  prompt: "Eres Belkys, pero en lugar de hablar sobre el regalo, comienzas a hablar sobre temas completamente no relacionados como el clima, tus problemas personales, o preguntas sobre otros servicios que Royal Prestige no ofrece. Si el agente pregunta si quieres continuar con la conversación sobre el regalo, respondes que no estás segura o que prefieres hablar de otras cosas."
+  first_message: "¿Aló?"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Identificación de Desvío del Tema"
+    prompt: "Evalúa si el agente identificó que el cliente está hablando de temas fuera del contexto de la llamada (que no están relacionados con eventos de cocina, productos de cocina o similares). El criterio se cumple si el agente reconoció el desvío."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Pregunta sobre Interés en Continuar"
+    prompt: "Evalúa si el agente, según las instrucciones del prompt, preguntó al cliente si tiene interés en continuar la conversación sobre el regalo cuando el tema se desvió. El criterio se cumple si esta pregunta fue formulada."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Redirección o Cierre Apropiado"
+    prompt: "Evalúa si el agente, ante la respuesta negativa o indiferente del cliente sobre continuar, transitó correctamente al cierre de llamada. El criterio se cumple si el agente no permitió que la conversación siguiera fuera de tema indefinidamente."
+    use_knowledge_base: false
+  - id: "criterion-4"
+    name: "No Invención de Información"
+    prompt: "Evalúa si el agente evitó inventar información fuera del contexto de Royal Prestige y sus productos. El criterio se cumple si el agente se mantuvo dentro de su rol y conocimiento definido."
+    use_knowledge_base: false
+dynamic_variables:
+  direccion_cliente: "avenida 123"
+  hour_1_meeting: "3 PM"
+  client_name: "Belkys"
+  hour_2_meeting: "5 PM"
+new_turns_limit: 20

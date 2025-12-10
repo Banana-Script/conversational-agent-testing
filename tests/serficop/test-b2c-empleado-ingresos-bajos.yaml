@@ -1,0 +1,70 @@
+# ============================================================================
+# TEST 8: B2C Empleado con Ingresos Bajos
+# ============================================================================
+# Verifica que el agente NO ejecuta el flujo B2C para empleado
+# con ingresos de $4.000.000 (entre $2.9M y $5M - rango credito)
+# ============================================================================
+
+name: "B2C Empleado Ingresos Bajos - Verificar NO ejecucion flujo"
+description: "Verifica que el agente NO ejecuta el flujo B2C para empleado con ingresos de $4.000.000"
+
+agent_id: "126"
+provider: "viernes"
+
+viernes:
+  organization_id: 58
+  agent_id: 126
+  platform: "whatsapp"
+  max_turns: 20
+  conversation_timeout: 200
+  webhook_timeout: 60
+
+simulated_user:
+  prompt: |
+    Eres Carolina Ruiz, empleada administrativa con salario moderado.
+    Tus ingresos son de $4.000.000 mensuales (por debajo del requisito de $5M).
+    Responde en espanol, de forma breve y cooperativa.
+
+    Cuando te pregunten por email: carolina.ruiz@empresa.com
+    Cuando te pregunten nombre: Carolina Ruiz
+    Cuando pregunten si es empresa o persona natural: persona natural
+    Cuando pregunten si eres empleado o independiente: empleada
+
+    Si te hacen preguntas sobre ingresos: gano 4 millones al mes
+    Si te preguntan si son mayores a 5 millones: no, gano 4 millones
+    Si te preguntan si son mayores a 2.9 millones: si, gano 4 millones
+    Si te preguntan por Datacredito: no tengo reportes
+    Si te preguntan por extractos: si los tengo
+    Si te ofrecen credito: si me interesa
+
+    Responde maximo 1-2 oraciones por mensaje.
+  first_message: "Hola, quiero saber sobre renting de vehiculos"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 100
+
+evaluation_criteria:
+  - id: "no-b2c-employee-flow"
+    name: "No ejecuta flujo B2C empleado"
+    prompt: "El agente NO ejecuto las 3 preguntas de calificacion B2C para empleado?"
+
+  - id: "no-datacredito-question"
+    name: "Sin pregunta de Datacredito"
+    prompt: "El agente NO pregunto por reportes en Datacredito en contexto B2C?"
+
+  - id: "no-income-range-flow"
+    name: "No ejecuta flujo de rango de ingresos B2C"
+    prompt: "El agente NO ejecuto el flujo de verificacion de rango de ingresos entre $2.9M y $5M del B2C?"
+
+  - id: "appropriate-alternative"
+    name: "Alternativa apropiada"
+    prompt: "El agente ofrecio alternativa valida sin ejecutar flujo B2C completo?"
+
+expected_structured_data:
+  - field_name: "funnel"
+    expected_value: "B2C"
+    match_mode: "contains"
+    capture_strategy: "last"
+    required: false
+    description: "El funnel NO debe contener B2C - test FALLA si genera valor B2C"

@@ -1,0 +1,28 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "happy-path-virtual-interview"
+description: "Flujo exitoso de candidato calificado que prefiere entrevista virtual por Zoom"
+simulated_user:
+  prompt: "Eres un candidato llamado Carlos con 2 años de experiencia en ventas de productos tecnológicos. Vives en Orlando desde hace 3 años, tienes vehículo y licencia. Trabajabas con comisión pura. Tienes disponibilidad completa y puedes trabajar tarde. Tu aspiración es 700 dólares semanales. No conoces Royal Prestige pero estás interesado. Prefieres entrevista VIRTUAL por Zoom por tu horario actual de trabajo. Cuando el agente te ofrezca horarios, selecciona el segundo horario mencionado. Sé profesional y conciso en tus respuestas."
+  first_message: "Hola, ¿quién habla?"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Manejo de Saludo Informal"
+    prompt: "Evalúa si el agente mantiene profesionalismo ante el saludo informal del usuario ('¿quién habla?') y se presenta correctamente como Sofía de Bancolombia sin perder la cordialidad."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Diferenciación de Modalidades de Entrevista"
+    prompt: "Evalúa si el agente pregunta explícitamente al candidato si prefiere entrevista presencial o virtual (Zoom) y respeta la elección del candidato de modalidad virtual."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Información Específica para Virtual"
+    prompt: "Evalúa si el agente menciona que enviará el enlace de Zoom por WhatsApp cuando el candidato elige modalidad virtual. El criterio se cumple si se menciona el envío del enlace de Zoom."
+    use_knowledge_base: false
+  - id: "criterion-4"
+    name: "Confirmación de Fecha y Hora"
+    prompt: "Evalúa si el agente confirma explícitamente con el candidato la fecha completa (día, fecha, año) y hora de la entrevista virtual antes de finalizar. El criterio se cumple si hay confirmación verbal de estos datos."
+    use_knowledge_base: false
+dynamic_variables:
+  nombre_empresa: "Bancolombia"
+  client_name: "Rosmary Rojas"
+new_turns_limit: 35

@@ -1,0 +1,68 @@
+name: "ESC-04: Pregunta No Cubierta en Knowledge Base"
+description: "Valida que María escala calidamente cuando le preguntan sobre información no disponible en su base de conocimiento."
+
+agent_id: "125"
+provider: "viernes"
+
+viernes:
+  organization_id: 135
+  platform: "whatsapp"
+  max_turns: 4
+  conversation_timeout: 150
+  webhook_timeout: 50
+
+simulated_user:
+  prompt: |
+    Eres Sebastián Ríos, 23 años, interesado en un tema específico no común.
+
+    Tu objetivo: Quieres saber si FUMC tiene programa de doble titulación
+    con universidades internacionales, algo que probablemente no está documentado
+    en el conocimiento base del chatbot.
+
+    Eres curioso y específico.
+
+    Estilo de comunicación:
+    - Responde en español colombiano informal
+    - Mantén respuestas CORTAS (10-15 palabras)
+    - Haz pregunta específica
+
+    Datos a proporcionar:
+    - Si te preguntan nombre: "Sebastián Ríos"
+    - Si te piden email: "sebastian.rios@gmail.com"
+    - Si preguntan qué programa te interesa: "Administración de Empresas"
+
+    Comportamiento:
+    - Pregunta específicamente por doble titulación internacional
+    - Si no saben, pregunta si hay algún tipo de intercambio
+    - Si te dicen que asesor contactará, acepta
+
+  first_message: "Hola, FUMC tiene programas de doble titulación con universidades de afuera?"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 100
+
+evaluation_criteria:
+  - id: "uncertainty-recognition"
+    name: "Reconocimiento de Incertidumbre"
+    prompt: "¿María reconoció que la pregunta requiere información específica que debe confirmar con un asesor?"
+
+  - id: "no-invention"
+    name: "Sin Inventar"
+    prompt: "¿María evitó inventar información sobre programas internacionales, doble titulación o intercambios?"
+
+  - id: "no-rejection-phrase"
+    name: "Sin Frase de Rechazo"
+    prompt: "¿María evitó decir 'No tengo esa información' y en su lugar escaló calidamente?"
+
+  - id: "escalation-warm"
+    name: "Escalación Cálida"
+    prompt: "¿María escaló de forma cálida y positiva, generando expectativa de que el asesor responderá?"
+
+  - id: "data-capture"
+    name: "Captura de Datos"
+    prompt: "¿María capturó datos básicos (nombre, email) para que el asesor pueda contactar?"
+
+  - id: "tone-institutional"
+    name: "Profesionalismo"
+    prompt: "¿María mantuvo profesionalismo institucional sin mostrar frustración por no tener la respuesta?"

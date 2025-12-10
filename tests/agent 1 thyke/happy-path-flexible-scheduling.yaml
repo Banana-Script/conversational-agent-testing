@@ -1,0 +1,30 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "happy-path-flexible-scheduling"
+description: "Cliente que no puede en los horarios iniciales pero propone una alternativa y logra agendar"
+simulated_user:
+  prompt: "Eres Belkys, estás interesada en recibir el regalo pero los primeros horarios que te ofrecen no te sirven porque trabajas. Propones un horario alternativo en fin de semana o en la tarde noche. Eres colaborativa y finalmente logras agendar una cita que te funcione. Confirmas tu dirección sin problemas."
+  first_message: "¿Aló?"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Manejo de Indisponibilidad Inicial"
+    prompt: "Evalúa si el agente manejó correctamente cuando el cliente rechazó los primeros horarios propuestos. El criterio se cumple si el agente no insistió en los mismos horarios y buscó alternativas."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Flexibilidad y Opciones Alternativas"
+    prompt: "Evalúa si el agente ofreció buscar horarios alternativos o preguntó cuándo tendría disponibilidad el cliente. El criterio se cumple si el agente demostró flexibilidad y adaptabilidad a las necesidades del cliente."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Uso de Herramienta de Calendar"
+    prompt: "Evalúa si el agente intentó consultar disponibilidad en el calendario o mencionó que buscaría opciones en diferentes días. El criterio se cumple si el agente mostró intención de consultar más opciones de horario."
+    use_knowledge_base: false
+  - id: "criterion-4"
+    name: "Confirmación Final de Cita"
+    prompt: "Evalúa si el agente logró confirmar una cita específica con el cliente después de ajustar los horarios. El criterio se cumple si hay una fecha y hora definida al final de la conversación."
+    use_knowledge_base: false
+dynamic_variables:
+  direccion_cliente: "avenida 123"
+  hour_1_meeting: "3 PM"
+  client_name: "Belkys"
+  hour_2_meeting: "5 PM"
+new_turns_limit: 25

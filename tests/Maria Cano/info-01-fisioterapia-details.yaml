@@ -1,0 +1,71 @@
+name: "INFO-01: Información Completa Fisioterapia"
+description: "Valida precisión de información sobre Fisioterapia: duración, precio, modalidad, sedes disponibles y campo laboral. Datos deben coincidir exactamente con documentos oficiales."
+
+agent_id: "125"
+provider: "viernes"
+
+viernes:
+  organization_id: 135
+  platform: "whatsapp"
+  max_turns: 6
+  conversation_timeout: 240
+  webhook_timeout: 60
+
+simulated_user:
+  prompt: |
+    Eres Alejandra Muñoz, 18 años, muy interesada en Fisioterapia.
+
+    Tu objetivo: Necesitas información completa sobre el programa de Fisioterapia.
+    Quieres saber duración, precio, en qué sedes está disponible, y qué puedes hacer
+    cuando te gradúes.
+
+    Eres curiosa y haces preguntas específicas.
+
+    Estilo de comunicación:
+    - Responde en español colombiano informal
+    - Mantén respuestas CORTAS (10-15 palabras)
+    - Haz una pregunta a la vez
+    - Muestra interés genuino
+
+    Datos a proporcionar:
+    - Si te preguntan nombre: "Alejandra Muñoz"
+    - Si te piden email: "alejandra.munoz@gmail.com"
+    - Si preguntan ciudad donde vives: "Medellín"
+
+    Comportamiento:
+    - Pregunta sobre duración del programa
+    - Pregunta sobre precio específicamente para Medellín
+    - Pregunta en qué otras sedes está disponible
+    - Pregunta sobre campo laboral
+    - Si la información es clara, muestra entusiasmo
+
+  first_message: "Hola, me interesa Fisioterapia. Cuánto dura el programa?"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 100
+
+evaluation_criteria:
+  - id: "duration-accuracy"
+    name: "Duración Correcta"
+    prompt: "¿María indicó correctamente que Fisioterapia dura 8 semestres (4 años)?"
+
+  - id: "price-medellin-accuracy"
+    name: "Precio Medellín Exacto"
+    prompt: "¿María proporcionó el precio exacto de Fisioterapia en Medellín ($9,254,018)?"
+
+  - id: "sedes-accuracy"
+    name: "Sedes Correctas"
+    prompt: "¿María indicó correctamente que Fisioterapia está disponible en Medellín, Cali, Neiva y Popayán?"
+
+  - id: "price-other-sedes"
+    name: "Precios Otras Sedes"
+    prompt: "Si mencionó otras sedes, ¿los precios son correctos? (Cali: $6,164,553, Neiva/Popayán: $5,985,511)"
+
+  - id: "info-contextual"
+    name: "Información Contextual"
+    prompt: "¿María proporcionó información adaptada al contexto sin abrumar con todos los datos a la vez?"
+
+  - id: "tone-warmth"
+    name: "Tono Cálido"
+    prompt: "¿María mantuvo un tono cálido y motivador apropiado para prospecto entusiasta?"

@@ -1,0 +1,30 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "edge-case-existing-client-negative-experience"
+description: "Cliente existente con productos pero experiencia negativa, calificación baja"
+simulated_user:
+  prompt: "Eres Belkys, tienes productos de Royal Prestige en casa pero tu experiencia no ha sido buena. Los productos se dañaron rápido y el servicio postventa fue malo. Calificas la experiencia con 3 de 10. Estás escéptica pero aún así quieres escuchar sobre el regalo gratis. Tienes una actitud cautelosa pero no agresiva."
+  first_message: "¿Aló?"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Respuesta Empática a Experiencia Negativa"
+    prompt: "Evalúa si el agente respondió con empatía cuando el cliente mencionó su experiencia negativa. El criterio se cumple si el agente usó frases como 'Lamento escuchar eso' o mostró comprensión del problema."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "No Defensivo ni Confrontacional"
+    prompt: "Evalúa si el agente evitó ser defensivo o confrontacional ante las quejas del cliente. El criterio se cumple si el agente no discutió ni minimizó los problemas mencionados por el cliente."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Pivote hacia Beneficios VIP"
+    prompt: "Evalúa si el agente, después de reconocer la experiencia negativa, mencionó los beneficios del programa VIP como una forma de compensación o mejora de la relación. El criterio se cumple si el agente presentó los beneficios especiales para clientes preferenciales."
+    use_knowledge_base: false
+  - id: "criterion-4"
+    name: "Mantiene Profesionalismo"
+    prompt: "Evalúa si el agente mantuvo un tono profesional y cordial a pesar de la calificación baja. El criterio se cumple si el agente no perdió la compostura y continuó con el objetivo de entregar el regalo."
+    use_knowledge_base: false
+dynamic_variables:
+  direccion_cliente: "avenida 123"
+  hour_1_meeting: "3 PM"
+  client_name: "Belkys"
+  hour_2_meeting: "5 PM"
+new_turns_limit: 25

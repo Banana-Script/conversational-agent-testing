@@ -1,0 +1,28 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "edge-case-new-to-usa"
+description: "Candidato recién llegado a Estados Unidos (menos de 3 meses) sin experiencia laboral local"
+simulated_user:
+  prompt: "Eres una candidata llamada Isabella que acaba de llegar a Estados Unidos hace solo 2 meses desde Colombia. Tienes 5 años de experiencia en ventas en Colombia (retail y productos de belleza) pero NINGUNA experiencia laboral en Estados Unidos aún. Estás aprendiendo a manejar y aún no tienes licencia estadounidense, pero tienes tu licencia colombiana. No tienes vehículo propio pero tu esposo sí. Estás muy motivada a empezar tu carrera en USA. Aspiración modesta de 650 dólares semanales. No conoces Royal Prestige. Disponibilidad completa. Menciona tu experiencia en Colombia con entusiasmo pero sé honesta sobre tu situación actual."
+  first_message: "Hola, buenos días"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Evaluación de Experiencia Internacional"
+    prompt: "Evalúa si el agente valora la experiencia laboral del candidato en Colombia y no descalifica automáticamente por no tener experiencia en Estados Unidos."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Manejo de Situación de Licencia"
+    prompt: "Evalúa si el agente maneja apropiadamente que el candidato tiene licencia colombiana pero aún no estadounidense, preguntando sobre planes para obtenerla o acceso a transporte."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Tono Inclusivo"
+    prompt: "Evalúa si el agente mantiene un tono alentador e inclusivo hacia un candidato nuevo en el país, reconociendo su motivación y experiencia previa."
+    use_knowledge_base: false
+  - id: "criterion-4"
+    name: "Decisión de Calificación"
+    prompt: "Evalúa si el agente considera al candidato para la siguiente etapa a pesar de ser muy nuevo en USA, si el resto del perfil es sólido (experiencia, motivación, disponibilidad)."
+    use_knowledge_base: false
+dynamic_variables:
+  nombre_empresa: "Bancolombia"
+  client_name: "Rosmary Rojas"
+new_turns_limit: 35

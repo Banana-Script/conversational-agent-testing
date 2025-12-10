@@ -1,0 +1,82 @@
+name: "EDGE-01: Conversación Multi-Tema"
+description: "Valida que María mantiene coherencia cuando usuario salta entre múltiples temas: programa, precio, financiación, sede. Test de robustez."
+
+agent_id: "125"
+provider: "viernes"
+
+viernes:
+  organization_id: 135
+  platform: "whatsapp"
+  max_turns: 8
+  conversation_timeout: 300
+  webhook_timeout: 60
+
+simulated_user:
+  prompt: |
+    Eres Gabriela Suárez, 20 años, muy indecisa y con muchas dudas.
+
+    Tu objetivo: Estás interesada en estudiar pero no tienes idea clara.
+    Saltas entre temas: preguntas por un programa, luego por otro, luego por precios,
+    luego por sedes, luego por financiación. Eres un poco desorganizada en tu
+    forma de preguntar.
+
+    Eres amable pero dispersa.
+
+    Estilo de comunicación:
+    - Responde en español colombiano informal
+    - Mantén respuestas CORTAS pero a veces cambias de tema abruptamente
+    - Usa: "ah, y otra cosa", "espera, mejor pregunto por...", "pero también me interesa..."
+
+    Datos a proporcionar:
+    - Si te preguntan nombre: "Gabriela Suárez"
+    - Si te piden email: "gabriela.suarez@gmail.com"
+    - Si preguntan qué te interesa: primero di Psicología, luego Administración, luego Contaduría
+    - Si preguntan sede: primero Medellín, luego Cali
+
+    Comportamiento:
+    - Empieza preguntando por Psicología
+    - Luego cambia a Administración de Empresas
+    - Pregunta por precios de ambas
+    - Pregunta si hay en otras sedes
+    - Pregunta por financiación
+    - Al final pregunta cuál le recomiendan
+    - Salta entre temas sin seguir orden lógico
+
+  first_message: "Hola, me interesa estudiar Psicología. Cuánto cuesta?"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.6
+  max_tokens: 120
+
+evaluation_criteria:
+  - id: "coherence-maintained"
+    name: "Coherencia Mantenida"
+    prompt: "¿María mantuvo coherencia a través de los múltiples cambios de tema sin confundirse?"
+
+  - id: "each-question-answered"
+    name: "Todas las Preguntas Respondidas"
+    prompt: "¿María respondió cada pregunta del usuario sin perder información de temas anteriores?"
+
+  - id: "gentle-focus"
+    name: "Intento de Enfocar Sin Presionar"
+    prompt: "¿María intentó ayudar a enfocar la conversación sin ser autoritaria o frustrarse?"
+
+  - id: "data-capture-progressive"
+    name: "Captura Progresiva de Datos"
+    prompt: "¿María intentó capturar datos del usuario de forma progresiva y natural a través de la conversación?"
+
+  - id: "tone-patience"
+    name: "Tono Paciente"
+    prompt: "¿María mantuvo un tono paciente y cálido incluso ante la indecisión y saltos de tema?"
+
+  - id: "no-overwhelm"
+    name: "Sin Abrumar"
+    prompt: "¿María evitó abrumar con demasiada información a la vez, dosificando apropiadamente?"
+
+  - id: "info-accuracy-multiple"
+    name: "Precisión en Múltiples Temas"
+    prompt: "¿Toda la información proporcionada sobre los diferentes programas y precios fue precisa?"
+
+  - id: "tone-institutional"
+    name: "Profesionalismo Sostenido"
+    prompt: "¿María mantuvo profesionalismo y calidez institucional a través de toda la conversación dispersa?"

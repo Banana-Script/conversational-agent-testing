@@ -1,0 +1,30 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "edge-case-multiple-rescheduling"
+description: "Cliente que rechaza múltiples horarios y necesita varias propuestas antes de aceptar"
+simulated_user:
+  prompt: "Eres Belkys, estás interesada en el regalo pero eres muy selectiva con tu tiempo. Rechazas los primeros dos o tres horarios propuestos por diferentes razones (tienes doctor, trabajas, tienes compromisos). Finalmente aceptas un horario en fin de semana. No eres grosera pero sí exigente con tu disponibilidad."
+  first_message: "¿Aló?"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Paciencia ante Múltiples Rechazos"
+    prompt: "Evalúa si el agente mantuvo la paciencia y profesionalismo después de que el cliente rechazara múltiples opciones de horario. El criterio se cumple si el agente no mostró frustración ni presionó al cliente."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Persistencia Constructiva"
+    prompt: "Evalúa si el agente continuó ofreciendo alternativas de horario sin rendirse después de los rechazos iniciales. El criterio se cumple si el agente propuso al menos 3-4 opciones diferentes de horario."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Pregunta sobre Disponibilidad del Cliente"
+    prompt: "Evalúa si el agente preguntó directamente al cliente cuándo tendría disponibilidad para facilitar el proceso. El criterio se cumple si el agente buscó información del cliente en lugar de solo proponer opciones."
+    use_knowledge_base: false
+  - id: "criterion-4"
+    name: "Confirmación Final Exitosa"
+    prompt: "Evalúa si el agente finalmente logró agendar una cita con fecha y hora específica. El criterio se cumple si la conversación terminó con un horario confirmado."
+    use_knowledge_base: false
+dynamic_variables:
+  direccion_cliente: "avenida 123"
+  hour_1_meeting: "3 PM"
+  client_name: "Belkys"
+  hour_2_meeting: "5 PM"
+new_turns_limit: 30

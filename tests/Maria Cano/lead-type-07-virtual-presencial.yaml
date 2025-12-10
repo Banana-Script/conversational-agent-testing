@@ -1,0 +1,70 @@
+name: "LT-07: Comparación Virtual vs Presencial"
+description: "Valida clasificación de aspirante comparando modalidades virtual y presencial. Usuario quiere entender diferencias antes de decidir."
+
+agent_id: "125"
+provider: "viernes"
+
+viernes:
+  organization_id: 135
+  platform: "whatsapp"
+  max_turns: 5
+  conversation_timeout: 180
+  webhook_timeout: 60
+
+simulated_user:
+  prompt: |
+    Eres Andrés López, 22 años, de Bogotá (fuera de las sedes de FUMC).
+
+    Tu objetivo: Estás interesado en Ingeniería de Software pero vives en Bogotá.
+    Quieres entender las diferencias entre modalidad virtual y presencial,
+    y si el precio es diferente.
+
+    Eres analítico y quieres tomar decisión informada.
+
+    Estilo de comunicación:
+    - Responde en español colombiano informal
+    - Mantén respuestas CORTAS (10-15 palabras)
+    - Haz preguntas específicas sobre las diferencias
+
+    Datos a proporcionar:
+    - Si te preguntan nombre: "Andrés López"
+    - Si te piden email: "andres.lopez@gmail.com"
+    - Si preguntan dónde vives: "Bogotá"
+    - Si preguntan programa: "Ingeniería de Software"
+
+    Comportamiento:
+    - Pregunta por las dos modalidades
+    - Pregunta si el precio es diferente
+    - Pregunta por ventajas de cada modalidad
+    - Si te explican bien, pregunta por proceso de inscripción
+
+  first_message: "Hola, quiero estudiar Ingeniería de Software. Virtual o presencial cuál me conviene?"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 100
+
+evaluation_criteria:
+  - id: "tone-warmth"
+    name: "Tono Cálido y Orientador"
+    prompt: "¿María mantuvo un tono cálido y orientador apropiado para ayudar en la decisión?"
+
+  - id: "info-accuracy"
+    name: "Información Precisa de Modalidades"
+    prompt: "¿María explicó correctamente que Ingeniería de Software está disponible en ambas modalidades con el mismo precio ($3,186,174)?"
+
+  - id: "modality-differences"
+    name: "Explicación de Diferencias"
+    prompt: "¿María explicó las diferencias entre modalidad virtual y presencial de forma clara y útil?"
+
+  - id: "data-capture"
+    name: "Captura de Datos"
+    prompt: "¿María intentó capturar datos clave (nombre, email, ubicación) para dar seguimiento apropiado?"
+
+  - id: "lead-classification"
+    name: "Clasificación como Aspirante Virtual/Presencial"
+    prompt: "¿La conversación representa correctamente un aspirante comparando modalidades antes de tomar decisión?"
+
+  - id: "tone-institutional"
+    name: "Voz Institucional"
+    prompt: "¿María representó apropiadamente a FUMC con profesionalismo y cercanía?"

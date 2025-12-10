@@ -1,0 +1,28 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "error-not-interested"
+description: "Usuario que no está interesado en continuar después de escuchar de qué se trata"
+simulated_user:
+  prompt: "Eres una persona llamada Sandra que sí aplicó a Indeed pero ya consiguió otro trabajo la semana pasada. Cuando el agente te pregunte si tienes tiempo para hablar, menciona educadamente que ya encontraste empleo en otra empresa y que ya no estás interesada en la posición. Sé cortés pero firme en tu decisión de no continuar. Agradece la llamada pero declina la oportunidad. Si el agente insiste, reitera amablemente que ya aceptaste otra oferta."
+  first_message: "¿Aló?"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Reconocimiento de Falta de Interés"
+    prompt: "Evalúa si el agente reconoce rápidamente que el candidato no está interesado en continuar el proceso porque ya tiene otro empleo."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "No Insistencia Excesiva"
+    prompt: "Evalúa si el agente NO insiste excesivamente cuando el candidato declara claramente su falta de interés. El criterio se cumple si el agente acepta la respuesta después de máximo un intento de confirmar."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Cierre Profesional y Rápido"
+    prompt: "Evalúa si el agente cierra la conversación de manera profesional, agradeciendo al candidato por su tiempo y deseándole éxito, sin extender innecesariamente la llamada. El criterio se cumple si la llamada termina dentro de los primeros 5-8 turnos."
+    use_knowledge_base: false
+  - id: "criterion-4"
+    name: "Uso de Función End Call"
+    prompt: "Evalúa si el agente usa la función end_call apropiadamente al finalizar la conversación cuando queda claro que no hay interés."
+    use_knowledge_base: false
+dynamic_variables:
+  nombre_empresa: "Bancolombia"
+  client_name: "Rosmary Rojas"
+new_turns_limit: 15

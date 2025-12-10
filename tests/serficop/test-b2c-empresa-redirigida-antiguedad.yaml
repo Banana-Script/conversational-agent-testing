@@ -1,0 +1,69 @@
+# ============================================================================
+# TEST 4: Empresa Redirigida por Antiguedad Baja
+# ============================================================================
+# Verifica que empresa con < 1.5 anos de antiguedad NO es redirigida
+# al flujo B2C de persona natural
+# ============================================================================
+
+name: "Empresa Redirigida (Antiguedad) - Verificar NO redireccion a B2C"
+description: "Verifica que empresa nueva (< 1.5 anos) NO es redirigida al flujo B2C de persona natural"
+
+agent_id: "126"
+provider: "viernes"
+
+viernes:
+  organization_id: 58
+  agent_id: 126
+  platform: "whatsapp"
+  max_turns: 12
+  conversation_timeout: 300
+  webhook_timeout: 60
+
+simulated_user:
+  prompt: |
+    Eres Ana Martinez, duena de una startup reciente pero con buenos ingresos.
+    Tu empresa tiene ingresos anuales de 500 millones de pesos.
+    La empresa solo tiene 8 meses de constituida.
+    Responde en espanol, de forma breve y cooperativa.
+
+    Cuando te pregunten por email: ana@startup.com
+    Cuando te pregunten nombre: Ana Martinez
+    Cuando pregunten si es empresa o persona natural: empresa
+    Cuando pregunten nombre y NIT: Startup Innovadora SAS, NIT 901234567-8
+    Cuando pregunten ingresos anuales: alrededor de 500 millones
+    Cuando pregunten antiguedad: 8 meses, somos nuevos pero vamos muy bien
+
+    Si te preguntan si eres empleado o independiente: eso no aplica, soy empresaria
+    Si insisten en el flujo de persona natural: puedo responder como independiente
+
+    Responde maximo 1-2 oraciones por mensaje.
+  first_message: "Buenos dias, quiero cotizar renting empresarial"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 100
+
+evaluation_criteria:
+  - id: "no-redirect-to-natural"
+    name: "No redirige a persona natural"
+    prompt: "El agente NO inicio el flujo de calificacion de persona natural (preguntando si es empleado o independiente despues de saber que es empresa)?"
+
+  - id: "no-b2c-questions"
+    name: "Sin preguntas B2C"
+    prompt: "El agente NO hizo preguntas de calificacion B2C (Datacredito, extractos personales, salud/pension, declaracion renta)?"
+
+  - id: "handles-new-company"
+    name: "Manejo apropiado empresa nueva"
+    prompt: "El agente dio una respuesta apropiada para empresa nueva sin redirigir a B2C?"
+
+  - id: "professional-tone"
+    name: "Tono profesional mantenido"
+    prompt: "El agente mantuvo tono profesional?"
+
+expected_structured_data:
+  - field_name: "funnel"
+    expected_value: "B2C"
+    match_mode: "contains"
+    capture_strategy: "last"
+    required: false
+    description: "El funnel NO debe contener B2C - test FALLA si aparece cualquier valor B2C"

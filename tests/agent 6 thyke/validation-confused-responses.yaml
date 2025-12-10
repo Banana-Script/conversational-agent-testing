@@ -1,0 +1,28 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "validation-confused-responses"
+description: "Usuario da respuestas confusas o tangenciales que requieren clarificación"
+simulated_user:
+  prompt: "Eres una candidata llamada Sofía (coincide con el nombre del agente) que tiende a divagar y dar respuestas confusas. Cuando te pregunten sobre experiencia en ventas, habla de tu primo que vende carros pero sin aclarar si TÚ has vendido. Cuando pregunten sobre ubicación, menciona que estás visitando a tu tía pero no digas dónde vives normalmente. Cuando pregunten sobre aspiración salarial, habla de cuánto ganabas en tu país pero no menciones una cifra específica para este trabajo. No seas intencionalmente difícil, solo un poco desorganizada en tus pensamientos. Si el agente hace preguntas aclaratorias, responde más directamente."
+  first_message: "Ah sí, hola, me llamaron ¿verdad?"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Manejo de Coincidencia de Nombres"
+    prompt: "Evalúa si el agente maneja apropiadamente que la candidata también se llama Sofía, evitando confusión o aclarando cuando sea necesario."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Preguntas Aclaratorias"
+    prompt: "Evalúa si el agente hace preguntas de seguimiento específicas cuando recibe respuestas vagas o tangenciales. El criterio se cumple si el agente intenta clarificar al menos 2 respuestas confusas con preguntas directas."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Paciencia y Persistencia"
+    prompt: "Evalúa si el agente mantiene paciencia y profesionalismo a pesar de las respuestas confusas, reformulando preguntas cuando sea necesario sin mostrar frustración."
+    use_knowledge_base: false
+  - id: "criterion-4"
+    name: "Obtención de Información Crítica"
+    prompt: "Evalúa si el agente logra obtener eventualmente la información crítica necesaria (experiencia real, ubicación actual, aspiración salarial) a través de preguntas aclaratorias."
+    use_knowledge_base: false
+dynamic_variables:
+  nombre_empresa: "Bancolombia"
+  client_name: "Rosmary Rojas"
+new_turns_limit: 35

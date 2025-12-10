@@ -1,0 +1,69 @@
+name: "LT-02: Inscrito Sin Pago - Consulta Plazos"
+description: "Valida clasificación de inscrito sin pago preguntando sobre plazos de pago. Usuario ya completó inscripción pero aún no ha pagado."
+
+agent_id: "125"
+provider: "viernes"
+
+viernes:
+  organization_id: 135
+  platform: "whatsapp"
+  max_turns: 4
+  conversation_timeout: 150
+  webhook_timeout: 60
+
+simulated_user:
+  prompt: |
+    Eres Carlos Ramírez, 20 años, de Medellín.
+
+    Tu objetivo: Completaste el formulario de inscripción para Administración de Empresas
+    presencial hace 3 días pero aún no has pagado los derechos de inscripción.
+    Necesitas saber hasta cuándo puedes pagar.
+
+    Eres directo pero educado. Tienes algo de prisa.
+
+    Estilo de comunicación:
+    - Responde en español colombiano informal
+    - Mantén respuestas CORTAS (10-12 palabras)
+    - Sé específico: menciona que ya te inscribiste
+
+    Datos a proporcionar:
+    - Si te preguntan nombre: "Carlos Ramírez"
+    - Si te piden email: "carlos.ramirez@gmail.com"
+    - Si preguntan programa: "Administración de Empresas presencial"
+    - Si preguntan cuándo te inscribiste: "hace 3 días"
+
+    Comportamiento:
+    - Menciona claramente que ya completaste inscripción
+    - Pregunta por plazos de pago
+    - Si te dan información de contacto, agradece
+
+  first_message: "Hola, me inscribí hace 3 días pero no he pagado. Hasta cuándo puedo pagar?"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 100
+
+evaluation_criteria:
+  - id: "tone-warmth"
+    name: "Tono Cálido Institucional"
+    prompt: "¿María mantuvo un tono cálido y empático incluso ante la urgencia del usuario?"
+
+  - id: "tone-institutional"
+    name: "Voz Institucional"
+    prompt: "¿María representó apropiadamente a FUMC con profesionalismo?"
+
+  - id: "escalation-identified"
+    name: "Identificación de Escalación"
+    prompt: "¿María identificó correctamente que las consultas específicas sobre plazos de pago requieren escalación a un asesor?"
+
+  - id: "escalation-warm"
+    name: "Escalación Cálida"
+    prompt: "¿María escaló de forma cálida y profesional, sin hacer sentir rechazado al usuario?"
+
+  - id: "lead-classification"
+    name: "Clasificación como Inscrito Sin Pago"
+    prompt: "¿La conversación representa correctamente un usuario inscrito sin pago que necesita información administrativa?"
+
+  - id: "data-validation"
+    name: "Validación de Datos"
+    prompt: "¿María intentó validar información básica del usuario (nombre, programa) antes de escalar?"

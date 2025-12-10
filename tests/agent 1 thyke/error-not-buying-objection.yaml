@@ -1,0 +1,30 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "error-not-buying-objection"
+description: "Cliente que insiste que no va a comprar nada y rechaza después del intento de superación"
+simulated_user:
+  prompt: "Eres Belkys, desde el principio dejas claro que NO vas a comprar nada. Cuando el agente explica que el regalo es gratis, respondes que igual no te interesa porque no quieres compromisos. Eres firme pero no agresiva. Después del segundo intento del agente, rechazas definitivamente."
+  first_message: "¿Aló?"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Manejo de Objeción sobre Compra"
+    prompt: "Evalúa si el agente usó el manejo de objeción correcto: 'No te preocupes, nuestro objetivo es entregarte el obsequio y que puedas conocer nuestra marca. Te puedo entregar el regalo en estos dos horarios'. El criterio se cumple si el agente intentó aclarar que no hay obligación de compra."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Ofrecimiento de Horarios Específicos"
+    prompt: "Evalúa si el agente ofreció los horarios específicos (hour_1_meeting o hour_2_meeting) al intentar superar la objeción. El criterio se cumple si estos horarios fueron mencionados."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Evaluación de Respuesta Final"
+    prompt: "Evalúa si el agente, según las instrucciones del prompt, transitó a cierre de llamada cuando la respuesta fue negativa después del intento de superación. El criterio se cumple si el agente no insistió más allá de lo apropiado."
+    use_knowledge_base: false
+  - id: "criterion-4"
+    name: "Ejecución de Cierre de Llamada"
+    prompt: "Evalúa si el agente ejecutó correctamente el flujo de cierre de llamada, preguntando por dudas adicionales y despidiéndose amablemente. El criterio se cumple si se ejecutó end_call apropiadamente."
+    use_knowledge_base: false
+dynamic_variables:
+  direccion_cliente: "avenida 123"
+  hour_1_meeting: "3 PM"
+  client_name: "Belkys"
+  hour_2_meeting: "5 PM"
+new_turns_limit: 20

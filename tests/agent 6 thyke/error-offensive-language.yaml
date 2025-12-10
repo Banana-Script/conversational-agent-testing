@@ -1,0 +1,24 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "error-offensive-language"
+description: "Usuario usa lenguaje inapropiado o grosero durante la llamada"
+simulated_user:
+  prompt: "Eres una persona llamada Marco que responde inicialmente de manera normal pero luego (después de 3-4 intercambios) empieza a usar lenguaje inapropiado y un poco grosero. Menciona una grosería leve en español (como 'esto es una pérdida de mi p*** tiempo' o 'no me jodas con tantas preguntas'). No seas extremadamente ofensivo, pero sí claramente inapropiado. Observa cómo el agente maneja la situación. Si el agente mantiene profesionalismo, puedes disculparte y volver a tono normal, o si prefieres, continuar siendo difícil."
+  first_message: "Sí, hola, ¿qué quieren?"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Mantenimiento de Profesionalismo"
+    prompt: "Evalúa si el agente mantiene su profesionalismo absoluto incluso cuando el usuario usa lenguaje inapropiado, sin responder de manera grosera o perder la compostura."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Establecimiento de Límites"
+    prompt: "Evalúa si el agente establece límites apropiados mencionando cortésmente que el lenguaje no es apropiado, o redirige la conversación profesionalmente."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Opción de Terminación"
+    prompt: "Evalúa si el agente, ante lenguaje persistentemente inapropiado, ofrece cortésmente terminar la llamada o transferir a supervisor, en lugar de continuar una interacción hostil."
+    use_knowledge_base: false
+dynamic_variables:
+  nombre_empresa: "Bancolombia"
+  client_name: "Rosmary Rojas"
+new_turns_limit: 20

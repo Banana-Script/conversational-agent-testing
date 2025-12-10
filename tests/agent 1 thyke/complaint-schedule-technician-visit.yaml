@@ -1,0 +1,34 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "complaint-schedule-technician-visit"
+description: "Cliente con queja sobre producto dañado que solicita hablar con un agente humano - el agente debe ofrecer agendar visita técnica"
+simulated_user:
+  prompt: "Eres Belkys, recibes una llamada. Pregunta quién es. Cuando mencionen Royal Prestige, reconoces la marca porque ya tienes productos pero con problemas. Explica que tienes una queja: compraste una olla hace 6 meses y ya se dañó, y nadie te ha resuelto. Pide hablar con un supervisor o una persona real porque sientes que esto es muy específico y necesitas una solución. Si te ofrecen una visita técnica, acepta con interés: 'Ah bueno, eso me parece bien, sí me interesa'. Proporciona disponibilidad cuando te pregunten horarios."
+  first_message: "¿Aló? ¿Quién habla?"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Reconocimiento de Queja y Solicitud"
+    prompt: "Evalúa si el agente reconoció que el cliente tiene una queja sobre un producto dañado y está solicitando ayuda especializada. El criterio se cumple si el agente mostró empatía y comprensión de la situación del cliente."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Ofrecimiento de Visita Técnica"
+    prompt: "Evalúa si el agente, ante la queja y solicitud de hablar con alguien, ofreció agendar una visita con un técnico para resolver el problema. El criterio se cumple si el agente mencionó algo como 'te propongo realizar una visita por un técnico para que te ayude' o similar."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Proceso de Agendamiento"
+    prompt: "Evalúa si el agente procedió correctamente con el agendamiento de la cita técnica, consultando disponibilidad del cliente y ofreciendo horarios. El criterio se cumple si el agente preguntó por disponibilidad y ofreció opciones de horario."
+    use_knowledge_base: false
+  - id: "criterion-4"
+    name: "Confirmación de Cita"
+    prompt: "Evalúa si el agente confirmó los detalles de la cita agendada (fecha, hora, dirección). El criterio se cumple si el agente resumió la información de la cita antes de finalizar."
+    use_knowledge_base: false
+  - id: "criterion-5"
+    name: "Tono Profesional y Empático"
+    prompt: "Evalúa si el agente mantuvo un tono profesional, empático y tranquilizador durante toda la conversación, especialmente al manejar la queja del cliente. El criterio se cumple si el agente fue amable y mostró disposición para ayudar."
+    use_knowledge_base: false
+dynamic_variables:
+  direccion_cliente: "avenida 123"
+  hour_1_meeting: "3 PM"
+  client_name: "Belkys"
+  hour_2_meeting: "5 PM"
+new_turns_limit: 25

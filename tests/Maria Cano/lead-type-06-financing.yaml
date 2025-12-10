@@ -1,0 +1,69 @@
+name: "LT-06: Interesado en Financiación"
+description: "Valida clasificación de usuario interesado en opciones de financiación. María debe proporcionar precio base y escalar para detalles específicos."
+
+agent_id: "125"
+provider: "viernes"
+
+viernes:
+  organization_id: 135
+  platform: "whatsapp"
+  max_turns: 4
+  conversation_timeout: 150
+  webhook_timeout: 60
+
+simulated_user:
+  prompt: |
+    Eres Patricia Morales, 25 años, trabajadora de Medellín.
+
+    Tu objetivo: Estás interesada en Contaduría Pública presencial pero necesitas
+    saber opciones de financiación porque no puedes pagar todo de contado.
+
+    Eres responsable y preocupada por las finanzas.
+
+    Estilo de comunicación:
+    - Responde en español colombiano informal
+    - Mantén respuestas CORTAS (10-15 palabras)
+    - Menciona tu situación: trabajas y necesitas cuotas
+
+    Datos a proporcionar:
+    - Si te preguntan nombre: "Patricia Morales"
+    - Si te piden email: "patricia.morales@gmail.com"
+    - Si preguntan programa: "Contaduría Pública presencial"
+    - Si preguntan por sede: "Medellín"
+
+    Comportamiento:
+    - Pregunta primero por el precio
+    - Luego pregunta por opciones de pago o financiación
+    - Menciona que trabajas y necesitas facilidades de pago
+    - Si mencionan asesor, pregunta cuándo te contactarán
+
+  first_message: "Hola, me interesa Contaduría. Hay financiación o planes de pago?"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 100
+
+evaluation_criteria:
+  - id: "tone-warmth"
+    name: "Tono Cálido y Comprensivo"
+    prompt: "¿María mantuvo un tono cálido y comprensivo apropiado para alguien con preocupaciones financieras?"
+
+  - id: "price-accuracy"
+    name: "Precio Base Correcto"
+    prompt: "¿María proporcionó el precio base correcto de Contaduría Pública presencial ($3,639,661) antes de escalar?"
+
+  - id: "escalation-identified"
+    name: "Identificación de Escalación"
+    prompt: "¿María identificó correctamente que los detalles específicos de financiación requieren escalación a un asesor?"
+
+  - id: "no-invention"
+    name: "Sin Inventar Términos"
+    prompt: "¿María evitó inventar información sobre cuotas, tasas, plazos o convenios específicos de financiación?"
+
+  - id: "lead-classification"
+    name: "Clasificación como Interesado en Financiación"
+    prompt: "¿La conversación representa correctamente un usuario interesado en el programa pero con necesidad específica de financiación?"
+
+  - id: "tone-institutional"
+    name: "Voz Institucional"
+    prompt: "¿María representó apropiadamente a FUMC con profesionalismo y empatía?"

@@ -1,0 +1,24 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "validation-language-mixing"
+description: "Usuario mezcla español e inglés (Spanglish) durante la conversación"
+simulated_user:
+  prompt: "Eres un candidato bilingüe llamado José que vive en Estados Unidos y naturalmente mezcla español e inglés en su conversación (Spanglish). Responde preguntas mezclando ambos idiomas de manera natural como: 'Yo trabajaba en sales de insurance por tres años', 'Tengo mi car y mi driver license', 'Mi salary expectation es around 850 dollars por semana'. Tienes buena experiencia y calificas, pero tu forma de hablar es naturalmente bilingüe. No lo hagas forzado, simula un hablante real de Spanglish. Estás interesado en la posición."
+  first_message: "Hello, ¿quién habla?"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Comprensión de Spanglish"
+    prompt: "Evalúa si el agente comprende las respuestas en Spanglish y puede extraer la información necesaria sin mostrar confusión o pedir constantemente que se hable solo en español."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Mantenimiento de Idioma en Español"
+    prompt: "Evalúa si el agente mantiene sus propias respuestas en español consistentemente, incluso cuando el usuario mezcla idiomas. El criterio se cumple si el agente responde en español al menos el 90% del tiempo."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Continuidad del Proceso"
+    prompt: "Evalúa si el agente continúa el proceso de screening normalmente sin que el uso de Spanglish del candidato sea un impedimento. El criterio se cumple si se completa el screening."
+    use_knowledge_base: false
+dynamic_variables:
+  nombre_empresa: "Bancolombia"
+  client_name: "Rosmary Rojas"
+new_turns_limit: 35

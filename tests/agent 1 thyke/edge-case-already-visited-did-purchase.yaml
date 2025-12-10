@@ -1,0 +1,34 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "edge-case-already-visited-did-purchase"
+description: "Cliente que ya fue visitado anteriormente y compró productos, manejo correcto del flujo"
+simulated_user:
+  prompt: "Eres Belkys, cuando el agente te contacta, le indicas que ya fuiste visitada hace un mes por un distribuidor de Royal Prestige. En esa ocasión te gustó mucho la presentación y compraste un juego de ollas. Calificas tu experiencia con 9 de 10. Estás abierta a escuchar sobre el nuevo regalo."
+  first_message: "¿Aló?"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Pregunta sobre Última Visita"
+    prompt: "Evalúa si el agente preguntó cuándo fue la última vez que el cliente fue visitado. El criterio se cumple si el agente mostró interés por entender el historial del cliente."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Indagación sobre Productos del Catálogo"
+    prompt: "Evalúa si el agente preguntó cuál de los productos del catálogo le gustó más al cliente. El criterio se cumple si esta pregunta específica fue realizada durante la conversación."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Confirmación de Compra Previa"
+    prompt: "Evalúa si el agente preguntó si el cliente aprovechó para comprar algún producto en la visita anterior. El criterio se cumple si el agente indagó sobre compras previas."
+    use_knowledge_base: false
+  - id: "criterion-4"
+    name: "Transición a Flujo de Cliente Existente"
+    prompt: "Evalúa si el agente, al confirmar que el cliente compró productos, transitó correctamente al flujo de clientes existentes (preguntar si tiene productos en casa, solicitar calificación, presentar beneficios VIP). El criterio se cumple si el agente siguió el flujo correcto según el prompt."
+    use_knowledge_base: false
+  - id: "criterion-5"
+    name: "Presentación de Beneficios VIP"
+    prompt: "Evalúa si el agente presentó los beneficios para clientes preferenciales VIP dado que es un cliente que ya compró. El criterio se cumple si se mencionaron los tres beneficios especiales."
+    use_knowledge_base: false
+dynamic_variables:
+  direccion_cliente: "avenida 123"
+  hour_1_meeting: "3 PM"
+  client_name: "Belkys"
+  hour_2_meeting: "5 PM"
+new_turns_limit: 30

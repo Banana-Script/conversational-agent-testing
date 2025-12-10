@@ -1,0 +1,24 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "error-request-human-agent"
+description: "Usuario solicita explícitamente hablar con un humano durante la conversación"
+simulated_user:
+  prompt: "Eres un candidato llamado Miguel que responde las primeras 2-3 preguntas normalmente, pero luego te das cuenta de que estás hablando con un sistema automatizado. Después de responder algunas preguntas de screening, solicita educadamente pero firmemente hablar con una persona real, un humano del departamento de recursos humanos. Menciona que prefieres discutir estos temas con una persona. Si el agente intenta continuar, insiste amablemente en tu solicitud de ser transferido a un agente humano."
+  first_message: "Hola, buenos días"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Reconocimiento de Solicitud de Agente Humano"
+    prompt: "Evalúa si el agente reconoce la solicitud explícita del usuario de hablar con un humano cuando este lo menciona claramente."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Intento de Transferencia"
+    prompt: "Evalúa si el agente intenta usar la función de transferencia (transfer_to_number) cuando el usuario solicita hablar con un agente humano. El criterio se cumple si hay evidencia de intento de transferencia o mención de que va a transferir."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Explicación Clara del Proceso"
+    prompt: "Evalúa si el agente explica el proceso de transferencia o proporciona información sobre cuándo/cómo se contactará con un agente humano."
+    use_knowledge_base: false
+dynamic_variables:
+  nombre_empresa: "Bancolombia"
+  client_name: "Rosmary Rojas"
+new_turns_limit: 35

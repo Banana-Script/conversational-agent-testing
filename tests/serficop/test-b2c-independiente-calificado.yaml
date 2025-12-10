@@ -1,0 +1,93 @@
+# ============================================================================
+# TEST 7: B2C Independiente Calificado (CRITICO - Happy Path)
+# ============================================================================
+# Verifica que el agente NO ejecuta el flujo completo B2C para un
+# independiente que cumple TODOS los requisitos. Este es el test mas
+# critico porque cubre el "happy path" del flujo B2C eliminado.
+# ============================================================================
+
+name: "B2C Independiente Calificado - Verificar NO ejecucion flujo completo"
+description: "CRITICO: Verifica que el agente NO ejecuta las 5 preguntas B2C para independiente que cumple todos los requisitos"
+
+agent_id: "126"
+provider: "viernes"
+
+viernes:
+  organization_id: 58
+  agent_id: 126
+  platform: "whatsapp"
+  max_turns: 18
+  conversation_timeout: 400
+  webhook_timeout: 60
+
+simulated_user:
+  prompt: |
+    Eres Jorge Martinez, un profesional independiente exitoso.
+    Cumples TODOS los requisitos del flujo B2C:
+    - Ingresos: $8.000.000 mensuales (mayor a $5.000.000)
+    - Sin reportes en Datacredito
+    - Tienes extractos bancarios de los ultimos 6 meses
+    - Cotizas salud y pension
+    - Eres declarante de renta
+
+    Responde en espanol, de forma breve y cooperativa a TODAS las preguntas.
+
+    Cuando te pregunten por email: jorge.martinez@consultoria.com
+    Cuando te pregunten nombre: Jorge Martinez
+    Cuando pregunten si es empresa o persona natural: persona natural
+    Cuando pregunten si eres empleado o independiente: independiente
+
+    Si te hacen preguntas sobre ingresos: gano 8 millones mensuales
+    Si te preguntan si son mayores a 5 millones: si, gano 8 millones
+    Si te preguntan por Datacredito: no, no tengo ningun reporte negativo
+    Si te preguntan por extractos bancarios: si, tengo todos los extractos de los ultimos 6 meses
+    Si te preguntan por salud/pension: si, cotizo salud y pension como independiente
+    Si te preguntan por declaracion renta: si, soy declarante de renta
+
+    Responde cooperativamente a cada pregunta. Maximo 1-2 oraciones por mensaje.
+  first_message: "Hola, estoy interesado en el servicio de renting"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 100
+
+evaluation_criteria:
+  - id: "no-5-questions-sequence"
+    name: "No ejecuta secuencia de 5 preguntas B2C"
+    prompt: "El agente NO ejecuto la secuencia completa de 5 preguntas B2C para independiente (ingresos, Datacredito, extractos 6 meses, salud/pension, declarante renta)?"
+
+  - id: "no-datacredito-question"
+    name: "Sin pregunta de Datacredito"
+    prompt: "El agente NO pregunto '¿Tienes reportes en Datacredito?'?"
+
+  - id: "no-bank-statements-6months"
+    name: "Sin pregunta de extractos 6 meses"
+    prompt: "El agente NO solicito extractos bancarios de los ultimos 6 meses?"
+
+  - id: "no-health-insurance-question"
+    name: "Sin pregunta de cotizacion salud"
+    prompt: "El agente NO pregunto '¿Eres Cotizante de salud y pension?'?"
+
+  - id: "no-tax-declaration-question"
+    name: "Sin pregunta de declaracion renta"
+    prompt: "El agente NO pregunto '¿Eres declarante de renta?'?"
+
+  - id: "no-service-presentation-b2c"
+    name: "Sin presentacion servicios B2C"
+    prompt: "El agente NO presento los servicios con el mensaje B2C que incluye planes Esencial, Premium y Elite para persona natural?"
+
+  - id: "appropriate-alternative"
+    name: "Alternativa apropiada ofrecida"
+    prompt: "El agente ofrecio una alternativa valida (asesor humano, flujo B2B, o informacion general) en lugar del flujo B2C?"
+
+  - id: "collected-basic-info"
+    name: "Informacion basica recolectada"
+    prompt: "El agente al menos recolecto nombre y correo electronico?"
+
+expected_structured_data:
+  - field_name: "funnel"
+    expected_value: "B2C - PROSPECTO CALIFICADO"
+    match_mode: "exact"
+    capture_strategy: "last"
+    required: false
+    description: "CRITICO: El funnel NO debe ser B2C - PROSPECTO CALIFICADO - test FALLA si genera este valor"

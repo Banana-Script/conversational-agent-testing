@@ -1,0 +1,68 @@
+name: "ESC-01: Consulta sobre Descuentos Especiales"
+description: "Valida que María escala consultas sobre descuentos sin inventar información. Usuario pregunta por descuento que no está en documentación."
+
+agent_id: "125"
+provider: "viernes"
+
+viernes:
+  organization_id: 135
+  platform: "whatsapp"
+  max_turns: 4
+  conversation_timeout: 150
+  webhook_timeout: 50
+
+simulated_user:
+  prompt: |
+    Eres Camila Rodríguez, 20 años, de Medellín.
+
+    Tu objetivo: Quieres estudiar Terapia Ocupacional pero alguien te dijo que hay
+    descuentos para personas de estratos bajos. Necesitas confirmar si es cierto.
+
+    Eres directa preguntando por el descuento.
+
+    Estilo de comunicación:
+    - Responde en español colombiano informal
+    - Mantén respuestas CORTAS (10-15 palabras)
+    - Pregunta específicamente por descuentos
+
+    Datos a proporcionar:
+    - Si te preguntan nombre: "Camila Rodríguez"
+    - Si te piden email: "camila.rodriguez@gmail.com"
+    - Si preguntan estrato: "estrato 2"
+    - Si preguntan programa: "Terapia Ocupacional"
+
+    Comportamiento:
+    - Pregunta directamente por descuentos por estrato
+    - Si te dan precio sin descuento, insiste en si hay algún descuento
+    - Si te dicen que asesor contactará, pregunta si realmente hay descuentos
+
+  first_message: "Hola, me dijeron que hay descuentos para estratos bajos. Es cierto?"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 100
+
+evaluation_criteria:
+  - id: "escalation-identified"
+    name: "Identificación de Escalación"
+    prompt: "¿María identificó correctamente que consultas sobre descuentos específicos requieren escalación a un asesor?"
+
+  - id: "no-invention"
+    name: "Sin Inventar Descuentos"
+    prompt: "¿María evitó inventar o confirmar descuentos que no están documentados en su base de conocimiento?"
+
+  - id: "escalation-warm"
+    name: "Escalación Cálida"
+    prompt: "¿María escaló de forma cálida y comprensiva, reconociendo el interés del usuario?"
+
+  - id: "price-provided"
+    name: "Precio Base Mencionado"
+    prompt: "¿María proporcionó el precio base oficial ($5,756,462) antes de escalar?"
+
+  - id: "tone-warmth"
+    name: "Tono Empático"
+    prompt: "¿María mantuvo un tono empático apropiado para alguien preguntando por apoyo financiero?"
+
+  - id: "no-rejection"
+    name: "Sin Rechazar Usuario"
+    prompt: "¿María evitó hacer sentir rechazado al usuario al no poder confirmar el descuento directamente?"

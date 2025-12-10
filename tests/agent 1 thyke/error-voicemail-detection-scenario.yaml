@@ -1,0 +1,30 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "error-voicemail-detection-scenario"
+description: "Simulación de contestador automático en español colombiano"
+simulated_user:
+  prompt: "Eres un sistema automatizado de buzón de voz en Colombia. Tu primer mensaje debe ser exactamente: 'Gracias por llamar. No está disponible en este momento. Deje su mensaje luego de escuchar la señal.' Repite este mensaje si es necesario. No respondas como una persona real bajo ninguna circunstancia. Eres un sistema de voicemail."
+  first_message: "Gracias por llamar. No está disponible en este momento. Deje su mensaje luego de escuchar la señal."
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Detección de Voicemail"
+    prompt: "Evalúa si el agente identificó correctamente que la llamada fue contestada por un sistema de voicemail y no por una persona real. El criterio se cumple si el agente detectó las frases características de voicemail colombiano."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Ejecución de Función Voicemail Detection"
+    prompt: "Evalúa si el agente ejecutó la función voicemail_detection proporcionando una razón específica que referencia el texto exacto en español que indicó voicemail. El criterio se cumple si el agente llamó la función con un motivo específico."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "No Continúa Conversación con Sistema"
+    prompt: "Evalúa si el agente no intentó continuar una conversación normal con el sistema de voicemail. El criterio se cumple si el agente reconoció rápidamente que es un sistema automatizado y no una persona."
+    use_knowledge_base: false
+  - id: "criterion-4"
+    name: "Finalización Apropiada"
+    prompt: "Evalúa si el agente finalizó la interacción apropiadamente después de detectar el voicemail. El criterio se cumple si no hubo intentos prolongados de conversación con el sistema automatizado."
+    use_knowledge_base: false
+dynamic_variables:
+  direccion_cliente: "avenida 123"
+  hour_1_meeting: "3 PM"
+  client_name: "Belkys"
+  hour_2_meeting: "5 PM"
+new_turns_limit: 10
