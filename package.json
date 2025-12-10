@@ -20,6 +20,7 @@
     "run": "tsx src/index.ts run",
     "list": "tsx src/index.ts list",
     "report": "tsx src/index.ts report",
+    "analyze": "tsx src/index.ts analyze",
     "download-agent": "tsx src/index.ts download-agent",
     "download": "tsx src/index.ts download-agent",
     "copy-agent": "tsx src/index.ts copy-agent",

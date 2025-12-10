@@ -16,6 +16,8 @@ A comprehensive testing framework designed for conversational AI agents, support
   - **Direct simulation**: Execute tests immediately without saving
   - **Persistent tests**: Save tests in provider platform for reuse
 - 📊 **Detailed reports**: JSON and Markdown with complete metrics
+- 🚦 **Severity analysis**: Classify failures by severity (Critical/High/Medium/Low) with deployment gates
+- 🤖 **Intelligent analysis**: Uses Claude CLI to understand context and business logic
 - 🎨 **Friendly CLI**: Interface with colors and spinners
 - 📝 **Customizable criteria**: Define your own evaluation criteria
 - 🤖 **Automatic test generation**: Claude Code generates test cases from agent configuration
@@ -186,7 +188,57 @@ npm run copy-agent -- --source source_agent_456 --destination destination_agent_
 npm run download -- --agent destination_agent_123
 ```
 
-### 8. Generate Tests Automatically (`generate:tests`)
+### 8. Analyze Results Severity (`analyze`)
+
+Analyze test results and classify failures by severity using Claude CLI:
+
+```bash
+# Analyze specific results file
+npm run analyze -- results/test-results-2025-12-10T02-17-42-982Z.json
+
+# Analyze most recent results
+npm run analyze -- $(ls -t results/test-results-*.json | head -1)
+```
+
+🎯 **Severity Classification**:
+
+| Severity | Description | Deployment Impact |
+|----------|-------------|-------------------|
+| 🔴 **Critical** | Core functionality broken, security issues, data corruption | ❌ Blocks deployment |
+| 🟠 **High** | Main flows broken, severely degraded UX, integration failures | ❌ Blocks deployment |
+| 🟡 **Medium** | Secondary flows affected, edge cases not handled | ⚠️ Should fix soon |
+| 🟢 **Low** | Minor UX issues, suboptimal behavior | ✅ Can deploy |
+
+📊 **Deployment Rule**: Only deployable if there are **no Critical AND no High** severity failures.
+
+🤖 **How it works**:
+1. Reads the test results JSON file
+2. If Claude CLI is available, uses intelligent analysis considering:
+   - Conversation context and business logic
+   - Nature of failed criteria
+   - Potential production impact
+   - Testing limitations (interruptions, latency, voice tone)
+3. If Claude CLI is unavailable, falls back to percentage-based analysis
+4. Generates `severity-analysis-{timestamp}.json` with classifications
+5. Updates the Markdown report with deployment status section
+
+**Output includes**:
+- Deployment status (deployable/not deployable) with confidence level
+- Summary by severity (critical, high, medium, low counts)
+- Detailed classification for each failed test
+- Recommendations for fixing issues
+- Testing notes about framework limitations
+
+✨ **Confidence Levels**:
+- 🟢 **High**: Clear bot behavior issue
+- 🟡 **Medium**: Possible testing limitation
+- 🟠 **Low**: Likely framework error, not bot issue
+
+⚠️ **Prerequisites**:
+- Claude Code CLI installed (optional, falls back to basic analysis)
+- Test results JSON file from `npm run simulate`
+
+### 9. Generate Tests Automatically (`generate:tests`)
 
 Automatically generate test cases using Claude Code from agent configuration:
 
@@ -318,8 +370,11 @@ dynamic_variables:
 # 2. Execute simulation
 npm run simulate
 
-# 3. Review results in results/
-# 4. Iterate adjusting the YAML
+# 3. Analyze severity (optional but recommended)
+npm run analyze -- $(ls -t results/test-results-*.json | head -1)
+
+# 4. Review results in results/
+# 5. Iterate adjusting the YAML
 ```
 
 ### Production/CI
@@ -332,7 +387,26 @@ npm run create
 # 3. Execute in CI/CD
 npm run run -- --agent $AGENT_ID --tests $TEST_IDS
 
-# 4. Verify results
+# 4. Analyze severity for deployment decision
+npm run analyze -- $(ls -t results/test-results-*.json | head -1)
+
+# 5. Check deployment status
+cat results/severity-analysis-*.json | jq '.deployment_status'
+```
+
+### Pre-deployment Check
+
+```bash
+# Complete flow with deployment gate
+npm run simulate && \
+npm run analyze -- $(ls -t results/test-results-*.json | head -1) && \
+DEPLOYABLE=$(cat $(ls -t results/severity-analysis-*.json | head -1) | jq -r '.deployment_status.is_deployable') && \
+if [ "$DEPLOYABLE" = "true" ]; then
+  echo "✅ Ready to deploy!"
+else
+  echo "❌ Not deployable - fix critical/high issues first"
+  exit 1
+fi
 ```
 
 ## 📊 Results
@@ -358,10 +432,37 @@ npm run run -- --agent $AGENT_ID --tests $TEST_IDS
 ### Markdown (`results/report-*.md`)
 
 Complete report with:
+- **🚦 Deployment Status** (when severity analysis is run)
 - Executive summary
 - Test table
 - Complete transcriptions
 - Criteria and rationales
+
+### Severity Analysis (`results/severity-analysis-*.json`)
+
+When running `npm run analyze`, generates:
+```json
+{
+  "analysis_timestamp": "2025-12-10T02:17:42.984Z",
+  "deployment_status": {
+    "is_deployable": false,
+    "reason": "2 critical and 1 high severity failures",
+    "confidence": "high"
+  },
+  "summary": {
+    "total_tests": 11,
+    "passed_tests": 6,
+    "failed_tests": 5,
+    "critical": 2,
+    "high": 1,
+    "medium": 1,
+    "low": 1
+  },
+  "test_classifications": [...],
+  "recommendations": [...],
+  "testing_notes": [...]
+}
+```
 
 ## 🏗️ Project Structure
 
@@ -371,13 +472,16 @@ conversational-agent-testing/
 │   ├── api/elevenlabs-client.ts      # API client
 │   ├── testing/
 │   │   ├── test-runner.ts            # Test runner
-│   │   └── reporter.ts               # Reports
+│   │   ├── reporter.ts               # Reports generation
+│   │   └── severity-analyzer.ts      # Severity analysis with Claude
 │   ├── types/index.ts                # TS types
 │   └── index.ts                      # CLI
+├── prompts/
+│   └── analyze-results.md            # Prompt for severity analysis
 ├── tests/
 │   ├── template.yaml                 # Template
 │   └── scenarios/                    # Tests
-└── results/                          # Results
+└── results/                          # Results & analysis
 ```
 
 ## 🔧 Advanced Configuration
@@ -423,6 +527,14 @@ This framework includes multiple security layers to protect against common vulne
 - Automatic backup before deleting files
 - `.gitignore` configured to avoid commits of sensitive data
 - Agent files excluded from version control
+
+#### ✅ Severity Analyzer Security
+- Path validation with null byte detection
+- Absolute path requirement for file operations
+- Race condition prevention with settled flags
+- Timeout protection (5 minutes) for Claude CLI execution
+- Constructor validation for empty/invalid paths
+- `shell: false` in all subprocess spawning
 
 ### Validation Tests
 

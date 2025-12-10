@@ -7,6 +7,7 @@ import ora from 'ora';
 import { ElevenLabsClient } from './api/elevenlabs-client.js';
 import { TestRunner } from './testing/test-runner.js';
 import { Reporter } from './testing/reporter.js';
+import { SeverityAnalyzer } from './testing/severity-analyzer.js';
 import { TestValidationError } from './validation/schemas.js';
 import { PathValidationError } from './utils/path-validator.js';
 import { getElevenLabsApiKey, handleMissingEnvVar } from './utils/env-validator.js';
@@ -120,13 +121,34 @@ program
       // Guardar resultados
       console.log(chalk.cyan('\n💾 Guardando resultados...\n'));
       const resultsPath = await reporter.saveTestResults(allResults);
-      const reportPath = await reporter.generateMarkdownReport(allResults);
 
       console.log(chalk.green(`✓ Resultados guardados en: ${resultsPath}`));
+
+      // Analizar severidad con Claude (con fallback a análisis básico)
+      console.log(chalk.cyan('\n🔍 Analizando severidad de resultados...\n'));
+      const analyzer = new SeverityAnalyzer();
+      const severityAnalysis = await analyzer.analyzeWithFallback(resultsPath);
+
+      // Generar reporte con análisis de severidad
+      const reportPath = await reporter.generateMarkdownReport(allResults, severityAnalysis);
+
       console.log(chalk.green(`✓ Reporte generado en: ${reportPath}`));
 
       // Mostrar resumen
       console.log(reporter.generateConsoleSummary(allResults));
+
+      // Mostrar estado de despliegue
+      const statusEmoji = severityAnalysis.deployment_status.is_deployable ? '✅' : '❌';
+      const statusText = severityAnalysis.deployment_status.is_deployable ? 'DESPLEGABLE' : 'NO DESPLEGABLE';
+      console.log(chalk.bold(`\n🚦 Estado de despliegue: ${statusEmoji} ${statusText}`));
+      console.log(chalk.gray(`   ${severityAnalysis.deployment_status.reason}\n`));
+
+      if (!severityAnalysis.deployment_status.is_deployable) {
+        console.log(chalk.yellow('⚠️  Resumen de fallos bloqueantes:'));
+        console.log(chalk.red(`   🔴 Críticos: ${severityAnalysis.summary.critical}`));
+        console.log(chalk.yellow(`   🟠 Altos: ${severityAnalysis.summary.high}`));
+        console.log();
+      }
 
       console.log(chalk.green.bold('✅ Simulación completada\n'));
     } catch (error) {
@@ -336,7 +358,8 @@ program
   .command('report')
   .description('Genera reporte desde resultados guardados')
   .argument('<results-file>', 'Archivo JSON con resultados')
-  .action(async (resultsFile) => {
+  .option('--no-severity', 'Omitir análisis de severidad')
+  .action(async (resultsFile, options) => {
     console.log(chalk.blue.bold('\n📄 Generando reporte...\n'));
 
     try {
@@ -345,9 +368,104 @@ program
       const data = JSON.parse(content);
 
       const reporter = new Reporter();
-      const reportPath = await reporter.generateMarkdownReport(data.results);
+
+      let severityAnalysis = undefined;
+      if (options.severity !== false) {
+        console.log(chalk.cyan('🔍 Analizando severidad...\n'));
+        const analyzer = new SeverityAnalyzer();
+        severityAnalysis = await analyzer.analyzeWithFallback(resultsFile);
+      }
+
+      const reportPath = await reporter.generateMarkdownReport(data.results, severityAnalysis);
 
       console.log(chalk.green(`✓ Reporte generado en: ${reportPath}\n`));
+
+      if (severityAnalysis) {
+        const statusEmoji = severityAnalysis.deployment_status.is_deployable ? '✅' : '❌';
+        const statusText = severityAnalysis.deployment_status.is_deployable ? 'DESPLEGABLE' : 'NO DESPLEGABLE';
+        console.log(chalk.bold(`🚦 Estado de despliegue: ${statusEmoji} ${statusText}`));
+        console.log(chalk.gray(`   ${severityAnalysis.deployment_status.reason}\n`));
+      }
+    } catch (error) {
+      console.error(
+        chalk.red(`\n❌ Error: ${error instanceof Error ? error.message : String(error)}\n`)
+      );
+      process.exit(1);
+    }
+  });
+
+/**
+ * Comando: analyze
+ * Analiza severidad de resultados existentes con Claude
+ */
+program
+  .command('analyze')
+  .description('Analiza severidad de resultados con Claude')
+  .argument('<results-file>', 'Archivo JSON con resultados')
+  .option('--basic', 'Usar análisis básico sin Claude')
+  .action(async (resultsFile, options) => {
+    console.log(chalk.blue.bold('\n🔍 Analizando severidad de resultados...\n'));
+
+    try {
+      const analyzer = new SeverityAnalyzer();
+
+      let analysis;
+      if (options.basic) {
+        console.log(chalk.yellow('Usando análisis básico (sin Claude)\n'));
+        analysis = analyzer.generateBasicAnalysis(resultsFile);
+      } else {
+        analysis = await analyzer.analyzeWithFallback(resultsFile);
+      }
+
+      // Mostrar resultados
+      const statusEmoji = analysis.deployment_status.is_deployable ? '✅' : '❌';
+      const statusText = analysis.deployment_status.is_deployable ? 'DESPLEGABLE' : 'NO DESPLEGABLE';
+
+      console.log(chalk.bold('═══════════════════════════════════════════'));
+      console.log(chalk.bold(`🚦 ESTADO DE DESPLIEGUE: ${statusEmoji} ${statusText}`));
+      console.log(chalk.bold('═══════════════════════════════════════════'));
+      console.log(chalk.gray(`\n${analysis.deployment_status.reason}\n`));
+
+      console.log(chalk.cyan('📊 Resumen por severidad:\n'));
+      console.log(chalk.red(`   🔴 Críticos: ${analysis.summary.critical}`));
+      console.log(chalk.yellow(`   🟠 Altos: ${analysis.summary.high}`));
+      console.log(chalk.blue(`   🟡 Medios: ${analysis.summary.medium}`));
+      console.log(chalk.green(`   🟢 Bajos: ${analysis.summary.low}`));
+      console.log(chalk.gray(`\n   Total tests: ${analysis.summary.total_tests}`));
+      console.log(chalk.green(`   ✅ Exitosos: ${analysis.summary.passed_tests}`));
+      console.log(chalk.red(`   ❌ Fallidos: ${analysis.summary.failed_tests}\n`));
+
+      // Mostrar tests bloqueantes
+      const blocking = analysis.test_classifications.filter(
+        t => t.severity === 'critical' || t.severity === 'high'
+      );
+
+      if (blocking.length > 0) {
+        console.log(chalk.yellow.bold('⚠️  Tests bloqueantes:\n'));
+        for (const test of blocking) {
+          const emoji = test.severity === 'critical' ? '🔴' : '🟠';
+          console.log(chalk.bold(`   ${emoji} ${test.test_name}`));
+          console.log(chalk.gray(`      Criterios: ${test.criteria_passed}`));
+          console.log(chalk.gray(`      ${test.rationale}\n`));
+        }
+      }
+
+      // Mostrar recomendaciones
+      if (analysis.recommendations && analysis.recommendations.length > 0) {
+        console.log(chalk.cyan('💡 Recomendaciones:\n'));
+        analysis.recommendations.forEach((rec, i) => {
+          console.log(chalk.gray(`   ${i + 1}. ${rec}`));
+        });
+        console.log();
+      }
+
+      // Guardar análisis a archivo
+      const { writeFile } = await import('fs/promises');
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const analysisPath = `./results/severity-analysis-${timestamp}.json`;
+      await writeFile(analysisPath, JSON.stringify(analysis, null, 2), 'utf-8');
+      console.log(chalk.green(`✓ Análisis guardado en: ${analysisPath}\n`));
+
     } catch (error) {
       console.error(
         chalk.red(`\n❌ Error: ${error instanceof Error ? error.message : String(error)}\n`)
