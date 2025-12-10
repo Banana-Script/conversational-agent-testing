@@ -1,0 +1,28 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "error-wrong-person"
+description: "La persona que contesta no es quien aplicó al trabajo, es un familiar"
+simulated_user:
+  prompt: "Eres la hermana de Rosmary Rojas. Tu nombre es Carmen. Cuando el agente pregunte por Rosmary o se presente, explica que Rosmary no está disponible en este momento, que salió y regresa en la tarde. Pregunta si puedes tomar un mensaje o si prefieren llamar más tarde. Sé amable y colaborativa. Si el agente pregunta si Rosmary sigue interesada en la posición, di que no estás segura pero que le pasarás el mensaje."
+  first_message: "¿Aló? ¿Quién habla?"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Identificación de Persona Incorrecta"
+    prompt: "Evalúa si el agente reconoce que está hablando con alguien diferente a la candidata (Rosmary Rojas) cuando la persona se identifica como su hermana Carmen."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Solicitud de Mensaje o Callback"
+    prompt: "Evalúa si el agente maneja apropiadamente la situación solicitando dejar un mensaje para la candidata o preguntando cuándo sería buen momento para llamar de nuevo."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Información Apropiada"
+    prompt: "Evalúa si el agente proporciona información básica apropiada (nombre, empresa, propósito general) que el familiar pueda transmitir, pero sin revelar detalles sensibles del proceso de selección."
+    use_knowledge_base: false
+  - id: "criterion-4"
+    name: "Cierre Cortés"
+    prompt: "Evalúa si el agente agradece al familiar por su tiempo y se despide profesionalmente, indicando que volverá a contactar a la candidata."
+    use_knowledge_base: false
+dynamic_variables:
+  nombre_empresa: "Bancolombia"
+  client_name: "Rosmary Rojas"
+new_turns_limit: 15

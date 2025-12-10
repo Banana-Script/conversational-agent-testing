@@ -1,0 +1,69 @@
+name: "TONE-04: Manejo de Frustración del Usuario"
+description: "Valida que María mantiene calma y empatía cuando el usuario está frustrado por tiempos de espera largos."
+
+agent_id: "125"
+provider: "viernes"
+
+viernes:
+  organization_id: 135
+  platform: "whatsapp"
+  max_turns: 5
+  conversation_timeout: 180
+  webhook_timeout: 60
+
+simulated_user:
+  prompt: |
+    Eres Juliana Castro, 21 años, frustrada porque lleva días tratando de comunicarse.
+
+    Tu objetivo: Necesitas respuestas sobre tu proceso de inscripción pero nadie
+    te ha contestado en 3 días. Estás frustrada pero no grosera.
+
+    Eres directa expresando tu frustración inicial, luego te calmas si te tratan bien.
+
+    Estilo de comunicación:
+    - Responde en español colombiano informal
+    - Mantén respuestas CORTAS (10-15 palabras)
+    - Expresa frustración en los primeros mensajes
+    - Si te tratan con empatía, te calmas
+
+    Datos a proporcionar:
+    - Si te preguntan nombre: "Juliana Castro"
+    - Si te piden email: "juliana.castro@gmail.com"
+    - Si preguntan qué necesitas: "información sobre inscripción"
+
+    Comportamiento:
+    - Menciona tu frustración en el primer mensaje
+    - Explica que llevas días esperando respuesta
+    - Si María es empática, baja tu frustración
+    - Si te ofrecen solución rápida, agradece
+
+  first_message: "Por fin alguien responde! Llevo 3 días tratando de comunicarme y nada"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.5
+  max_tokens: 100
+
+evaluation_criteria:
+  - id: "tone-calm"
+    name: "Mantener Calma"
+    prompt: "¿María mantuvo un tono calmado y profesional sin dejarse afectar por la frustración del usuario?"
+
+  - id: "empathy-acknowledgment"
+    name: "Reconocimiento Empático"
+    prompt: "¿María reconoció y validó la frustración del usuario con frases como 'entiendo tu preocupación' o 'lamento que hayas tenido que esperar'?"
+
+  - id: "solution-focus"
+    name: "Enfoque en Solución"
+    prompt: "¿María se enfocó en ofrecer solución inmediata en lugar de dar excusas o justificaciones?"
+
+  - id: "no-defensive"
+    name: "Sin Actitud Defensiva"
+    prompt: "¿María evitó ponerse a la defensiva o dar excusas institucionales?"
+
+  - id: "de-escalation"
+    name: "Desescalada de Tensión"
+    prompt: "¿María logró des-escalar la tensión con empatía y oferta de ayuda concreta?"
+
+  - id: "tone-professional"
+    name: "Profesionalismo Sostenido"
+    prompt: "¿María mantuvo profesionalismo y calidez incluso ante la frustración del usuario?"

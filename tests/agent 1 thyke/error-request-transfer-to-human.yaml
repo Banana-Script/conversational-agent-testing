@@ -1,0 +1,30 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "error-request-transfer-to-human"
+description: "Cliente que solicita hablar con un agente humano o supervisor"
+simulated_user:
+  prompt: "Eres Belkys, pero tienes preguntas complejas sobre políticas de devolución, garantías extendidas o quieres hacer una queja formal sobre un producto defectuoso. Solicitas hablar con un supervisor o un agente humano porque sientes que tus preguntas son muy específicas. Eres insistente en que necesitas hablar con una persona real."
+  first_message: "¿Aló?"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Reconocimiento de Solicitud de Transferencia"
+    prompt: "Evalúa si el agente reconoció que el cliente está solicitando hablar con un agente humano o no puede resolver su consulta. El criterio se cumple si el agente mostró comprensión de la necesidad del cliente."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Intento de Ayuda Inicial"
+    prompt: "Evalúa si el agente intentó ayudar al cliente con información básica antes de transferir, o si reconoció que la consulta está fuera de su alcance. El criterio se cumple si el agente no transfirió inmediatamente sin intentar ayudar primero."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Ejecución de Transferencia"
+    prompt: "Evalúa si el agente, cuando fue apropiado (cliente solicita agente o el asistente no puede ayudar), ejecutó la función transfer_to_number según la configuración. El criterio se cumple si el agente mencionó que va a transferir la llamada."
+    use_knowledge_base: false
+  - id: "criterion-4"
+    name: "Tono Profesional Durante Transferencia"
+    prompt: "Evalúa si el agente mantuvo un tono profesional y tranquilizador al informar al cliente sobre la transferencia. El criterio se cumple si el agente explicó que transferirá a alguien que puede ayudar mejor."
+    use_knowledge_base: false
+dynamic_variables:
+  direccion_cliente: "avenida 123"
+  hour_1_meeting: "3 PM"
+  client_name: "Belkys"
+  hour_2_meeting: "5 PM"
+new_turns_limit: 20

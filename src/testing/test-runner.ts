@@ -70,19 +70,17 @@ export class TestRunner {
     const content = await readFile(filePath, 'utf-8');
     const parsedYAML = parseYAML(content);
 
+    // Reemplazar variables de entorno en TODO el objeto ANTES de validación
+    const yamlWithEnvVars = this.replaceEnvVarsInObject(parsedYAML);
+
     // Validar el YAML con Zod
-    const validationResult = TestDefinitionSchema.safeParse(parsedYAML);
+    const validationResult = TestDefinitionSchema.safeParse(yamlWithEnvVars);
 
     if (!validationResult.success) {
       throw new TestValidationError(validationResult.error);
     }
 
     const test = validationResult.data as TestDefinition;
-
-    // Reemplazar variables de entorno en agent_id
-    if (test.agent_id && test.agent_id.includes('${')) {
-      test.agent_id = this.replaceEnvVars(test.agent_id);
-    }
 
     return test;
   }
@@ -94,6 +92,30 @@ export class TestRunner {
     return str.replace(/\$\{([^}]+)\}/g, (_, varName) => {
       return process.env[varName] || '';
     });
+  }
+
+  /**
+   * Reemplaza variables de entorno en un objeto de forma recursiva
+   * Procesa strings, arrays y objetos anidados
+   */
+  private replaceEnvVarsInObject(obj: any): any {
+    if (typeof obj === 'string') {
+      return this.replaceEnvVars(obj);
+    }
+
+    if (Array.isArray(obj)) {
+      return obj.map((item) => this.replaceEnvVarsInObject(item));
+    }
+
+    if (obj !== null && typeof obj === 'object') {
+      const result: any = {};
+      for (const [key, value] of Object.entries(obj)) {
+        result[key] = this.replaceEnvVarsInObject(value);
+      }
+      return result;
+    }
+
+    return obj;
   }
 
   /**

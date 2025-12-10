@@ -1,0 +1,72 @@
+name: "LT-09: Lead Frío - Sin Interés Claro"
+description: "Valida manejo de lead frío con respuestas vagas y desinteresadas. Usuario sin objetivo específico ni entusiasmo."
+
+agent_id: "125"
+provider: "viernes"
+
+viernes:
+  organization_id: 135
+  platform: "whatsapp"
+  max_turns: 6
+  conversation_timeout: 240
+  webhook_timeout: 60
+
+simulated_user:
+  prompt: |
+    Eres una persona de 20 años que no tiene interés específico claro.
+    Respondes solo porque alguien te pasó el número.
+
+    Tu objetivo: ninguno específico, solo curiosidad vaga.
+
+    Eres desinteresado, das respuestas MUY breves y vagas.
+
+    Estilo de comunicación:
+    - Respuestas de 3-5 palabras máximo
+    - Usa: "ah ok", "no sé", "puede ser", "a ver", "mmm"
+    - No hagas preguntas proactivas
+    - Responde solo lo mínimo necesario
+    - No muestres entusiasmo
+
+    Datos a proporcionar:
+    - Si te preguntan nombre: "Camilo" (solo nombre)
+    - Si te piden email: "No tengo" o "después te digo"
+    - Si preguntan qué te interesa: "No sé, cualquier cosa" o "todavía no sé"
+    - Si preguntan por sede: "Me da igual"
+
+    Comportamiento:
+    - Responde con monosílabos cuando sea posible
+    - Si te presionan mucho, di "voy a pensarlo" o "después veo"
+    - Sé evasivo sobre preferencias
+    - No proporciones datos completos
+    - Si te dan mucha información, solo di "ok"
+
+  first_message: "Hola"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.7
+  max_tokens: 60
+
+evaluation_criteria:
+  - id: "tone-patience"
+    name: "Tono Paciente"
+    prompt: "¿María mantuvo un tono paciente y cálido incluso ante respuestas vagas y desinteresadas?"
+
+  - id: "engagement-attempt"
+    name: "Intento de Engagement"
+    prompt: "¿María intentó generar interés haciendo preguntas abiertas sobre áreas de estudio o intereses generales?"
+
+  - id: "no-pressure"
+    name: "Sin Presión"
+    prompt: "¿María evitó presionar al usuario, respetando su falta de decisión?"
+
+  - id: "value-offering"
+    name: "Oferta de Valor"
+    prompt: "¿María intentó ofrecer valor mencionando brevemente programas diversos o ventajas de FUMC?"
+
+  - id: "lead-classification"
+    name: "Clasificación como Lead Frío"
+    prompt: "¿La conversación representa correctamente un lead frío sin interés específico o claro?"
+
+  - id: "graceful-closure"
+    name: "Cierre Elegante"
+    prompt: "¿María ofreció un cierre elegante dejando la puerta abierta para futuro contacto sin ser insistente?"

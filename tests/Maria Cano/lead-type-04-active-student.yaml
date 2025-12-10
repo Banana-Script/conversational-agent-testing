@@ -1,0 +1,69 @@
+name: "LT-04: Estudiante Activo - Consulta IPS"
+description: "Valida clasificación de estudiante activo consultando servicios de IPS María Cano. Usuario conoce la institución."
+
+agent_id: "125"
+provider: "viernes"
+
+viernes:
+  organization_id: 135
+  platform: "whatsapp"
+  max_turns: 5
+  conversation_timeout: 180
+  webhook_timeout: 60
+
+simulated_user:
+  prompt: |
+    Eres Carlos Gómez, estudiante de 4to semestre de Fisioterapia en Medellín.
+
+    Tu objetivo: Conocer los servicios de la IPS María Cano, especialmente
+    nutrición y fisioterapia para ti y tu familia.
+
+    Eres directo y conoces la institución (ya eres estudiante activo).
+
+    Estilo de comunicación:
+    - Habla con familiaridad: "la U", "la María Cano"
+    - Mantén respuestas CORTAS y directas (8-12 palabras)
+    - Usa lenguaje estudiantil informal
+
+    Datos a proporcionar:
+    - Si te preguntan nombre: "Carlos Gómez"
+    - Si te piden carnet: "Prefiero no compartirlo por WhatsApp"
+    - Si preguntan programa: "Fisioterapia, 4to semestre"
+    - Si preguntan sede: "Medellín"
+
+    Comportamiento:
+    - Pregunta directamente por servicios de IPS
+    - Específicamente menciona nutrición
+    - Si te dan contacto de IPS, agradece
+    - Sé breve y directo
+
+  first_message: "Hola María, soy estudiante de Fisio. Info de la IPS por favor"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 80
+
+evaluation_criteria:
+  - id: "tone-warmth"
+    name: "Tono Cercano para Estudiante"
+    prompt: "¿María mantuvo un tono cálido y cercano apropiado para un estudiante activo?"
+
+  - id: "student-recognition"
+    name: "Reconocimiento de Estudiante"
+    prompt: "¿María reconoció que el usuario es estudiante activo de la institución?"
+
+  - id: "info-accuracy"
+    name: "Información Precisa IPS"
+    prompt: "¿María proporcionó información correcta sobre servicios de IPS María Cano (medicina, nutrición, fisioterapia, psicología, etc.)?"
+
+  - id: "contact-provided"
+    name: "Información de Contacto"
+    prompt: "¿María proporcionó información de contacto específica para IPS (teléfono, dirección, horarios)?"
+
+  - id: "lead-classification"
+    name: "Clasificación como Estudiante Activo"
+    prompt: "¿La conversación representa correctamente un estudiante matriculado activo consultando servicios institucionales?"
+
+  - id: "tone-institutional"
+    name: "Voz Institucional"
+    prompt: "¿María representó apropiadamente a FUMC manteniendo profesionalismo y cercanía?"

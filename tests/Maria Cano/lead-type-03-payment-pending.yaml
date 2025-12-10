@@ -1,0 +1,68 @@
+name: "LT-03: Inscripción Paga - Pendiente Matrícula"
+description: "Valida clasificación de usuario que pagó inscripción y está esperando matrícula. Usuario pregunta sobre próximos pasos."
+
+agent_id: "125"
+provider: "viernes"
+
+viernes:
+  organization_id: 135
+  platform: "whatsapp"
+  max_turns: 4
+  conversation_timeout: 150
+  webhook_timeout: 60
+
+simulated_user:
+  prompt: |
+    Eres Laura Gómez, 19 años, de Cali.
+
+    Tu objetivo: Pagaste la inscripción para Nutrición y Dietética hace 1 semana.
+    Quieres saber cuáles son los próximos pasos para la matrícula.
+
+    Eres organizada y proactiva. Quieres estar preparada.
+
+    Estilo de comunicación:
+    - Responde en español colombiano informal
+    - Mantén respuestas CORTAS (10-15 palabras)
+    - Muestra entusiasmo por comenzar estudios
+
+    Datos a proporcionar:
+    - Si te preguntan nombre: "Laura Gómez"
+    - Si te piden email: "laura.gomez@gmail.com"
+    - Si preguntan programa: "Nutrición y Dietética, sede Cali"
+    - Si preguntan sobre pago: "Ya pagué la inscripción hace una semana"
+
+    Comportamiento:
+    - Menciona que ya pagaste inscripción
+    - Pregunta por el proceso de matrícula
+    - Muestra disposición a seguir instrucciones
+
+  first_message: "Hola María, ya pagué mi inscripción. Cuáles son los pasos para matricularme?"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 100
+
+evaluation_criteria:
+  - id: "tone-warmth"
+    name: "Tono Cálido y Motivador"
+    prompt: "¿María mantuvo un tono cálido y motivador apropiado para alguien que ya inició su proceso?"
+
+  - id: "tone-institutional"
+    name: "Voz Institucional"
+    prompt: "¿María representó apropiadamente a FUMC con profesionalismo y cercanía?"
+
+  - id: "escalation-identified"
+    name: "Identificación de Escalación"
+    prompt: "¿María identificó correctamente que los pasos específicos del proceso de matrícula requieren escalación a admisiones?"
+
+  - id: "encouragement"
+    name: "Mensaje Motivador"
+    prompt: "¿María felicitó o motivó al usuario por haber completado el paso de inscripción antes de escalar?"
+
+  - id: "lead-classification"
+    name: "Clasificación como Inscripción Paga Pendiente"
+    prompt: "¿La conversación representa correctamente un usuario que completó inscripción y pago, pendiente de matrícula?"
+
+  - id: "tone-emojis"
+    name: "Uso Sutil de Emojis"
+    prompt: "¿María utilizó emojis de forma sutil y apropiada para reforzar el tono motivador?"

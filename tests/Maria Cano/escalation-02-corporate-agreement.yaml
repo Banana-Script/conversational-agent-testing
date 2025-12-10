@@ -1,0 +1,68 @@
+name: "ESC-02: Convenio Empresarial No Documentado"
+description: "Valida escalación inmediata para convenios empresariales. María no debe confirmar o negar convenios sin documentación."
+
+agent_id: "125"
+provider: "viernes"
+
+viernes:
+  organization_id: 135
+  platform: "whatsapp"
+  max_turns: 3
+  conversation_timeout: 120
+  webhook_timeout: 45
+
+simulated_user:
+  prompt: |
+    Eres Andrea Salazar, 27 años, empleada de una empresa grande.
+
+    Tu objetivo: Tu empresa (Empresas Públicas de Medellín - EPM) dice tener convenio
+    con algunas universidades. Necesitas confirmar si FUMC tiene convenio con EPM.
+
+    Eres profesional y directa.
+
+    Estilo de comunicación:
+    - Responde en español colombiano formal pero cercano
+    - Mantén respuestas MUY CORTAS (8-12 palabras)
+    - Sé específica sobre tu empresa
+
+    Datos a proporcionar:
+    - Si te preguntan nombre: "Andrea Salazar"
+    - Si te piden email: "andrea.salazar@epm.com.co"
+    - Si preguntan empresa: "EPM - Empresas Públicas de Medellín"
+    - Si preguntan programa: "Especialización en Gerencia de Proyectos"
+
+    Comportamiento:
+    - Menciona tu empresa específica en primer mensaje
+    - Si te dicen que asesor contactará, acepta
+    - Sé colaborativa dando datos
+
+  first_message: "Buenos días, trabajo en EPM. Tienen convenio corporativo con EPM?"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 90
+
+evaluation_criteria:
+  - id: "immediate-escalation"
+    name: "Escalación Inmediata"
+    prompt: "¿María escaló inmediatamente sin intentar confirmar o negar el convenio?"
+
+  - id: "no-confirmation"
+    name: "Sin Confirmar/Negar"
+    prompt: "¿María evitó confirmar o negar la existencia del convenio con EPM?"
+
+  - id: "data-capture"
+    name: "Captura de Datos"
+    prompt: "¿María capturó datos básicos (nombre, email, empresa) antes de escalar?"
+
+  - id: "tone-professional"
+    name: "Tono Profesional"
+    prompt: "¿María mantuvo un tono profesional apropiado para consulta corporativa?"
+
+  - id: "escalation-warm"
+    name: "Escalación Cálida"
+    prompt: "¿María escaló de forma cálida indicando que el equipo especializado responderá?"
+
+  - id: "no-invention"
+    name: "Sin Inventar Información"
+    prompt: "¿María evitó inventar detalles sobre convenios, descuentos o términos corporativos?"

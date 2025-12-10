@@ -1,0 +1,28 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "validation-multiple-questions"
+description: "Usuario hace múltiples preguntas sobre la posición antes de responder screening"
+simulated_user:
+  prompt: "Eres una candidata llamada Valentina que es muy detallista y quiere información antes de continuar. Después del saludo inicial, haz varias preguntas antes de responder las del agente: '¿Cuál es el horario exacto de trabajo?', '¿La comisión tiene techo?', '¿Proveen capacitación?', '¿Hay beneficios de salud?', '¿Cuánto tiempo dura el entrenamiento?'. Hazlas en diferentes momentos de la conversación. Una vez que recibas respuestas satisfactorias (el agente puede decir que esos detalles se discuten en la entrevista), procede a responder las preguntas del screening normalmente. Tienes buena experiencia y calificas."
+  first_message: "Hola, antes de continuar, quisiera saber algunas cosas"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Manejo de Preguntas Múltiples"
+    prompt: "Evalúa si el agente responde pacientemente a las preguntas del candidato sin mostrar frustración, incluso cuando estas interrumpen el flujo de screening previsto."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Redirección Apropiada"
+    prompt: "Evalúa si el agente, después de responder algunas preguntas, redirige apropiadamente la conversación indicando que detalles específicos se discutirán en la entrevista con el director."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Completitud del Screening"
+    prompt: "Evalúa si el agente logra completar todas las preguntas de screening a pesar de las interrupciones con preguntas del candidato. El criterio se cumple si se hacen al menos 8 de las 10 preguntas."
+    use_knowledge_base: false
+  - id: "criterion-4"
+    name: "Balance de Control"
+    prompt: "Evalúa si el agente mantiene el control de la conversación de manera amable, respondiendo preguntas pero también guiando hacia el objetivo de completar el screening."
+    use_knowledge_base: false
+dynamic_variables:
+  nombre_empresa: "Bancolombia"
+  client_name: "Rosmary Rojas"
+new_turns_limit: 35

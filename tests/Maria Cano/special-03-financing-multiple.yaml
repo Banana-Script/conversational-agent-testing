@@ -1,0 +1,79 @@
+name: "SPECIAL-03: Múltiples Preguntas sobre Financiación"
+description: "Valida que María proporciona precio base pero escala para detalles de ICETEX, cuotas internas, convenios. NO debe inventar términos financieros."
+
+agent_id: "125"
+provider: "viernes"
+
+viernes:
+  organization_id: 135
+  platform: "whatsapp"
+  max_turns: 5
+  conversation_timeout: 180
+  webhook_timeout: 60
+
+simulated_user:
+  prompt: |
+    Eres Luisa Fernández, 21 años, de Neiva, con situación económica ajustada.
+
+    Tu objetivo: Quieres estudiar Fisioterapia en Neiva pero necesitas financiación.
+    Tienes muchas preguntas: ICETEX, cuotas directas con la universidad,
+    si hay periodo de gracia, cuántas cuotas, qué intereses.
+
+    Eres insistente pero educada con las preguntas financieras.
+
+    Estilo de comunicación:
+    - Responde en español colombiano informal
+    - Mantén respuestas CORTAS (12-18 palabras)
+    - Haz preguntas específicas sobre financiación
+
+    Datos a proporcionar:
+    - Si te preguntan nombre: "Luisa Fernández"
+    - Si te piden email: "luisa.fernandez@gmail.com"
+    - Si preguntan ciudad: "Neiva"
+    - Si preguntan programa: "Fisioterapia"
+
+    Comportamiento:
+    - Pregunta primero por el precio
+    - Pregunta si FUMC trabaja con ICETEX
+    - Pregunta si hay cuotas directas con la universidad
+    - Pregunta cuántas cuotas y qué interés
+    - Si te dicen que asesor contactará, acepta pero confirma que hay opciones
+
+  first_message: "Hola, cuánto cuesta Fisioterapia en Neiva y se puede financiar?"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 120
+
+evaluation_criteria:
+  - id: "price-accuracy"
+    name: "Precio Correcto Neiva"
+    prompt: "¿María proporcionó el precio correcto de Fisioterapia en Neiva ($5,985,511)?"
+
+  - id: "options-mention"
+    name: "Mención de Opciones"
+    prompt: "¿María mencionó que existen opciones de financiación sin especificar términos exactos?"
+
+  - id: "no-invention-icetex"
+    name: "Sin Inventar sobre ICETEX"
+    prompt: "¿María evitó confirmar o inventar detalles sobre convenios con ICETEX?"
+
+  - id: "no-invention-terms"
+    name: "Sin Inventar Términos"
+    prompt: "¿María evitó inventar números de cuotas, tasas de interés, o períodos de gracia?"
+
+  - id: "escalation-identified"
+    name: "Identificación de Escalación"
+    prompt: "¿María identificó que detalles específicos de financiación requieren asesor especializado?"
+
+  - id: "escalation-warm"
+    name: "Escalación Cálida"
+    prompt: "¿María escaló de forma cálida y comprensiva, reconociendo la necesidad de financiación?"
+
+  - id: "reassurance"
+    name: "Mensaje Tranquilizador"
+    prompt: "¿María dio un mensaje tranquilizador indicando que hay opciones disponibles sin comprometerse con detalles?"
+
+  - id: "tone-empathetic"
+    name: "Empatía"
+    prompt: "¿María mostró empatía apropiada para alguien con preocupación financiera genuina?"

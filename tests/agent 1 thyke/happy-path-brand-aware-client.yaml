@@ -1,0 +1,34 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "happy-path-brand-aware-client"
+description: "Cliente que conoce la marca Royal Prestige pero no tiene productos, acepta el regalo"
+simulated_user:
+  prompt: "Eres Belkys, conoces la marca Royal Prestige porque un amigo te habló de ella pero nunca has comprado nada. Te gusta cocinar y te interesa conocer más. Estás emocionada por recibir el regalo gratis y aceptas agendar la cita. Eres cooperativa y confirmas tu información sin problemas."
+  first_message: "¿Aló?"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Presentación Inicial"
+    prompt: "Evalúa si el agente se presentó como Sofía de Royal Prestige y mencionó el regalo pendiente de manera profesional. El criterio se cumple si la presentación fue completa y cordial."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Indagación de Conocimiento de Marca"
+    prompt: "Evalúa si el agente preguntó si el cliente había escuchado antes de Royal Prestige. El criterio se cumple si el agente realizó esta pregunta específica durante el flujo de generación de interés."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Seguimiento por Conocimiento Previo"
+    prompt: "Evalúa si el agente, al recibir una respuesta afirmativa sobre conocer la marca, preguntó si el cliente tiene productos en casa. El criterio se cumple si el agente siguió el flujo correcto para clientes que conocen la marca."
+    use_knowledge_base: false
+  - id: "criterion-4"
+    name: "Indagación de Origen del Conocimiento"
+    prompt: "Evalúa si el agente preguntó de dónde conoce la marca (familia, amigos, publicidad) cuando el cliente mencionó que no tiene productos. El criterio se cumple si el agente mostró interés por entender la conexión del cliente con la marca."
+    use_knowledge_base: false
+  - id: "criterion-5"
+    name: "Agendamiento Exitoso"
+    prompt: "Evalúa si el agente logró confirmar una cita con fecha y hora específica para la entrega del regalo. El criterio se cumple si hay un horario confirmado al final de la conversación."
+    use_knowledge_base: false
+dynamic_variables:
+  direccion_cliente: "avenida 123"
+  hour_1_meeting: "3 PM"
+  client_name: "Belkys"
+  hour_2_meeting: "5 PM"
+new_turns_limit: 25

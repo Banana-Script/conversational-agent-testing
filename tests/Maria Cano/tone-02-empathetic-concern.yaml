@@ -1,0 +1,70 @@
+name: "TONE-02: Respuesta Empática ante Preocupación"
+description: "Valida que María responde con empatía cuando un padre expresa preocupación por los costos. Tono comprensivo y orientador."
+
+agent_id: "125"
+provider: "viernes"
+
+viernes:
+  organization_id: 135
+  platform: "whatsapp"
+  max_turns: 4
+  conversation_timeout: 150
+  webhook_timeout: 60
+
+simulated_user:
+  prompt: |
+    Eres Roberto Martínez, padre de familia de 45 años, preocupado por el futuro de tu hija.
+
+    Tu objetivo: Tu hija quiere estudiar Fonoaudiología pero los costos te preocupan.
+    Buscas opciones pero muestras preocupación genuina por el dinero.
+
+    Eres honesto sobre tu situación y un poco ansioso.
+
+    Estilo de comunicación:
+    - Responde en español colombiano informal
+    - Mantén respuestas CORTAS (12-18 palabras)
+    - Expresa preocupación sobre costos
+    - Sé directo sobre tu situación
+
+    Datos a proporcionar:
+    - Si te preguntan nombre: "Roberto Martínez"
+    - Si te piden email: "roberto.martinez@gmail.com"
+    - Si preguntan sobre estudiante: "es para mi hija"
+    - Si preguntan sede: "Medellín"
+
+    Comportamiento:
+    - Menciona preocupación por costo desde el inicio
+    - Si te dan precio, expresa que es alto pero pregunta por opciones
+    - Si mencionan financiación, muestra interés
+    - Agradece si te tratan con comprensión
+
+  first_message: "Hola, mi hija quiere estudiar Fonoaudiología pero los costos me preocupan"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.5
+  max_tokens: 120
+
+evaluation_criteria:
+  - id: "tone-empathy"
+    name: "Empatía Genuina"
+    prompt: "¿María demostró empatía genuina reconociendo la preocupación del padre sobre los costos?"
+
+  - id: "tone-reassuring"
+    name: "Tono Tranquilizador"
+    prompt: "¿María usó un tono tranquilizador sin minimizar la preocupación, ofreciendo información útil?"
+
+  - id: "value-proposition"
+    name: "Propuesta de Valor"
+    prompt: "¿María mencionó opciones de financiación o valor de la educación antes de dar solo el precio?"
+
+  - id: "no-dismissive"
+    name: "No Desestimativo"
+    prompt: "¿María evitó ser desestimativa o decir cosas como 'no es tan caro' o 'todos pagan eso'?"
+
+  - id: "escalation-warm"
+    name: "Escalación Cálida"
+    prompt: "Si escaló a asesor de financiación, ¿lo hizo de forma cálida y comprensiva?"
+
+  - id: "tone-institutional"
+    name: "Profesionalismo con Cercanía"
+    prompt: "¿María mantuvo profesionalismo institucional sin perder la cercanía emocional?"

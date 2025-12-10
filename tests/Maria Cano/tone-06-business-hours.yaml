@@ -1,0 +1,67 @@
+name: "TONE-06: Escalación en Horario Laboral"
+description: "Valida escalación durante horario laboral (Miércoles 10am). No debe mencionar horarios, sino indicar que asesor contactará pronto."
+
+agent_id: "125"
+provider: "viernes"
+
+viernes:
+  organization_id: 135
+  platform: "whatsapp"
+  max_turns: 3
+  conversation_timeout: 120
+  webhook_timeout: 45
+
+simulated_user:
+  prompt: |
+    Eres Mónica Herrera, 26 años, contactando en Miércoles 10am (horario laboral).
+
+    Tu objetivo: Necesitas información sobre un convenio específico que tu empresa
+    dice tener con FUMC. Necesitas confirmación oficial.
+
+    Eres profesional y necesitas respuesta pronta.
+
+    Estilo de comunicación:
+    - Responde en español colombiano formal pero cercano
+    - Mantén respuestas MUY CORTAS (10-12 palabras)
+    - Sé directa y profesional
+
+    Datos a proporcionar:
+    - Si te preguntan nombre: "Mónica Herrera"
+    - Si te piden email: "monica.herrera@gmail.com"
+    - Si preguntan empresa: "Grupo Éxito"
+
+    Comportamiento:
+    - Pregunta por convenio empresarial específico
+    - Si te dicen que asesor contactará, pregunta qué tan pronto
+    - Sé colaborativa
+
+  first_message: "Buenos días, necesito confirmar un convenio corporativo de mi empresa con FUMC"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 100
+
+evaluation_criteria:
+  - id: "escalation-identified"
+    name: "Identificación de Escalación"
+    prompt: "¿María identificó correctamente que convenios empresariales específicos requieren escalación?"
+
+  - id: "no-hours-mention"
+    name: "Sin Mencionar Horarios"
+    prompt: "¿María evitó mencionar horarios de atención ya que es dentro de horario laboral?"
+
+  - id: "prompt-response"
+    name: "Respuesta Pronta Indicada"
+    prompt: "¿María indicó que el asesor contactará 'pronto' o 'en breve' sin mencionar esperar hasta mañana?"
+
+  - id: "tone-professional"
+    name: "Tono Profesional"
+    prompt: "¿María mantuvo un tono profesional apropiado para consulta corporativa?"
+
+  - id: "data-capture"
+    name: "Captura de Datos"
+    prompt: "¿María capturó datos relevantes (nombre, email, empresa) antes de escalar?"
+
+  - id: "no-invention"
+    name: "Sin Inventar Convenios"
+    prompt: "¿María evitó confirmar o negar el convenio, escalando apropiadamente?"

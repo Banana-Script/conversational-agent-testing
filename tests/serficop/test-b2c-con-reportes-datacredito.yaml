@@ -1,0 +1,73 @@
+# ============================================================================
+# TEST 9: B2C con Reportes en Datacredito
+# ============================================================================
+# Verifica que el agente NO ejecuta el manejo de Datacredito B2C
+# para independiente con reportes negativos sin paz y salvo
+# ============================================================================
+
+name: "B2C con Reportes Datacredito - Verificar NO manejo B2C"
+description: "Verifica que el agente NO ejecuta el flujo de manejo de Datacredito B2C"
+
+agent_id: "126"
+provider: "viernes"
+
+viernes:
+  organization_id: 58
+  agent_id: 126
+  platform: "whatsapp"
+  max_turns: 12
+  conversation_timeout: 300
+  webhook_timeout: 60
+
+simulated_user:
+  prompt: |
+    Eres Roberto Sanchez, trabajador independiente con buen ingreso pero con historial crediticio.
+    Tus ingresos son de $6.000.000 mensuales.
+    TIENES reportes en Datacredito y NO tienes paz y salvo.
+    Responde en espanol, de forma breve y honesta.
+
+    Cuando te pregunten por email: roberto.sanchez@gmail.com
+    Cuando te pregunten nombre: Roberto Sanchez
+    Cuando pregunten si es empresa o persona natural: persona natural
+    Cuando pregunten si eres empleado o independiente: independiente
+
+    Si te hacen preguntas sobre ingresos: gano 6 millones mensuales
+    Si te preguntan si son mayores a 5 millones: si
+    Si te preguntan por Datacredito: si, tengo algunos reportes
+    Si te preguntan por paz y salvo: no, no tengo paz y salvo
+    Si te preguntan por referido: no conozco a nadie que pueda ayudarme
+    Si te preguntan por extractos: si los tengo
+    Si te preguntan por salud/pension: si cotizo
+    Si te preguntan por declaracion renta: si declaro
+
+    Responde maximo 1-2 oraciones por mensaje.
+  first_message: "Hola, quiero rentar un vehiculo"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 100
+
+evaluation_criteria:
+  - id: "no-datacredito-followup"
+    name: "Sin seguimiento Datacredito B2C"
+    prompt: "El agente NO pregunto por paz y salvo despues de que el usuario menciono reportes en Datacredito?"
+
+  - id: "no-referral-question"
+    name: "Sin pregunta de referido B2C"
+    prompt: "El agente NO pregunto si conoce a alguien que cumpla los requisitos para sacar el vehiculo?"
+
+  - id: "no-b2c-lost-flow"
+    name: "No ejecuta flujo B2C perdido"
+    prompt: "El agente NO ejecuto el flujo completo que termina en B2C - PERDIDO por Datacredito?"
+
+  - id: "appropriate-handling"
+    name: "Manejo apropiado"
+    prompt: "El agente manejo la situacion de forma apropiada sin ejecutar flujo B2C?"
+
+expected_structured_data:
+  - field_name: "funnel"
+    expected_value: "B2C - PERDIDO"
+    match_mode: "exact"
+    capture_strategy: "last"
+    required: false
+    description: "El funnel NO debe ser B2C - PERDIDO - test FALLA si genera este valor"

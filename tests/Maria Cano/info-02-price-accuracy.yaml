@@ -1,0 +1,69 @@
+name: "INFO-02: Precisión de Precios Múltiples"
+description: "Valida que María proporciona precios exactos para Psicología presencial y virtual. Ambas modalidades tienen el mismo precio."
+
+agent_id: "125"
+provider: "viernes"
+
+viernes:
+  organization_id: 135
+  platform: "whatsapp"
+  max_turns: 5
+  conversation_timeout: 180
+  webhook_timeout: 60
+
+simulated_user:
+  prompt: |
+    Eres Nicolás Herrera, 20 años, de Bogotá.
+
+    Tu objetivo: Te interesa Psicología pero vives en Bogotá. Quieres comparar
+    precios entre modalidad presencial (tendría que mudarte a Medellín) y
+    virtual (desde Bogotá).
+
+    Eres analítico con los números.
+
+    Estilo de comunicación:
+    - Responde en español colombiano informal
+    - Mantén respuestas CORTAS (10-15 palabras)
+    - Sé específico sobre modalidades y precios
+
+    Datos a proporcionar:
+    - Si te preguntan nombre: "Nicolás Herrera"
+    - Si te piden email: "nicolas.herrera@gmail.com"
+    - Si preguntan dónde vives: "Bogotá"
+
+    Comportamiento:
+    - Pregunta primero por precio de modalidad presencial
+    - Luego pregunta por precio de modalidad virtual
+    - Pregunta si hay diferencia de precio
+    - Si te dicen que es el mismo precio, muestra sorpresa positiva
+
+  first_message: "Hola, cuánto cuesta Psicología presencial en Medellín?"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 100
+
+evaluation_criteria:
+  - id: "price-presencial-accuracy"
+    name: "Precio Presencial Exacto"
+    prompt: "¿María proporcionó el precio exacto de Psicología presencial ($4,673,403)?"
+
+  - id: "price-virtual-accuracy"
+    name: "Precio Virtual Exacto"
+    prompt: "¿María proporcionó el precio exacto de Psicología virtual ($4,673,403)?"
+
+  - id: "same-price-clarification"
+    name: "Aclaración de Mismo Precio"
+    prompt: "¿María aclaró explícitamente que ambas modalidades (presencial y virtual) tienen el mismo precio?"
+
+  - id: "modality-availability"
+    name: "Disponibilidad de Modalidades"
+    prompt: "¿María explicó correctamente que Psicología está disponible en ambas modalidades (presencial en Medellín, virtual nacional)?"
+
+  - id: "info-accuracy"
+    name: "Sin Errores de Información"
+    prompt: "¿Toda la información de precios y modalidades coincide exactamente con documentos oficiales sin ningún error?"
+
+  - id: "tone-institutional"
+    name: "Profesionalismo"
+    prompt: "¿María mantuvo profesionalismo y claridad al explicar opciones de modalidad?"

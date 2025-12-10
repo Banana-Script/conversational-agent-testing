@@ -1,0 +1,24 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "error-no-availability"
+description: "Candidato que no tiene disponibilidad de tiempo completo, solo medio tiempo"
+simulated_user:
+  prompt: "Eres una candidata llamada Elena con buena experiencia en ventas (3 años). Vives en Miami desde hace 7 años, tienes vehículo y licencia. Sin embargo, IMPORTANTE: cuando el agente pregunte sobre disponibilidad de tiempo completo, explica que actualmente solo puedes trabajar medio tiempo (4 horas diarias) porque estás estudiando en la universidad. No puedes comprometerte a tiempo completo hasta terminar el semestre en 6 meses. Sé honesta sobre esta limitación. Menciona que estarías interesada en una posición de medio tiempo si existe."
+  first_message: "Hola, buenos días"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Identificación de Restricción de Disponibilidad"
+    prompt: "Evalúa si el agente identifica claramente que el candidato no tiene disponibilidad de tiempo completo cuando este menciona que solo puede medio tiempo."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Manejo de Descalificación"
+    prompt: "Evalúa si el agente maneja la situación profesionalmente, explicando que la posición requiere tiempo completo si esa es la política. El criterio se cumple si el agente es claro pero empático sobre los requisitos."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Alternativas o Cierre Apropiado"
+    prompt: "Evalúa si el agente ofrece mantener el contacto para el futuro cuando haya disponibilidad completa, o cierra profesionalmente agradeciendo el interés. El criterio se cumple si hay un cierre constructivo."
+    use_knowledge_base: false
+dynamic_variables:
+  nombre_empresa: "Bancolombia"
+  client_name: "Rosmary Rojas"
+new_turns_limit: 20

@@ -1,0 +1,71 @@
+name: "ESC-03: Homologación Compleja"
+description: "Valida que María valida y recopila información básica ANTES de escalar homologación. Caso especial que requiere validación previa."
+
+agent_id: "125"
+provider: "viernes"
+
+viernes:
+  organization_id: 135
+  platform: "whatsapp"
+  max_turns: 5
+  conversation_timeout: 180
+  webhook_timeout: 60
+
+simulated_user:
+  prompt: |
+    Eres Jorge Mendoza, 24 años, estudiante de otra universidad.
+
+    Tu objetivo: Estudiaste 3 semestres de Psicología en Universidad de Antioquia.
+    Quieres pasarte a FUMC y homologar materias aprobadas.
+
+    Eres cooperativo dando información.
+
+    Estilo de comunicación:
+    - Responde en español colombiano informal
+    - Mantén respuestas CORTAS (10-15 palabras)
+    - Proporciona información cuando te pregunten
+
+    Datos a proporcionar:
+    - Si te preguntan nombre: "Jorge Mendoza"
+    - Si te piden email: "jorge.mendoza@gmail.com"
+    - Si preguntan universidad anterior: "Universidad de Antioquia"
+    - Si preguntan programa: "Psicología"
+    - Si preguntan cuántos semestres: "3 semestres completos"
+    - Si preguntan estado: "todos los semestres aprobados"
+
+    Comportamiento:
+    - Menciona "homologación" claramente
+    - Responde todas las preguntas de validación
+    - Sé cooperativo
+    - Si te dicen que asesor contactará, acepta
+
+  first_message: "Hola, estudié Psicología en otra universidad. Puedo homologar materias?"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 100
+
+evaluation_criteria:
+  - id: "validation-questions"
+    name: "Preguntas de Validación"
+    prompt: "¿María hizo preguntas de validación sobre universidad anterior, programa, semestres cursados y estado académico?"
+
+  - id: "info-collection"
+    name: "Recopilación de Información"
+    prompt: "¿María recopiló información básica (nombre, universidad, programa, nivel) ANTES de escalar?"
+
+  - id: "homologation-range"
+    name: "Mención de Rangos"
+    prompt: "¿María mencionó los rangos de homologación (1-10 créditos: $218,248, 11-20 créditos: $339,789)?"
+
+  - id: "escalation-after-validation"
+    name: "Escalación Después de Validación"
+    prompt: "¿María escaló DESPUÉS de validar y recopilar información, no inmediatamente?"
+
+  - id: "tone-motivational"
+    name: "Tono Motivador"
+    prompt: "¿María mantuvo un tono motivador sobre la posibilidad de continuar estudios en FUMC?"
+
+  - id: "tone-institutional"
+    name: "Profesionalismo"
+    prompt: "¿María mantuvo profesionalismo institucional durante la recopilación de información?"

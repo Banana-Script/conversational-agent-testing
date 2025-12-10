@@ -1,0 +1,81 @@
+name: "SPECIAL-01: Homologación con Validación Previa"
+description: "Valida que María recoge información (universidad, programa, nivel) ANTES de escalar homologación. También debe mencionar rangos de costo."
+
+agent_id: "125"
+provider: "viernes"
+
+viernes:
+  organization_id: 135
+  platform: "whatsapp"
+  max_turns: 6
+  conversation_timeout: 240
+  webhook_timeout: 60
+
+simulated_user:
+  prompt: |
+    Eres Sofía Ramírez, 23 años, estudiante de otra universidad.
+
+    Tu objetivo: Estudiaste 4 semestres de Nutrición y Dietética en Universidad
+    del Valle (Cali). Todos aprobados. Quieres pasarte a FUMC y homologar.
+
+    Eres cooperativa dando información.
+
+    Estilo de comunicación:
+    - Responde en español colombiano informal
+    - Mantén respuestas CORTAS (10-15 palabras)
+    - Proporciona información cuando te pregunten
+    - Sé específica en tus respuestas
+
+    Datos a proporcionar:
+    - Si te preguntan nombre: "Sofía Ramírez"
+    - Si te piden email: "sofia.ramirez@gmail.com"
+    - Si preguntan universidad anterior: "Universidad del Valle, en Cali"
+    - Si preguntan programa: "Nutrición y Dietética"
+    - Si preguntan cuántos semestres: "4 semestres"
+    - Si preguntan estado académico: "Todos aprobados, buen promedio"
+    - Si preguntan por qué quieres cambiar: "Me vine a Medellín por trabajo"
+
+    Comportamiento:
+    - Usa la palabra "homologar" o "homologación"
+    - Responde todas las preguntas de validación
+    - Si te mencionan rangos de precio, pregunta cuántos créditos homologarías
+    - Si te dicen que asesor contactará, acepta y agradece
+
+  first_message: "Hola, estudié 4 semestres de Nutrición en otra universidad. Puedo homologar materias?"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 100
+
+evaluation_criteria:
+  - id: "validation-university"
+    name: "Pregunta por Universidad Anterior"
+    prompt: "¿María preguntó por la universidad de origen?"
+
+  - id: "validation-program"
+    name: "Pregunta por Programa"
+    prompt: "¿María preguntó por el programa académico cursado?"
+
+  - id: "validation-level"
+    name: "Pregunta por Nivel/Semestres"
+    prompt: "¿María preguntó cuántos semestres o qué nivel completó?"
+
+  - id: "validation-status"
+    name: "Pregunta por Estado Académico"
+    prompt: "¿María preguntó por el estado académico (aprobados, promedio)?"
+
+  - id: "homologation-ranges"
+    name: "Mención de Rangos"
+    prompt: "¿María mencionó los rangos de costo de homologación (1-10 créditos: $218,248, 11-20 créditos: $339,789)?"
+
+  - id: "escalation-after-validation"
+    name: "Escalación Después de Recopilar"
+    prompt: "¿María escaló DESPUÉS de recopilar información, no inmediatamente al inicio?"
+
+  - id: "tone-motivational"
+    name: "Tono Motivador"
+    prompt: "¿María mantuvo un tono motivador sobre la posibilidad de continuar estudios en FUMC?"
+
+  - id: "data-capture"
+    name: "Captura de Datos de Contacto"
+    prompt: "¿María capturó nombre y email para que admisiones contacte?"

@@ -1,0 +1,34 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "edge-case-already-visited-no-purchase"
+description: "Cliente que ya fue visitado pero no compró, indaga sobre el motivo y reagenda"
+simulated_user:
+  prompt: "Eres Belkys, ya fuiste visitada hace dos meses por un distribuidor de Royal Prestige. Los productos te gustaron pero no compraste porque en ese momento estaban muy caros para tu presupuesto. Ahora que mencionan un regalo gratis, estás interesada en recibir la visita nuevamente para conocer más opciones."
+  first_message: "¿Aló?"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Pregunta sobre Última Visita"
+    prompt: "Evalúa si el agente preguntó cuándo fue la última vez que el cliente fue visitado. El criterio se cumple si el agente realizó esta pregunta específica."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Pregunta sobre Productos Preferidos"
+    prompt: "Evalúa si el agente preguntó cuál de los productos del catálogo le gustó más al cliente durante la visita anterior. El criterio se cumple si esta indagación fue realizada."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Pregunta sobre Compra"
+    prompt: "Evalúa si el agente preguntó si el cliente aprovechó para comprar algún producto. El criterio se cumple si esta pregunta fue formulada."
+    use_knowledge_base: false
+  - id: "criterion-4"
+    name: "Indagación del Motivo de No Compra"
+    prompt: "Evalúa si el agente preguntó cuál fue el motivo por el cual el cliente no compró en la visita anterior. El criterio se cumple si el agente mostró interés por entender las objeciones previas."
+    use_knowledge_base: false
+  - id: "criterion-5"
+    name: "Transición a Agendamiento"
+    prompt: "Evalúa si el agente, después de escuchar el motivo de no compra, continuó con el proceso de agendamiento para la entrega del regalo. El criterio se cumple si se llegó a confirmar una cita específica."
+    use_knowledge_base: false
+dynamic_variables:
+  direccion_cliente: "avenida 123"
+  hour_1_meeting: "3 PM"
+  client_name: "Belkys"
+  hour_2_meeting: "5 PM"
+new_turns_limit: 30

@@ -1,0 +1,26 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "edge-case-family-unavailable-continues"
+description: "Cliente indica que su familia no podrá estar presente pero aún así quiere recibir el regalo"
+simulated_user:
+  prompt: "Eres Belkys, estás interesada en recibir el regalo pero cuando el agente menciona que es importante estar con la familia, explicas que tu esposo trabaja y no podrá estar en ese horario. Sin embargo, insistes en que tú sí puedes recibir el regalo. Quieres continuar con el agendamiento a pesar de que la familia no estará completa."
+  first_message: "¿Aló?"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Reconocimiento de Limitación Familiar"
+    prompt: "Evalúa si el agente escuchó y reconoció que la familia no podrá estar presente en el horario propuesto. El criterio se cumple si el agente mostró comprensión de la situación."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Mantiene Cita Programada"
+    prompt: "Evalúa si el agente mantuvo la fecha y hora acordada a pesar de que la familia no estará presente, según las instrucciones del prompt (mantener la fecha si familiares no pueden estar). El criterio se cumple si el agente no canceló ni reprogramó obligatoriamente la cita."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Confirmación Final de Cita"
+    prompt: "Evalúa si el agente confirmó la cita con la fecha y hora específica aunque la familia no esté disponible. El criterio se cumple si hay confirmación clara del horario agendado."
+    use_knowledge_base: false
+dynamic_variables:
+  direccion_cliente: "avenida 123"
+  hour_1_meeting: "3 PM"
+  client_name: "Belkys"
+  hour_2_meeting: "5 PM"
+new_turns_limit: 25

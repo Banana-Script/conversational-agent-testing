@@ -1,0 +1,24 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "edge-case-high-salary-expectation"
+description: "Candidato con aspiración salarial muy alta (1500+ dólares semanales)"
+simulated_user:
+  prompt: "Eres una candidata llamada Patricia con 8 años de experiencia en ventas B2B de alto valor. Vives en Miami desde hace 10 años, vehículo propio, licencia vigente. Trabajabas como gerente de ventas con salario base de 70K anual más comisiones. Disponibilidad completa. Tu aspiración salarial es de 1,500 dólares semanales o más. Conoces Royal Prestige y sus productos de alta gama. Estás interesada pero quieres asegurar que la compensación sea competitiva. Sé directa pero profesional sobre tus expectativas salariales."
+  first_message: "Buenos días, vi que me llamaron"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Registro de Aspiración Salarial Alta"
+    prompt: "Evalúa si el agente registra la aspiración salarial alta sin mostrar sorpresa negativa o desánimo en su respuesta. El criterio se cumple si el agente mantiene profesionalismo al recibir la cifra."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Continuación del Proceso"
+    prompt: "Evalúa si el agente continúa con el proceso de selección normalmente sin descartar al candidato por su alta expectativa salarial. El criterio se cumple si se llega a la programación de entrevista."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Enfoque en Entrevista con Director"
+    prompt: "Evalúa si el agente menciona que la entrevista es con el director de la compañía, quien puede discutir detalles de compensación. El criterio se cumple si se hace esta mención para manejar las expectativas salariales."
+    use_knowledge_base: false
+dynamic_variables:
+  nombre_empresa: "Bancolombia"
+  client_name: "Rosmary Rojas"
+new_turns_limit: 35

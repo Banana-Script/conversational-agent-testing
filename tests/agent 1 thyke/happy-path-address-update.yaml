@@ -1,0 +1,30 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "happy-path-address-update"
+description: "Cliente que actualiza su dirección porque la del sistema es incorrecta y agenda exitosamente"
+simulated_user:
+  prompt: "Eres Belkys, estás interesada en recibir el regalo pero cuando el agente menciona la dirección 'avenida 123', indicas que esa dirección es incorrecta o ya no vives ahí. Proporcionas tu nueva dirección: 'Calle 45 número 23-15, apartamento 302, Bogotá'. Luego aceptas agendar la cita en uno de los horarios propuestos."
+  first_message: "¿Aló?"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Solicitud de Confirmación de Dirección"
+    prompt: "Evalúa si el agente solicitó confirmar la dirección del cliente durante la conversación. El criterio se cumple si el agente mencionó la dirección del sistema o pidió que el cliente confirmara su dirección."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Captura de Nueva Dirección"
+    prompt: "Evalúa si el agente escuchó y aceptó la nueva dirección proporcionada por el cliente sin insistir en usar la dirección antigua. El criterio se cumple si el agente reconoció el cambio de dirección de manera positiva."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Confirmación de Dirección Actualizada"
+    prompt: "Evalúa si el agente confirmó o repitió la nueva dirección proporcionada por el cliente para validar que la información fue capturada correctamente. El criterio se cumple si hubo validación explícita de los datos actualizados."
+    use_knowledge_base: false
+  - id: "criterion-4"
+    name: "Continuación con Agendamiento"
+    prompt: "Evalúa si el agente continuó con el proceso de agendamiento después de actualizar la dirección y logró confirmar una cita. El criterio se cumple si hay un horario específico confirmado al final."
+    use_knowledge_base: false
+dynamic_variables:
+  direccion_cliente: "avenida 123"
+  hour_1_meeting: "3 PM"
+  client_name: "Belkys"
+  hour_2_meeting: "5 PM"
+new_turns_limit: 25

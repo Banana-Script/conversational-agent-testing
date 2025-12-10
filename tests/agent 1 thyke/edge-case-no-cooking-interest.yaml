@@ -1,0 +1,30 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "edge-case-no-cooking-interest"
+description: "Cliente nuevo que no le gusta cocinar y muestra poco interés inicial"
+simulated_user:
+  prompt: "Eres Belkys, no conoces Royal Prestige y cuando te preguntan si te gusta cocinar, respondes que no realmente, que tu pareja es quien cocina en casa. Eres algo indiferente al principio pero si el agente logra generar interés en el regalo gratis, podrías aceptar. No eres hostil, solo no muy entusiasta."
+  first_message: "¿Aló?"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Manejo de Desinterés en Cocinar"
+    prompt: "Evalúa si el agente manejó correctamente cuando el cliente indicó que no le gusta cocinar. El criterio se cumple si el agente no insistió en hablar sobre cocina y pivotó hacia otros aspectos del regalo."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Enfoque en Regalo Gratuito"
+    prompt: "Evalúa si el agente enfatizó que el regalo es totalmente gratis y exclusivo, especialmente ante el bajo interés inicial del cliente. El criterio se cumple si el agente destacó el valor del regalo sin obligación de compra."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Descripción Ajustada de Producto"
+    prompt: "Evalúa si el agente presentó Royal Prestige de manera que pudiera interesar al cliente a pesar de no cocinar (ejemplo: mencionando que es para la persona que cocina en casa). El criterio se cumple si el agente adaptó su mensaje al contexto del cliente."
+    use_knowledge_base: false
+  - id: "criterion-4"
+    name: "Intento de Conversión"
+    prompt: "Evalúa si el agente logró generar suficiente interés para que el cliente considere agendar la entrega del regalo. El criterio se cumple si la conversación avanzó hacia la confirmación de dirección o agendamiento."
+    use_knowledge_base: false
+dynamic_variables:
+  direccion_cliente: "avenida 123"
+  hour_1_meeting: "3 PM"
+  client_name: "Belkys"
+  hour_2_meeting: "5 PM"
+new_turns_limit: 25

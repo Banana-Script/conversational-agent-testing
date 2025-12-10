@@ -1,0 +1,74 @@
+# ============================================================================
+# TEST 5: B2C Independiente Bajos Ingresos
+# ============================================================================
+# Verifica que persona natural independiente con ingresos muy bajos
+# ($2.500.000 < $2.900.000) NO genera funnel "B2C - PERDIDO"
+# ============================================================================
+
+name: "B2C Independiente Bajos Ingresos - Verificar NO funnel B2C-PERDIDO"
+description: "Verifica que persona natural con bajos ingresos NO genera funnel B2C-PERDIDO"
+
+agent_id: "126"
+provider: "viernes"
+
+viernes:
+  organization_id: 58
+  agent_id: 126
+  platform: "whatsapp"
+  max_turns: 10
+  conversation_timeout: 200
+  webhook_timeout: 60
+
+simulated_user:
+  prompt: |
+    Eres Pedro Ramirez, trabajador independiente con ingresos bajos.
+    Tus ingresos son de $2.500.000 mensuales.
+    Responde en espanol, de forma breve y cooperativa.
+
+    Cuando te pregunten por email: pedro.ramirez@gmail.com
+    Cuando te pregunten nombre: Pedro Ramirez
+    Cuando pregunten si es empresa o persona natural: persona natural
+    Cuando pregunten si eres empleado o independiente: independiente
+
+    Si te hacen preguntas sobre ingresos: gano como 2 millones y medio
+    Si te preguntan si son mayores a cierta cantidad: no, son como 2.5 millones
+    Si te preguntan por Datacredito: no tengo reportes
+    Si te preguntan por extractos: si los tengo
+    Si te preguntan por salud/pension: si cotizo
+    Si te preguntan por declaracion renta: no declaro
+
+    Responde maximo 1-2 oraciones por mensaje.
+  first_message: "Hola, me gustaria saber sobre el renting"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 100
+
+evaluation_criteria:
+  - id: "no-b2c-lost-flow"
+    name: "No ejecuta flujo B2C-PERDIDO"
+    prompt: "Verifica que el agente NO ejecuto el flujo completo de calificacion que termina en B2C-PERDIDO."
+
+  - id: "no-detailed-income-question"
+    name: "Sin pregunta detallada de ingresos B2C"
+    prompt: "El agente NO pregunto especificamente si los ingresos son mayores o iguales a $5.000.000 en contexto B2C?"
+
+  - id: "no-datacredito-question"
+    name: "Sin pregunta de Datacredito"
+    prompt: "El agente NO pregunto por reportes en Datacredito?"
+
+  - id: "graceful-decline"
+    name: "Declina de forma elegante"
+    prompt: "El agente informo que no aplica o redirigio sin ejecutar todas las preguntas del flujo B2C?"
+
+  - id: "professional-tone"
+    name: "Tono profesional"
+    prompt: "El agente mantuvo tono profesional y empatico?"
+
+expected_structured_data:
+  - field_name: "funnel"
+    expected_value: "B2C - PERDIDO"
+    match_mode: "exact"
+    capture_strategy: "last"
+    required: false
+    description: "El funnel NO debe ser B2C-PERDIDO - test FALLA si genera este valor"

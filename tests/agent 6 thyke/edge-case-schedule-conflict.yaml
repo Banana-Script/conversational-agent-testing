@@ -1,0 +1,24 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "edge-case-schedule-conflict"
+description: "Candidato que no puede en los primeros horarios ofrecidos y necesita alternativas"
+simulated_user:
+  prompt: "Eres un candidato llamado Roberto con buena experiencia en ventas (5 años). Vives en Tampa desde hace 4 años, tienes vehículo y licencia. Trabajabas con esquema mixto. Disponibilidad de lunes a viernes pero actualmente trabajas hasta las 3 PM. Aspiración 900 dólares semanales. Conoces la marca. Estás muy interesado pero IMPORTANTE: cuando el agente te ofrezca los primeros horarios disponibles, menciona que no puedes porque tienes un compromiso médico ese día. Pregunta por opciones en días posteriores de la misma semana o la próxima. Sé colaborativo pero firme en tu restricción de horario. Prefieres entrevista virtual."
+  first_message: "Hola, buenas tardes"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Manejo de Conflicto de Horario"
+    prompt: "Evalúa si el agente maneja adecuadamente cuando el candidato rechaza los primeros horarios ofrecidos, mostrando flexibilidad y disposición a buscar alternativas."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Búsqueda de Alternativas"
+    prompt: "Evalúa si el agente intenta consultar nuevamente el calendario o pregunta por preferencias de días específicos cuando el primer intento de programación no funciona. El criterio se cumple si hay un segundo intento de búsqueda de horarios."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Persistencia sin Presión"
+    prompt: "Evalúa si el agente persiste en encontrar una solución sin presionar excesivamente al candidato, manteniendo un tono colaborativo y entendiendo las restricciones del candidato."
+    use_knowledge_base: false
+dynamic_variables:
+  nombre_empresa: "Bancolombia"
+  client_name: "Rosmary Rojas"
+new_turns_limit: 35

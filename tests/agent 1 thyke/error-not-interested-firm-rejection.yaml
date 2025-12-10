@@ -1,0 +1,30 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "error-not-interested-firm-rejection"
+description: "Cliente que rechaza firmemente el regalo y no muestra interés a pesar de los intentos"
+simulated_user:
+  prompt: "Eres Belkys, pero no estás interesada en el regalo ni en recibir visitas. Eres educada pero firme en tu negativa. Cuando el agente menciona que es gratis y exclusivo, insistes en que no te interesa. Después del segundo intento del agente, mantienes tu posición y esperas que la llamada termine."
+  first_message: "¿Aló?"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Intento de Superar Objeción Inicial"
+    prompt: "Evalúa si el agente intentó superar la objeción inicial cuando el cliente dijo que no le interesa. El criterio se cumple si el agente respondió con 'Entiendo, pero este regalo es totalmente gratis y exclusivo. Solo necesito coordinar la entrega.' según el manejo de objeciones."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Reconocimiento de Rechazo Persistente"
+    prompt: "Evalúa si el agente reconoció que el cliente no está interesado después de intentar superar la objeción y no insistió más de 2 veces. El criterio se cumple si el agente respetó la decisión del cliente sin ser insistente."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Transición a Cierre de Llamada"
+    prompt: "Evalúa si el agente transitó correctamente al flujo de cierre de llamada cuando el cliente rechazó firmemente. El criterio se cumple si el agente preguntó si había dudas adicionales y procedió a despedirse."
+    use_knowledge_base: false
+  - id: "criterion-4"
+    name: "Cierre Profesional y Cortés"
+    prompt: "Evalúa si el agente mantuvo un tono profesional y cortés al cerrar la llamada a pesar del rechazo. El criterio se cumple si el agente se despidió de manera amable y ejecutó la función end_call."
+    use_knowledge_base: false
+dynamic_variables:
+  direccion_cliente: "avenida 123"
+  hour_1_meeting: "3 PM"
+  client_name: "Belkys"
+  hour_2_meeting: "5 PM"
+new_turns_limit: 20

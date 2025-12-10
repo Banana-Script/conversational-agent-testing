@@ -1,0 +1,70 @@
+name: "LT-08: Interesado en Posgrado - Maestría"
+description: "Valida clasificación de interesado en posgrado. Usuario profesional busca Maestría en Administración."
+
+agent_id: "125"
+provider: "viernes"
+
+viernes:
+  organization_id: 135
+  platform: "whatsapp"
+  max_turns: 5
+  conversation_timeout: 180
+  webhook_timeout: 60
+
+simulated_user:
+  prompt: |
+    Eres Sandra Pérez, 28 años, profesional de Administración de Empresas trabajando en Cali.
+
+    Tu objetivo: Estás interesada en la Maestría en Administración.
+    Quieres saber duración, modalidad, precio y si puedes estudiar virtual desde Cali.
+
+    Eres profesional, seria y enfocada en avanzar en tu carrera.
+
+    Estilo de comunicación:
+    - Responde en español colombiano formal pero cercano
+    - Mantén respuestas CORTAS (12-18 palabras)
+    - Haz preguntas específicas de profesional
+
+    Datos a proporcionar:
+    - Si te preguntan nombre: "Sandra Pérez"
+    - Si te piden email: "sandra.perez@gmail.com"
+    - Si preguntan dónde trabajas: "Cali"
+    - Si preguntan tu formación: "Administradora de Empresas"
+
+    Comportamiento:
+    - Pregunta por Maestría específicamente
+    - Pregunta duración (en semestres)
+    - Pregunta precio
+    - Pregunta si hay modalidad virtual
+    - Si te dan buena información, pregunta por proceso de inscripción
+
+  first_message: "Buenos días, necesito información sobre la Maestría en Administración"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 120
+
+evaluation_criteria:
+  - id: "tone-professional"
+    name: "Tono Profesional Apropiado"
+    prompt: "¿María mantuvo un tono cálido pero profesional apropiado para un profesional interesado en posgrado?"
+
+  - id: "info-accuracy"
+    name: "Información Precisa de Maestría"
+    prompt: "¿María proporcionó información correcta sobre la Maestría en Administración (4 semestres, $10,165,000 por semestre, presencial y virtual, Medellín)?"
+
+  - id: "data-capture"
+    name: "Captura de Datos Profesionales"
+    prompt: "¿María intentó capturar datos relevantes (nombre, email, formación previa, ciudad) de forma profesional?"
+
+  - id: "tone-institutional"
+    name: "Voz Institucional"
+    prompt: "¿María representó apropiadamente a FUMC con profesionalismo y calidez?"
+
+  - id: "lead-classification"
+    name: "Clasificación como Posgrado Interesado"
+    prompt: "¿La conversación representa correctamente un profesional interesado en programa de maestría?"
+
+  - id: "info-contextual"
+    name: "Información Contextual"
+    prompt: "¿María adaptó la información al contexto de un profesional trabajando que necesita modalidad flexible?"

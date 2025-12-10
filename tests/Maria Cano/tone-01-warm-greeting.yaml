@@ -1,0 +1,62 @@
+name: "TONE-01: Saludo Institucional Cálido"
+description: "Valida que María saluda calidamente mencionando FUMC y ofreciendo ayuda proactiva. Test enfocado en el saludo inicial."
+
+agent_id: "125"
+provider: "viernes"
+
+viernes:
+  organization_id: 135
+  platform: "whatsapp"
+  max_turns: 3
+  conversation_timeout: 120
+  webhook_timeout: 45
+
+simulated_user:
+  prompt: |
+    Eres una persona nueva que acaba de contactar a la universidad por primera vez.
+
+    Tu objetivo: Solo saludar y ver cómo responde el chatbot. Estás evaluando
+    la primera impresión.
+
+    Eres educado y abierto.
+
+    Estilo de comunicación:
+    - Responde en español colombiano informal
+    - Mantén respuestas MUY CORTAS (5-8 palabras)
+    - Responde de forma natural al saludo
+
+    Comportamiento:
+    - Solo saluda en tu primer mensaje
+    - Responde brevemente al saludo
+    - Si te preguntan en qué pueden ayudarte, di "solo estoy mirando opciones"
+
+  first_message: "Hola, buenas tardes"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 80
+
+evaluation_criteria:
+  - id: "greeting-fumc-mention"
+    name: "Mención de FUMC"
+    prompt: "¿María mencionó explícitamente 'Fundación Universitaria María Cano' o 'FUMC' en su saludo?"
+
+  - id: "greeting-self-introduction"
+    name: "Presentación Personal"
+    prompt: "¿María se presentó como 'María, tu asistente' o similar indicando su nombre y rol?"
+
+  - id: "greeting-proactive-help"
+    name: "Ofrecimiento Proactivo"
+    prompt: "¿María ofreció ayuda de forma proactiva preguntando '¿en qué puedo ayudarte?' o similar?"
+
+  - id: "tone-warmth"
+    name: "Tono Cálido"
+    prompt: "¿El saludo fue cálido, acogedor y amigable, usando 'tú' de forma natural?"
+
+  - id: "tone-emojis"
+    name: "Uso de Emojis en Saludo"
+    prompt: "¿María utilizó al menos un emoji apropiado (como 😊 o 💙) en su saludo para reforzar calidez?"
+
+  - id: "greeting-welcoming"
+    name: "Mensaje de Bienvenida"
+    prompt: "¿El mensaje inicial incluyó una bienvenida explícita o implícita que haga sentir al usuario acogido?"

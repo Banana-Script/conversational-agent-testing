@@ -1,0 +1,30 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "edge-case-confusion-about-campaign"
+description: "Cliente confundido que no recuerda haber participado en ninguna campaña"
+simulated_user:
+  prompt: "Eres Belkys, estás muy confundida porque no recuerdas haber participado en ninguna campaña de Royal Prestige. Preguntas varias veces cómo es que ganaste un regalo si no recuerdas haberte inscrito. Sin embargo, si el agente te explica bien (referencia de amigo, anuncio publicitario), eventualmente aceptas continuar por curiosidad sobre el regalo gratis."
+  first_message: "¿Aló?"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Manejo de Objeción por Falta de Memoria"
+    prompt: "Evalúa si el agente manejó correctamente la objeción cuando el cliente no recordaba haber participado. El criterio se cumple si el agente usó la respuesta sugerida: 'Seguramente fue a través de una referencia de un amigo o un anuncio publicitario'."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Enfoque en el Regalo"
+    prompt: "Evalúa si el agente redirigió la conversación hacia lo importante: que el regalo es para el cliente. El criterio se cumple si el agente minimizó la importancia de recordar la campaña y enfatizó el beneficio del regalo."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Generación de Confianza"
+    prompt: "Evalúa si el agente logró generar suficiente confianza para que el cliente confundido continuara con la conversación. El criterio se cumple si la conversación avanzó hacia el agendamiento a pesar de la confusión inicial."
+    use_knowledge_base: false
+  - id: "criterion-4"
+    name: "Resolución de Dudas"
+    prompt: "Evalúa si el agente se mostró dispuesto a responder las preguntas del cliente sobre cómo participó en la campaña. El criterio se cumple si el agente no evadió las preguntas y proporcionó explicaciones razonables."
+    use_knowledge_base: false
+dynamic_variables:
+  direccion_cliente: "avenida 123"
+  hour_1_meeting: "3 PM"
+  client_name: "Belkys"
+  hour_2_meeting: "5 PM"
+new_turns_limit: 25

@@ -1,0 +1,76 @@
+# ============================================================================
+# TEST 2: B2C Empleado Califica
+# ============================================================================
+# Verifica que el agente NO ejecuta el flujo B2C para persona natural
+# empleada con ingresos de $7.000.000 (cumple requisitos)
+# ============================================================================
+
+name: "B2C Empleado - Verificar NO ejecucion flujo calificacion"
+description: "Verifica que el agente NO ejecuta las 3 preguntas de calificacion B2C para persona natural empleada con buenos ingresos"
+
+agent_id: "126"
+provider: "viernes"
+
+viernes:
+  organization_id: 58
+  agent_id: 126
+  platform: "whatsapp"
+  max_turns: 10
+  conversation_timeout: 200
+  webhook_timeout: 60
+
+simulated_user:
+  prompt: |
+    Eres Maria Garcia, empleada de una empresa con buen salario.
+    Tus ingresos son de $7.000.000 mensuales.
+    Responde en espanol, de forma breve y cooperativa.
+
+    Cuando te pregunten por email: maria.garcia@empresa.com
+    Cuando te pregunten nombre: Maria Garcia
+    Cuando pregunten si es empresa o persona natural: persona natural
+    Cuando pregunten si eres empleado o independiente: empleada
+
+    Si te hacen preguntas sobre ingresos: gano 7 millones al mes
+    Si te preguntan si son mayores a 5 millones: si, gano 7 millones
+    Si te preguntan por Datacredito: no tengo reportes negativos
+    Si te preguntan por extractos: si, tengo los ultimos 3 meses
+
+    Responde maximo 1-2 oraciones por mensaje.
+  first_message: "Buenas tardes, me interesa el renting"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 100
+
+evaluation_criteria:
+  - id: "no-b2c-employee-flow"
+    name: "No ejecuta flujo B2C empleado"
+    prompt: "Verifica que el agente NO ejecuto la secuencia de 3 preguntas B2C para empleado (ingresos exactos, datacredito, extractos bancarios)."
+
+  - id: "no-datacredito-question"
+    name: "Sin pregunta de Datacredito"
+    prompt: "El agente NO pregunto '¿Tienes reportes en Datacredito?' en contexto B2C?"
+
+  - id: "no-bank-statements-question"
+    name: "Sin pregunta de extractos bancarios"
+    prompt: "El agente NO solicito extractos bancarios de los ultimos 3 meses para calificacion B2C?"
+
+  - id: "appropriate-alternative"
+    name: "Alternativa apropiada ofrecida"
+    prompt: "El agente ofrecio alternativa valida (asesor humano, flujo B2B, o informacion general) en lugar del flujo B2C?"
+
+  - id: "professional-tone"
+    name: "Tono profesional mantenido"
+    prompt: "El agente mantuvo tono calido, profesional y empatico?"
+
+  - id: "collected-basic-info"
+    name: "Informacion basica recolectada"
+    prompt: "El agente recolecto nombre y correo?"
+
+expected_structured_data:
+  - field_name: "funnel"
+    expected_value: "B2C - PROSPECTO CALIFICADO"
+    match_mode: "exact"
+    capture_strategy: "last"
+    required: false
+    description: "El funnel NO debe ser B2C - PROSPECTO CALIFICADO - test FALLA si captura este valor"

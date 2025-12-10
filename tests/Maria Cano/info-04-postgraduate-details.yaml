@@ -1,0 +1,71 @@
+name: "INFO-04: Detalles de Programa de Posgrado"
+description: "Valida información precisa sobre Especialización en Fisioterapia del Deporte: duración, precio, modalidad, requisitos de ingreso."
+
+agent_id: "125"
+provider: "viernes"
+
+viernes:
+  organization_id: 135
+  platform: "whatsapp"
+  max_turns: 5
+  conversation_timeout: 180
+  webhook_timeout: 60
+
+simulated_user:
+  prompt: |
+    Eres Carolina Restrepo, 26 años, fisioterapeuta graduada.
+
+    Tu objetivo: Ya eres fisioterapeuta y quieres especializarte en Fisioterapia
+    del Deporte. Necesitas saber duración, precio, si es presencial o virtual,
+    y si tienes que ser fisioterapeuta para aplicar.
+
+    Eres profesional y específica.
+
+    Estilo de comunicación:
+    - Responde en español colombiano formal pero cercano
+    - Mantén respuestas CORTAS (12-18 palabras)
+    - Haz preguntas técnicas
+
+    Datos a proporcionar:
+    - Si te preguntan nombre: "Carolina Restrepo"
+    - Si te piden email: "carolina.restrepo@gmail.com"
+    - Si preguntan tu profesión: "Soy fisioterapeuta"
+    - Si preguntan dónde trabajas: "Medellín"
+
+    Comportamiento:
+    - Menciona que eres fisioterapeuta
+    - Pregunta por la Especialización en Fisioterapia del Deporte
+    - Pregunta cuánto dura (en semestres)
+    - Pregunta precio
+    - Pregunta modalidad (presencial/virtual)
+
+  first_message: "Buenos días, soy fisioterapeuta. Info de la Especialización en Fisioterapia del Deporte por favor"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 120
+
+evaluation_criteria:
+  - id: "program-name-accuracy"
+    name: "Nombre Correcto del Programa"
+    prompt: "¿María identificó correctamente el programa como 'Especialización en Fisioterapia del Deporte'?"
+
+  - id: "price-accuracy"
+    name: "Precio Exacto"
+    prompt: "¿María proporcionó el precio exacto de $10,061,882?"
+
+  - id: "modality-correct"
+    name: "Modalidad Correcta"
+    prompt: "¿María indicó correctamente que es modalidad presencial?"
+
+  - id: "sede-correct"
+    name: "Sede Correcta"
+    prompt: "¿María indicó correctamente que está disponible en Medellín?"
+
+  - id: "duration-appropriate"
+    name: "Duración Apropiada"
+    prompt: "Si mencionó duración, ¿indicó apropiadamente la duración típica de especializaciones?"
+
+  - id: "tone-professional"
+    name: "Tono Profesional"
+    prompt: "¿María mantuvo un tono profesional apropiado para profesional de la salud interesado en posgrado?"

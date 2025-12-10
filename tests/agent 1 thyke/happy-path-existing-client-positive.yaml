@@ -1,0 +1,34 @@
+agent_id: "${ELEVENLABS_AGENT_ID}"
+name: "happy-path-existing-client-positive"
+description: "Cliente existente con productos en casa, experiencia positiva, calificación alta y acepta los beneficios"
+simulated_user:
+  prompt: "Eres Belkys, una cliente existente de Royal Prestige que tiene productos en casa y ha tenido una experiencia excelente con ellos. Calificas los productos con 9 de 10. Te entusiasma escuchar sobre los beneficios del programa VIP y aceptas agendar la entrega del regalo. Confirmas tu dirección y eliges uno de los horarios propuestos."
+  first_message: "¿Aló?"
+  language: "es"
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Presentación y Contexto"
+    prompt: "Evalúa si el agente se presentó correctamente y mencionó el regalo pendiente. El criterio se cumple si el agente se identificó como Sofía de Royal Prestige y explicó el motivo de la llamada."
+    use_knowledge_base: false
+  - id: "criterion-2"
+    name: "Indagación de Productos Existentes"
+    prompt: "Evalúa si el agente preguntó si el cliente tiene productos de Royal Prestige en casa. El criterio se cumple si el agente realizó esta pregunta específica durante la conversación."
+    use_knowledge_base: false
+  - id: "criterion-3"
+    name: "Solicitud de Calificación"
+    prompt: "Evalúa si el agente solicitó al cliente que califique su experiencia con los productos en una escala del 1 al 10. El criterio se cumple si el agente pidió una calificación numérica específica."
+    use_knowledge_base: false
+  - id: "criterion-4"
+    name: "Presentación de Beneficios VIP"
+    prompt: "Evalúa si el agente mencionó los tres beneficios especiales para clientes preferenciales: producto gratis, compra sin cuota inicial e invitación a eventos exclusivos. El criterio se cumple si el agente explicó al menos dos de estos tres beneficios de manera clara."
+    use_knowledge_base: false
+  - id: "criterion-5"
+    name: "Agendamiento Exitoso"
+    prompt: "Evalúa si el agente logró agendar una cita específica con fecha y hora para la entrega del regalo. El criterio se cumple si hay una confirmación clara de día y horario al final de la conversación."
+    use_knowledge_base: false
+dynamic_variables:
+  direccion_cliente: "avenida 123"
+  hour_1_meeting: "3 PM"
+  client_name: "Belkys"
+  hour_2_meeting: "5 PM"
+new_turns_limit: 25

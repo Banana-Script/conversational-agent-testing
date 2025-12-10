@@ -1,0 +1,67 @@
+name: "TONE-05: Mensaje Fuera de Horario"
+description: "Valida que María maneja correctamente consultas fuera de horario laboral (Sábado 6pm). Debe escalar con mensaje de horario."
+
+agent_id: "125"
+provider: "viernes"
+
+viernes:
+  organization_id: 135
+  platform: "whatsapp"
+  max_turns: 3
+  conversation_timeout: 120
+  webhook_timeout: 45
+
+simulated_user:
+  prompt: |
+    Eres Felipe Vargas, 24 años, que contacta en Sábado 6pm (fuera de horario).
+
+    Tu objetivo: Necesitas información sobre descuentos por convenio empresarial.
+    Tu empresa tiene convenio con universidades pero no sabes si FUMC lo tiene.
+
+    Eres comprensivo si te dicen que es fuera de horario.
+
+    Estilo de comunicación:
+    - Responde en español colombiano informal
+    - Mantén respuestas MUY CORTAS (8-12 palabras)
+    - Entiende si te dicen que es fin de semana
+
+    Datos a proporcionar:
+    - Si te preguntan nombre: "Felipe Vargas"
+    - Si te piden email: "felipe.vargas@gmail.com"
+    - Si preguntan empresa: "trabajo en Bancolombia"
+
+    Comportamiento:
+    - Pregunta por convenio empresarial específico
+    - Si te dicen que es fuera de horario, acepta y pregunta cuándo contactarán
+    - Sé comprensivo
+
+  first_message: "Hola, mi empresa tiene convenios con universidades. FUMC tiene descuento corporativo?"
+  language: "es"
+  llm: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 90
+
+evaluation_criteria:
+  - id: "escalation-identified"
+    name: "Identificación de Escalación"
+    prompt: "¿María identificó correctamente que convenios empresariales requieren escalación a asesor?"
+
+  - id: "out-of-hours-message"
+    name: "Mensaje de Horario"
+    prompt: "¿María informó claramente el horario de atención (Lun-Vie 7:30am-5:30pm, Sáb hasta 4:30pm) indicando que es fuera de horario?"
+
+  - id: "next-contact-info"
+    name: "Información de Próximo Contacto"
+    prompt: "¿María indicó claramente cuándo será contactado ('en el próximo horario hábil' o 'el lunes')?"
+
+  - id: "tone-warmth"
+    name: "Tono Cálido Mantenido"
+    prompt: "¿María mantuvo un tono cálido y profesional incluso al no poder dar respuesta inmediata?"
+
+  - id: "no-invention"
+    name: "Sin Inventar Información"
+    prompt: "¿María evitó inventar información sobre descuentos o convenios empresariales?"
+
+  - id: "appreciation"
+    name: "Agradecimiento por Interés"
+    prompt: "¿María agradeció el interés del usuario antes de cerrar?"
