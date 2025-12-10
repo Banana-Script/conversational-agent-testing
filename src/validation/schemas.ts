@@ -91,8 +91,8 @@ export const TestDefinitionSchema = z.object({
 
   // Viernes-specific configuration
   viernes: z.object({
-    organization_id: z.number().optional(),
-    agent_id: z.number().optional(),
+    organization_id: z.coerce.number().optional(),
+    agent_id: z.coerce.number().optional(),
     platform: z.enum(['whatsapp', 'telegram', 'facebook', 'instagram', 'web', 'api']).optional(),
     max_turns: z.number().optional(),
     conversation_timeout: z.number().optional(),
