@@ -8,6 +8,7 @@ import { ElevenLabsClient } from './api/elevenlabs-client.js';
 import { TestRunner } from './testing/test-runner.js';
 import { Reporter } from './testing/reporter.js';
 import { SeverityAnalyzer } from './testing/severity-analyzer.js';
+import { PromptCorrector } from './testing/prompt-corrector.js';
 import { TestValidationError } from './validation/schemas.js';
 import { PathValidationError } from './utils/path-validator.js';
 import { getElevenLabsApiKey, handleMissingEnvVar } from './utils/env-validator.js';
@@ -148,6 +149,55 @@ program
         console.log(chalk.red(`   🔴 Críticos: ${severityAnalysis.summary.critical}`));
         console.log(chalk.yellow(`   🟠 Altos: ${severityAnalysis.summary.high}`));
         console.log();
+      }
+
+      // Generar instrucciones corregidas si hay tests fallidos
+      const failedResults = allResults.filter(r => !r.success);
+      if (failedResults.length > 0) {
+        console.log(chalk.cyan('\n📝 Generando instrucciones corregidas...\n'));
+
+        // Obtener el agentId más común de los tests fallidos
+        const agentIds = failedResults.map(r => r.agent_id);
+        const agentIdCounts = agentIds.reduce((acc, id) => {
+          acc[id] = (acc[id] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
+        const primaryAgentId = Object.entries(agentIdCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
+
+        // Determinar el provider predominante
+        const providerCounts: Record<string, number> = {};
+        for (const [providerType] of testsByProvider) {
+          const failedCount = failedResults.filter(r => {
+            const test = tests.find(t => t.name === r.test_name);
+            return test && ProviderFactory.determineProvider(test.provider) === providerType;
+          }).length;
+          if (failedCount > 0) {
+            providerCounts[providerType] = failedCount;
+          }
+        }
+        const primaryProvider = Object.entries(providerCounts).sort((a, b) => b[1] - a[1])[0]?.[0] as import('./adapters/provider-factory.js').ProviderType || 'elevenlabs';
+
+        try {
+          const corrector = new PromptCorrector({
+            resultsDir: options.output,
+            verbose: options.verbose,
+          });
+
+          const correctionResult = await corrector.generateCorrectedInstructions(
+            allResults,
+            primaryAgentId,
+            primaryProvider
+          );
+
+          if (correctionResult) {
+            console.log(chalk.green(`✅ Instrucciones corregidas guardadas en: ${correctionResult.filepath}`));
+            console.log(chalk.gray(`   Provider: ${correctionResult.provider}`));
+            console.log(chalk.gray(`   Problemas encontrados: ${correctionResult.problemsFound}`));
+            console.log();
+          }
+        } catch (correctionError) {
+          console.warn(chalk.yellow(`⚠️  No se pudieron generar instrucciones corregidas: ${correctionError instanceof Error ? correctionError.message : String(correctionError)}`));
+        }
       }
 
       console.log(chalk.green.bold('✅ Simulación completada\n'));
