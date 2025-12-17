@@ -218,6 +218,9 @@ export class Reporter {
     section += `| 🟠 Alto | ${analysis.summary.high} |\n`;
     section += `| 🟡 Medio | ${analysis.summary.medium} |\n`;
     section += `| 🟢 Bajo | ${analysis.summary.low} |\n`;
+    if (analysis.summary.incomplete && analysis.summary.incomplete > 0) {
+      section += `| ⚪ Incompleto | ${analysis.summary.incomplete} |\n`;
+    }
     if (analysis.summary.uncertain && analysis.summary.uncertain > 0) {
       section += `| ❓ Incierto | ${analysis.summary.uncertain} |\n`;
     }
@@ -243,6 +246,28 @@ export class Reporter {
             section += `  - ${issue}\n`;
           }
         }
+        if (test.testing_limitation_notes) {
+          section += `- ⚠️ Nota de testing: ${test.testing_limitation_notes}\n`;
+        }
+        section += '\n';
+      }
+    }
+
+    // Tests incompletos (no ejecutaron)
+    const incompleteTests = analysis.test_classifications.filter(
+      (t) => t.severity === 'incomplete'
+    );
+
+    if (incompleteTests.length > 0) {
+      const incompletePercentage = analysis.summary.total_tests > 0
+        ? ((incompleteTests.length / analysis.summary.total_tests) * 100).toFixed(0)
+        : '0';
+      section += `### ⚠️ Tests Incompletos (${incompleteTests.length} - ${incompletePercentage}% de cobertura faltante)\n\n`;
+      section += `> **ADVERTENCIA**: Estos tests no se ejecutaron correctamente. No hay evidencia del comportamiento del bot en estos escenarios.\n\n`;
+      for (const test of incompleteTests) {
+        section += `**⚪ ${test.test_name}** (Incompleto)\n`;
+        section += `- Criterios: ${test.criteria_passed}\n`;
+        section += `- Razón: ${test.rationale}\n`;
         if (test.testing_limitation_notes) {
           section += `- ⚠️ Nota de testing: ${test.testing_limitation_notes}\n`;
         }

@@ -6,7 +6,7 @@ import { tmpdir, homedir } from 'os';
 /**
  * Tipos para el análisis de severidad
  */
-export type Severity = 'critical' | 'high' | 'medium' | 'low';
+export type Severity = 'critical' | 'high' | 'medium' | 'low' | 'incomplete';
 export type Confidence = 'high' | 'medium' | 'low';
 
 export interface TestClassification {
@@ -35,6 +35,7 @@ export interface SeverityAnalysis {
     high: number;
     medium: number;
     low: number;
+    incomplete: number;
     uncertain?: number;
   };
   test_classifications: TestClassification[];
@@ -301,6 +302,10 @@ export class SeverityAnalyzer {
               rationale?: string;
             }>;
           };
+          simulated_conversation?: Array<{
+            role: string;
+            message: string;
+          }>;
         };
       }>;
     };
@@ -323,24 +328,42 @@ export class SeverityAnalyzer {
     const failedTests = results.results.filter((r) => !r.success);
     const classifications: TestClassification[] = [];
 
-    let critical = 0, high = 0, medium = 0, low = 0;
+    let critical = 0, high = 0, medium = 0, low = 0, incomplete = 0;
 
     for (const test of failedTests) {
       // Validar que el test tenga la estructura esperada
       const evaluationResults = test.simulation_response?.analysis?.evaluation_criteria_results;
+      const conversation = test.simulation_response?.simulated_conversation;
+      const hasConversation = Array.isArray(conversation) && conversation.length > 0;
+
       if (!evaluationResults || typeof evaluationResults !== 'object') {
-        // Si no hay criterios, marcar como crítico con nota
-        classifications.push({
-          test_name: test.test_name || 'Test sin nombre',
-          severity: 'critical',
-          confidence: 'low',
-          rationale: 'No se encontraron criterios de evaluación',
-          criteria_passed: '0/0',
-          key_issues: ['missing-evaluation-criteria'],
-          is_real_bot_issue: false,
-          testing_limitation_notes: 'Estructura de test incompleta - revisar configuración'
-        });
-        critical++;
+        // Si no hay criterios Y no hay conversación, es INCOMPLETE (no critical)
+        if (!hasConversation) {
+          classifications.push({
+            test_name: test.test_name || 'Test sin nombre',
+            severity: 'incomplete',
+            confidence: 'high',
+            rationale: 'Test no ejecutado: 0/0 criterios y sin conversación (probablemente timeout de infraestructura)',
+            criteria_passed: '0/0',
+            key_issues: ['test-did-not-run', 'no-conversation', 'infrastructure-timeout'],
+            is_real_bot_issue: false,
+            testing_limitation_notes: 'El test falló antes de iniciar - requiere re-ejecución para obtener cobertura real'
+          });
+          incomplete++;
+        } else {
+          // Si hay conversación pero no criterios, es problema de configuración
+          classifications.push({
+            test_name: test.test_name || 'Test sin nombre',
+            severity: 'critical',
+            confidence: 'low',
+            rationale: 'No se encontraron criterios de evaluación pero hubo conversación',
+            criteria_passed: '0/0',
+            key_issues: ['missing-evaluation-criteria'],
+            is_real_bot_issue: false,
+            testing_limitation_notes: 'Estructura de test incompleta - revisar configuración'
+          });
+          critical++;
+        }
         continue;
       }
 
@@ -348,17 +371,32 @@ export class SeverityAnalyzer {
 
       // Validar que criteriaResults sea un array válido
       if (!Array.isArray(criteriaResults) || criteriaResults.length === 0) {
-        classifications.push({
-          test_name: test.test_name || 'Test sin nombre',
-          severity: 'medium',
-          confidence: 'low',
-          rationale: 'Array de criterios vacío',
-          criteria_passed: '0/0',
-          key_issues: ['empty-criteria-array'],
-          is_real_bot_issue: false,
-          testing_limitation_notes: 'No hay criterios para evaluar'
-        });
-        medium++;
+        // 0/0 criterios con conversación vacía = incomplete
+        if (!hasConversation) {
+          classifications.push({
+            test_name: test.test_name || 'Test sin nombre',
+            severity: 'incomplete',
+            confidence: 'high',
+            rationale: 'Test no ejecutado: array de criterios vacío y sin conversación',
+            criteria_passed: '0/0',
+            key_issues: ['empty-criteria-array', 'no-conversation'],
+            is_real_bot_issue: false,
+            testing_limitation_notes: 'El test falló antes de iniciar - requiere re-ejecución'
+          });
+          incomplete++;
+        } else {
+          classifications.push({
+            test_name: test.test_name || 'Test sin nombre',
+            severity: 'medium',
+            confidence: 'low',
+            rationale: 'Array de criterios vacío pero hubo conversación',
+            criteria_passed: '0/0',
+            key_issues: ['empty-criteria-array'],
+            is_real_bot_issue: false,
+            testing_limitation_notes: 'No hay criterios para evaluar'
+          });
+          medium++;
+        }
         continue;
       }
 
@@ -390,46 +428,93 @@ export class SeverityAnalyzer {
         c.rationale?.includes('Evaluation failed:') || c.rationale?.includes('Error:')
       );
 
+      // Detectar bucle de despedidas (HIGH severity)
+      const farewellPatterns = /\b(adiós|adios|gracias|hasta luego|nos vemos|cuídate|cuidate|chao|bye|hasta pronto|nos hablamos)\b/i;
+      let farewellTurns = 0;
+      const conversationMessages = conversation || [];
+
+      for (let i = 0; i < conversationMessages.length; i++) {
+        const msg = conversationMessages[i];
+        if (msg.role === 'user' && farewellPatterns.test(msg.message)) {
+          // Contar turnos consecutivos de despedida (user dice adiós, agent responde, user dice adiós de nuevo)
+          farewellTurns++;
+        }
+      }
+
+      const hasFarewellLoop = farewellTurns > 2;
+
       // Determinar confianza basado en el tipo de fallo
       let confidence: Confidence = 'high';
       let testingLimitationNotes: string | null = null;
+      const keyIssues = [...failedCriteria];
 
       if (hasFrameworkError) {
         confidence = 'medium';
         testingLimitationNotes = 'Posible error técnico del framework de testing';
       }
 
+      // Si hay bucle de despedidas, subir severidad a HIGH
+      if (hasFarewellLoop) {
+        if (severity === 'low' || severity === 'medium') {
+          // Ajustar contadores
+          if (severity === 'low') low--;
+          if (severity === 'medium') medium--;
+          severity = 'high';
+          high++;
+        }
+        keyIssues.push('farewell-loop-detected');
+        testingLimitationNotes = testingLimitationNotes
+          ? `${testingLimitationNotes}. PROBLEMA REAL: Bucle de despedidas detectado (${farewellTurns} turnos).`
+          : `PROBLEMA REAL: Bucle de despedidas detectado - el agente no cierra la conversación apropiadamente (${farewellTurns} turnos de despedida).`;
+      }
+
       classifications.push({
         test_name: test.test_name || 'Test sin nombre',
         severity,
         confidence,
-        rationale: `${passed}/${total} criterios pasados (${passRate.toFixed(0)}%)`,
+        rationale: hasFarewellLoop
+          ? `${passed}/${total} criterios pasados, pero detectado bucle de despedidas (${farewellTurns} turnos) - severidad elevada a HIGH`
+          : `${passed}/${total} criterios pasados (${passRate.toFixed(0)}%)`,
         criteria_passed: `${passed}/${total}`,
-        key_issues: failedCriteria,
-        is_real_bot_issue: !hasFrameworkError,
+        key_issues: keyIssues,
+        is_real_bot_issue: !hasFrameworkError || hasFarewellLoop,
         testing_limitation_notes: testingLimitationNotes
       });
     }
 
-    const isDeployable = critical === 0 && high === 0;
+    // Calcular porcentaje de tests incompletos
+    const totalTests = results.total_tests ?? 0;
+    const incompletePercentage = totalTests > 0 ? (incomplete / totalTests) * 100 : 0;
+    const hasInsufficientCoverage = incompletePercentage > 20;
+
+    // Lógica de despliegue: no desplegable si hay critical/high O si >20% son incomplete
+    const isDeployable = critical === 0 && high === 0 && !hasInsufficientCoverage;
+
+    let deploymentReason: string;
+    if (critical > 0 || high > 0) {
+      deploymentReason = `Hay ${critical} fallos críticos y ${high} fallos altos`;
+    } else if (hasInsufficientCoverage) {
+      deploymentReason = `Cobertura insuficiente: ${incomplete} tests (${incompletePercentage.toFixed(0)}%) no se ejecutaron (timeouts/sin conversación). Requiere re-ejecución.`;
+    } else {
+      deploymentReason = 'No hay fallos críticos ni altos, y la cobertura de tests es suficiente';
+    }
 
     return {
       analysis_timestamp: new Date().toISOString(),
       deployment_status: {
         is_deployable: isDeployable,
-        reason: isDeployable
-          ? 'No hay fallos críticos ni altos'
-          : `Hay ${critical} fallos críticos y ${high} fallos altos`,
-        confidence: 'high'
+        reason: deploymentReason,
+        confidence: hasInsufficientCoverage ? 'low' : 'high'
       },
       summary: {
-        total_tests: results.total_tests ?? 0,
+        total_tests: totalTests,
         passed_tests: results.successful_tests ?? 0,
         failed_tests: results.failed_tests ?? 0,
         critical,
         high,
         medium,
         low,
+        incomplete,
         uncertain: 0
       },
       test_classifications: classifications,

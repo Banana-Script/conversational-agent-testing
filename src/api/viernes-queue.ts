@@ -5,6 +5,23 @@ import type {
 import { ViernesAPIError } from './errors.js';
 
 /**
+ * Retry configuration from environment variables
+ */
+const RETRY_CONFIG = {
+  // Maximum number of retry attempts (default: 10, max: 50)
+  maxAttempts: Math.min(
+    parseInt(process.env.VIERNES_MAX_RETRY_ATTEMPTS || '10', 10),
+    50
+  ),
+  // Base delay between retries in ms (default: 30000 = 30s)
+  baseDelay: parseInt(process.env.VIERNES_RETRY_DELAY_MS || '30000', 10),
+  // Maximum delay between retries in ms (default: 120000 = 2 min)
+  maxDelay: parseInt(process.env.VIERNES_MAX_RETRY_DELAY_MS || '120000', 10),
+  // Use exponential backoff (default: true)
+  useExponentialBackoff: process.env.VIERNES_EXPONENTIAL_BACKOFF !== 'false',
+};
+
+/**
  * Queued Request Item
  */
 interface QueuedRequest {
@@ -55,6 +72,12 @@ export class ViernesQueue {
     this.maxConcurrency = maxConcurrency;
     this.maxQueueSize = maxQueueSize;
 
+    // Log retry configuration
+    console.log(`[ViernesQueue] Retry config: ${RETRY_CONFIG.maxAttempts} attempts, ` +
+      `${RETRY_CONFIG.baseDelay / 1000}s base delay, ` +
+      `${RETRY_CONFIG.maxDelay / 1000}s max delay, ` +
+      `exponential backoff: ${RETRY_CONFIG.useExponentialBackoff}`);
+
     // Cleanup on process exit
     process.on('SIGINT', () => this.cleanup());
     process.on('SIGTERM', () => this.cleanup());
@@ -83,8 +106,8 @@ export class ViernesQueue {
         resolve,
         reject,
         attempts: 0,
-        maxAttempts: 10,
-        retryDelay: 30000, // 30 seconds
+        maxAttempts: RETRY_CONFIG.maxAttempts,
+        retryDelay: RETRY_CONFIG.baseDelay,
       });
 
       this.processQueue();
@@ -145,15 +168,26 @@ export class ViernesQueue {
       // Check if it's a 429 error and we have attempts left
       if (this.is429Error(error) && item.attempts < item.maxAttempts) {
         item.attempts++;
+
+        // Calculate delay with optional exponential backoff
+        let currentDelay = item.retryDelay;
+        if (RETRY_CONFIG.useExponentialBackoff) {
+          // Exponential backoff: baseDelay * 2^(attempt-1) with jitter
+          const exponentialDelay = RETRY_CONFIG.baseDelay * Math.pow(1.5, item.attempts - 1);
+          const jitter = Math.random() * 0.2 * exponentialDelay; // 0-20% jitter
+          currentDelay = Math.min(exponentialDelay + jitter, RETRY_CONFIG.maxDelay);
+        }
+
         item.onProgress?.(
-          `Concurrency limit reached. Waiting ${item.retryDelay / 1000}s before retry...`
+          `Concurrency limit reached. Attempt ${item.attempts}/${item.maxAttempts}. ` +
+          `Waiting ${(currentDelay / 1000).toFixed(0)}s before retry...`
         );
 
         // Schedule retry without blocking (use setTimeout instead of await sleep)
         setTimeout(() => {
           this.queue.push(item);
           this.processQueue();
-        }, item.retryDelay);
+        }, currentDelay);
       } else {
         // Max attempts exceeded or different error - reject
         if (item.attempts >= item.maxAttempts) {

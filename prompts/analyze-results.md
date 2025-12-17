@@ -46,6 +46,8 @@ Ejemplos:
 - Manejo inadecuado de información crítica del usuario
 - UX severamente degradada que confundiría a usuarios
 - Múltiples pasos del flujo omitidos o en orden incorrecto
+- **Bucle infinito de despedidas**: El agente no cierra la conversación cuando el usuario se despide, generando intercambios repetitivos de "adiós/gracias/cuídate" (más de 2 turnos de despedida)
+- **Fallo en cierre de conversación**: El agente responde indefinidamente a despedidas en lugar de terminar la interacción de forma profesional
 
 **Considera downgrade a Medium si**:
 - El fallo parece ser por expectativas demasiado rígidas del test
@@ -70,10 +72,22 @@ Ejemplos:
 - Verbosidad o brevedad excesiva
 - Orden de preguntas subóptimo pero funcional
 
+### Incomplete (Cobertura Insuficiente - NO Permite Despliegue Automático)
+**Tests que no pudieron ejecutarse o no tienen evidencia de comportamiento**
+
+Ejemplos:
+- 0/0 criterios evaluados (test no ejecutó)
+- Conversación vacía (timeout antes de cualquier interacción)
+- Error de infraestructura que impidió la prueba
+- Criterios que retornan "unknown" sin evaluación real
+
+**IMPORTANTE**: Un test con 0/0 criterios y conversación vacía NO debe clasificarse como "low" - debe clasificarse como "incomplete". No tenemos evidencia de que el bot funcione en ese escenario.
+
 ## Regla de Despliegue
-- **Desplegable**: NO hay fallos con severidad `critical` NI `high`
+- **Desplegable**: NO hay fallos con severidad `critical` NI `high` Y menos de 20% de tests son `incomplete`
 - **No desplegable**: Hay al menos 1 fallo `critical` o `high`
-- **Con advertencias**: Solo fallos `medium` o `low` - desplegable pero revisar
+- **Cobertura insuficiente**: Más del 20% de tests son `incomplete` (timeouts, 0/0 criterios) - NO desplegable hasta re-ejecutar tests
+- **Con advertencias**: Solo fallos `medium` o `low` y menos de 20% `incomplete` - desplegable pero revisar
 
 ## Análisis Requerido
 
@@ -106,7 +120,32 @@ Para cada test fallido (donde `success === false`), evalúa:
 - ¿Impacta experiencia del usuario directamente?
 - ¿Qué pasaría si este comportamiento llega a producción?
 
-### 4. Nivel de confianza
+### 4. Análisis de patrones de conversación (NUEVO)
+
+**IMPORTANTE**: Revisa la conversación completa buscando estos patrones problemáticos:
+
+**Bucle de despedidas (HIGH severity)**:
+- El usuario se despide ("adiós", "gracias", "hasta luego", "nos vemos", "cuídate")
+- El agente responde con otra despedida en lugar de cerrar
+- El usuario vuelve a despedirse
+- El agente vuelve a responder
+- **Si hay más de 2 turnos de despedida → severidad HIGH**
+
+Ejemplo de patrón problemático:
+```
+[USER]: ¡Gracias! Hasta luego.
+[AGENT]: ¡Hasta luego! Cuídate.
+[USER]: ¡Igualmente! Nos vemos.        ← Ya son 2 despedidas
+[AGENT]: Gracias, nos vemos pronto.    ← Debería haber cerrado
+[USER]: ¡Cuídate!                       ← 3 despedidas = HIGH
+```
+
+**Otros patrones a detectar**:
+- **Repetición excesiva**: El agente repite la misma información sin agregar valor
+- **No progresión**: La conversación no avanza hacia una resolución
+- **Eco mecánico**: El agente solo repite lo que dice el usuario sin aportar
+
+### 5. Nivel de confianza
 
 - **Alta confianza**: El fallo es claramente un problema real del bot
 - **Media confianza**: Probablemente es problema del bot pero podría ser test
@@ -136,6 +175,7 @@ El JSON debe tener exactamente esta estructura:
     "high": 2,
     "medium": 1,
     "low": 1,
+    "incomplete": 0,
     "uncertain": 0
   },
   "test_classifications": [
@@ -192,20 +232,26 @@ El JSON debe tener exactamente esta estructura:
       - ¿Es problema de lógica de negocio? → Más severo
       - ¿Es problema de formato/parsing? → Considerar downgrade
       - ¿Tiene "Evaluation failed:"? → Error técnico, evaluar impacto real
+      - ¿Tiene 0/0 criterios Y conversación vacía? → **INCOMPLETE** (NO es low)
 
-   d. **Clasifica severidad inicial** según tabla de criterios
+   d. **Analiza patrones de conversación** (INCLUSO en tests que pasaron criterios):
+      - Busca bucles de despedida (>2 turnos de adiós/gracias/cuídate) → **HIGH**
+      - Busca repetición excesiva o falta de progresión
+      - **IMPORTANTE**: Un test puede pasar todos sus criterios pero tener problemas de patrón que lo hacen HIGH
 
-   e. **Ajusta severidad** considerando:
+   e. **Clasifica severidad inicial** según tabla de criterios
+
+   f. **Ajusta severidad** considerando:
       - ¿Este fallo refleja un problema que afectaría usuarios reales?
       - ¿O es una limitación de testing automatizado?
       - Si hay duda, indica en `confidence` y `testing_limitation_notes`
 
-   f. **Determina confianza**:
+   g. **Determina confianza**:
       - `high`: Claramente problema real del bot
       - `medium`: Probablemente problema del bot
       - `low`: Podría ser limitación de test
 
-   g. **Extrae key_issues**: Problemas específicos, no genéricos
+   h. **Extrae key_issues**: Problemas específicos, no genéricos
 
 4. **Genera el resumen de conteos** incluyendo `uncertain` si hay tests con confidence=low
 
