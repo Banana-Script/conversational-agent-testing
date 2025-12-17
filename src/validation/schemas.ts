@@ -58,7 +58,7 @@ const ConversationTurnSchema = z.object({
 export const TestDefinitionSchema = z.object({
   name: z.string().min(1, 'El nombre del test no puede estar vacío'),
   description: z.string().min(1, 'La descripción del test no puede estar vacía'),
-  agent_id: z.string().min(1, 'El agent_id no puede estar vacío'),
+  agent_id: z.coerce.string().min(1, 'El agent_id no puede estar vacío'),
   simulated_user: SimulatedUserConfigYAMLSchema,
   evaluation_criteria: z.array(TestEvaluationCriterionSchema).optional(),
   dynamic_variables: z.record(z.string(), z.any()).optional(),
