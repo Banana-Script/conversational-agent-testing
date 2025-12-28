@@ -12,7 +12,7 @@ export interface ViernesConfig {
 // Simulated User Config (API format)
 export interface ViernesSimulatedUserConfig {
   persona: string;
-  model: 'gpt-4o-mini' | 'gpt-4o' | 'ollama/llama3.2' | 'ollama/llama3.1';
+  model: string; // Flexible: gpt-4o-mini, gpt-4o, gpt-oss:20b, ollama/*, etc.
   temperature: number;
   initial_message: string;
   max_tokens: number;

@@ -110,6 +110,7 @@ export interface TestEvaluationCriterion {
 export interface SimulatedUserConfigYAML {
   prompt: string;  // String directo en YAML
   llm?: string;
+  provider?: 'openai' | 'ollama';  // Override via SIMULATED_USER_PROVIDER env
   first_message: string;
   language: string;
   temperature?: number;

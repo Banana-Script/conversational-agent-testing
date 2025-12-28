@@ -64,23 +64,48 @@ export class ViernesAdapter {
       temperature: user.temperature ?? 0.7,
       initial_message: user.first_message,
       max_tokens: user.max_tokens ?? 150,
-      provider: null, // Auto-detect from model
+      provider: this.resolveProvider(user.provider),
     };
   }
 
   /**
-   * Normalize model name to Viernes format
+   * Resolve provider from env variable or YAML config
+   * Env variable SIMULATED_USER_PROVIDER takes precedence
    */
-  private normalizeModel(llm?: string): ViernesSimulatedUserConfig['model'] {
-    if (!llm) return 'gpt-4o-mini';
+  private resolveProvider(yamlProvider?: string | null): 'openai' | 'ollama' | null {
+    const envProvider = process.env.SIMULATED_USER_PROVIDER;
+    const provider = envProvider || yamlProvider;
 
-    const normalized = llm.toLowerCase();
+    if (!provider) return null;
+
+    const normalized = provider.toLowerCase();
+    if (normalized === 'ollama') return 'ollama';
+    if (normalized === 'openai') return 'openai';
+
+    return null;
+  }
+
+  /**
+   * Normalize model name to Viernes format
+   * Supports env variable SIMULATED_USER_LLM to override YAML config
+   */
+  private normalizeModel(llm?: string): string {
+    // Environment variable takes precedence over YAML config
+    const envLlm = process.env.SIMULATED_USER_LLM;
+    const modelToUse = envLlm || llm;
+
+    if (!modelToUse) return 'gpt-4o-mini';
+
+    const normalized = modelToUse.toLowerCase();
+
+    // Known model mappings
     if (normalized.includes('gpt-4o-mini')) return 'gpt-4o-mini';
     if (normalized.includes('gpt-4o')) return 'gpt-4o';
     if (normalized.includes('llama3.2')) return 'ollama/llama3.2';
     if (normalized.includes('llama3.1')) return 'ollama/llama3.1';
 
-    return 'gpt-4o-mini'; // Safe default
+    // Pass through for flexible models (gpt-oss:20b, ollama/*, etc.)
+    return modelToUse;
   }
 
   /**
