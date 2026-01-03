@@ -48,7 +48,7 @@ coverage/
 *.temp
 results/
 tests/scenarios/*
-tests/scenarios-backup-*/
+tests/scenarios-*/
 .tmp/
 
 # Vapi cache (auto-generated suite mappings and conversations)

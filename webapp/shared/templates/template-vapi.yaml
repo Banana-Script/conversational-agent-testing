@@ -1,0 +1,216 @@
+# Template para Tests de Vapi usando Evals API
+# Copia este archivo y modifícalo según tus necesidades
+#
+# IMPORTANTE: Test Suites solo existen en la UI de Vapi, no en la API.
+# Esta implementación usa Evals API con conversaciones mock.
+
+# ========================================
+# PROVIDER CONFIGURATION
+# ========================================
+
+# Especifica el provider (obligatorio para Vapi)
+provider: vapi
+
+# Categoría del test - para organización
+category: your-category-name  # Ej: loan-application, customer-service, error-handling
+
+# Tags opcionales para filtrado
+tags: [p0, smoke]  # Ej: p0, p1, p2, smoke, regression, etc.
+
+# ========================================
+# TEST METADATA
+# ========================================
+
+name: "Nombre Descriptivo del Test"
+description: "Descripción detallada de qué valida este test"
+
+# ID del agente (usa variable de entorno o especifica directamente)
+agent_id: "${ELEVENLABS_AGENT_ID}"
+
+# ========================================
+# VAPI-SPECIFIC CONFIGURATION
+# ========================================
+
+vapi:
+  # ID del assistant de Vapi (opcional si está en .env)
+  assistant_id: "${VAPI_ASSISTANT_ID}"
+
+  # Número de veces que se ejecuta el test (1-5)
+  # Se ejecuta manualmente en loop
+  attempts: 1
+
+  # Modo de eval: transiente (recomendado) o persistente
+  # - false (default): El eval no se guarda en Vapi
+  # - true: El eval se guarda y puede reutilizarse
+  persistent_eval: false
+
+  # Máximo de tokens para generación de conversación (default: 4000)
+  # Solo aplica si se usa generación automática (no conversation_turns)
+  max_conversation_tokens: 4000
+
+  # OPCIONAL: Conversación manual (turnos específicos)
+  # Si se define, se usa directamente sin generar con LLM
+  # Si NO se define, se genera automáticamente desde simulated_user.prompt
+  # conversation_turns:
+  #   - role: user
+  #     message: "Hello, I need help with my loan application"
+  #   - role: user  # Múltiples turnos del user (assistant responde en medio)
+  #     message: "Yes, I'm interested in a personal loan"
+  #   - role: user
+  #     message: "For $10,000"
+
+# ========================================
+# SIMULATED USER (para generación automática)
+# ========================================
+
+simulated_user:
+  # Prompt que define el comportamiento del usuario simulado
+  # Solo se usa si NO hay conversation_turns definido
+  # Un LLM genera la conversación completa basándose en este prompt
+  prompt: |
+    You are a [customer/user role].
+
+    Your scenario:
+    - [Describe the situation]
+    - [What do you want to accomplish]
+    - [Any specific information to provide]
+
+    Your behavior:
+    - [How should you act]
+    - [How should you respond]
+    - [Any specific phrases to use]
+
+    Continue the conversation until you achieve your goal or the assistant
+    ends it naturally. Be realistic and natural.
+
+  # Primer mensaje del usuario (obligatorio para generación automática)
+  first_message: "Hello, I need help with..."
+
+  # Idioma de la conversación
+  language: "en"  # en, es, fr, de, etc.
+
+  # Temperatura (0.0-1.0) - controla la creatividad de la generación
+  # 0.0-0.3: Conversación precisa y consistente
+  # 0.4-0.7: Balance entre consistencia y naturalidad
+  # 0.8-1.0: Conversación variada y creativa
+  temperature: 0.3
+
+# ========================================
+# EVALUATION CRITERIA
+# ========================================
+
+evaluation_criteria:
+  # Lista de criterios que se evalúan con AI judges
+  # Cada criterio se convierte en un checkpoint al final de la conversación
+  # El AI judge ve la conversación completa y responde "pass" o "fail"
+
+  - id: "criterion-1"
+    name: "Nombre del Criterio"
+    prompt: "Did the agent [accomplish specific goal]?"
+
+  - id: "criterion-2"
+    name: "Otro Criterio"
+    prompt: "Was the [specific aspect] handled correctly?"
+
+  # Tips para buenos criterios:
+  # - Hacer preguntas específicas y medibles
+  # - Usar formato "Did the agent..."
+  # - Enfocarse en un aspecto por criterio
+  # - Incluir tanto aspectos funcionales como de UX
+  # - Cada criterio es evaluado independientemente
+
+# ========================================
+# DYNAMIC VARIABLES
+# ========================================
+
+# Variables que se inyectan en mensajes
+# Usar sintaxis ${var}, {var}, o {{var}} en los mensajes
+dynamic_variables:
+  customer_name: "John Doe"
+  document_number: "1234567890"
+  phone: "+1-555-0123"
+  email: "john.doe@example.com"
+  # Agrega todas las variables que necesites
+
+# ========================================
+# EXAMPLES BY USE CASE
+# ========================================
+
+# Happy Path Test (generación automática):
+# - category: happy-path
+# - tags: [p0, smoke]
+# - temperature: 0.3 (consistente)
+# - persistent_eval: false
+# - NO definir conversation_turns (usa generación)
+# - Focus: Flujo exitoso completo
+
+# Happy Path Test (manual):
+# - category: happy-path
+# - tags: [p0, smoke]
+# - persistent_eval: false
+# - DEFINIR conversation_turns con turnos específicos
+# - Focus: Flujo exacto a validar
+
+# Error Handling Test:
+# - category: error-handling
+# - tags: [p1, error]
+# - temperature: 0.4-0.6
+# - Focus: Cómo maneja datos inválidos
+
+# Edge Case Test:
+# - category: edge-cases
+# - tags: [p2, edge]
+# - temperature: 0.5-0.7
+# - Focus: Situaciones inusuales pero válidas
+
+# Performance Test:
+# - category: performance
+# - tags: [p1, performance]
+# - attempts: 5
+# - Focus: Consistencia en múltiples ejecuciones
+
+# ========================================
+# MIGRATION NOTES
+# ========================================
+
+# CAMBIOS RESPECTO A TEST SUITES:
+#
+# 1. Test Suites NO existen en la API de Vapi
+#    - Solo disponibles en la UI de Vapi
+#    - Esta implementación usa Evals API
+#
+# 2. Dos modos de conversación:
+#    - Automático: LLM genera conversación completa (default)
+#    - Manual: Especificar conversation_turns exactos
+#
+# 3. Evaluación con AI judges:
+#    - Cada criterion es un checkpoint independiente
+#    - AI judge ve la conversación completa
+#    - Responde solo "pass" o "fail"
+#
+# 4. Persistencia opcional:
+#    - persistent_eval: false (recomendado, no guarda en Vapi)
+#    - persistent_eval: true (guarda para reutilizar)
+#
+# 5. Eliminados:
+#    - success_condition, success_examples, failure_examples
+#    - tool_mock_config
+#    - partial_conversation_history
+#    - new_turns_limit
+#    - Usar conversation_turns manual si se necesita control total
+
+# ========================================
+# ENVIRONMENT VARIABLES
+# ========================================
+
+# Asegúrate de tener estas variables en .env:
+#
+# VAPI_API_KEY=tu_api_key
+# VAPI_ASSISTANT_ID=tu_assistant_id
+# OPENAI_API_KEY=tu_openai_key  # Para generación y AI judges
+#
+# Opcionales (con defaults):
+# VAPI_EVAL_GENERATOR_MODEL=gpt-4o
+# VAPI_EVAL_JUDGE_MODEL=gpt-4o
+# VAPI_MAX_CONVERSATION_TOKENS=4000
+# VAPI_DEFAULT_PERSISTENT=false

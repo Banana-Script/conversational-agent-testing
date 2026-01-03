@@ -1,0 +1,244 @@
+# Plantilla de Test para ElevenLabs Agent
+#
+# ┌─────────────────────┬──────────────────────────────────────────────────────────────┐
+# │ Comando             │ Descripción                                                   │
+# ├─────────────────────┼──────────────────────────────────────────────────────────────┤
+# │ npm run simulate    │ Ejecuta conversación completa con evaluation_criteria        │
+# │ npm run create      │ Crea test persistente con success_examples/failure_examples  │
+# │ npm run run         │ Ejecuta tests persistentes creados previamente               │
+# │ npm run list        │ Lista todos los tests persistentes                           │
+# └─────────────────────┴──────────────────────────────────────────────────────────────┘
+
+# ===== CAMPOS BÁSICOS =====
+
+# Nombre descriptivo del test
+name: "Nombre del Test"
+
+# Descripción de qué valida este test
+description: "Descripción detallada de lo que este test verifica"
+
+# ID del agente a probar (se puede usar variable de entorno)
+agent_id: "${ELEVENLABS_AGENT_ID}"
+
+# Tipo de test (solo para tests persistentes con 'npm run create'):
+# - "llm": Evalúa la calidad de las respuestas del agente usando ejemplos de éxito/fallo
+# - "tool": Valida que el agente haga las llamadas correctas a herramientas
+# NOTA: Este campo NO se usa en simulaciones directas ('npm run simulate')
+type: "llm"
+
+# ===== CONFIGURACIÓN DEL USUARIO SIMULADO =====
+
+simulated_user:
+  # Prompt que define el comportamiento y personalidad del usuario simulado
+  # IMPORTANTE: Debe ser un STRING simple, NO un objeto
+  # El framework lo convierte automáticamente al formato de API requerido
+  prompt: |
+    Eres un cliente que llama para [describe el escenario].
+
+    Características del usuario:
+    - [característica 1]
+    - [característica 2]
+
+    Información para proporcionar cuando te pregunten:
+    - [dato 1]
+    - [dato 2]
+
+    Comportamiento:
+    - [comportamiento esperado]
+
+    Objetivo: [objetivo del usuario en la conversación]
+
+  # Primer mensaje que envía el usuario para iniciar la conversación
+  first_message: "Hola, [mensaje inicial]"
+
+  # Idioma de la conversación
+  language: "es"
+
+  # Modelo LLM para el usuario simulado (opcional, default: gpt-4o)
+  # llm: "gpt-4o"
+
+  # Temperatura para la generación (0.0 - 1.0, opcional, default: 0.7)
+  # Valores más bajos = más determinístico, valores más altos = más creativo
+  # temperature: 0.4
+
+# ===== OPCIÓN 1: Criterios de Evaluación (para simulación directa) =====
+# Usa evaluation_criteria cuando ejecutes: npm run simulate
+#
+# Este enfoque ejecuta una conversación completa multi-turno entre el agente
+# y un usuario simulado, luego evalúa toda la conversación contra criterios
+# definidos por el usuario.
+#
+# Ventajas:
+#   - Evalúa el comportamiento conversacional completo
+#   - Permite múltiples turnos de interacción
+#   - Criterios de evaluación flexibles basados en LLM
+#
+# IMPORTANTE: NO uses ambos evaluation_criteria y success_examples en el mismo test.
+
+evaluation_criteria:
+  - id: "criterion-1"
+    name: "Nombre del Criterio 1"
+    # El campo 'prompt' define el criterio de evaluación que el LLM usará
+    # Internamente se convierte al campo 'conversation_goal_prompt' de la API
+    prompt: |
+      Evalúa si el agente [describe qué debe hacer].
+
+      El criterio se cumple si:
+      - [condición 1]
+      - [condición 2]
+
+      El criterio NO se cumple si:
+      - [condición negativa 1]
+      - [condición negativa 2]
+
+    # Si debe usar la knowledge base del agente para la evaluación (opcional, default: false)
+    use_knowledge_base: false
+
+  - id: "criterion-2"
+    name: "Nombre del Criterio 2"
+    prompt: |
+      [Otro criterio de evaluación]
+    use_knowledge_base: false
+
+# NOTA sobre los resultados:
+# Los evaluation_criteria devuelven un objeto con estructura:
+# {
+#   "criterion-1": { result: "success" | "failure" | "unknown", rationale: "..." },
+#   "criterion-2": { result: "success" | "failure" | "unknown", rationale: "..." }
+# }
+# El test se considera exitoso solo si TODOS los criterios tienen result: "success"
+
+# ===== OPCIÓN 2: Success/Failure Examples (para tests persistentes) =====
+# Usa success_examples/failure_examples cuando ejecutes: npm run create
+#
+# Este enfoque crea tests de un solo turno en ElevenLabs que se pueden
+# ejecutar repetidamente.
+# El sistema compara la respuesta del agente contra ejemplos de éxito y fallo.
+#
+# Ventajas:
+#   - Tests más rápidos (un solo turno)
+#   - Persistidos en ElevenLabs para ejecución continua
+#   - Comparación directa de respuestas
+#
+# IMPORTANTE: Solo usa UNO de estos dos enfoques por test, NO ambos a la vez.
+
+# Condición general de éxito (descripción en lenguaje natural)
+success_condition: "El agente debe responder de manera profesional y resolver la consulta del usuario"
+
+# Ejemplos de respuestas que se consideran exitosas
+success_examples:
+  - "Entiendo su consulta. Permítame ayudarle con eso."
+  - "Por supuesto, voy a verificar esa información para usted."
+
+# Ejemplos de respuestas que se consideran fallidas
+failure_examples:
+  - "No sé"
+  - "No puedo ayudarte con eso"
+
+# ===== CAMPOS OPCIONALES AVANZADOS =====
+
+# Variables dinámicas que se inyectan en el agente durante la conversación
+# Estas permiten personalizar cada test sin cambiar la configuración del agente
+# Uso: Referencia variables en el prompt del agente con {{variable_name}}
+# Ejemplo en el agent prompt: "Hola {{nombre_cliente}}, tu documento es {{documento_identidad}}"
+dynamic_variables:
+  nombre_cliente: "Juan Pérez"
+  documento_identidad: "1234567890"
+  # Agrega más variables según las necesite tu agente
+
+# Configuración de mock para herramientas (opcional)
+# Útil para simular respuestas de APIs externas sin ejecutarlas realmente
+# Esto permite probar el comportamiento del agente ante diferentes respuestas de herramientas
+# tool_mock_config:
+#   nombre_herramienta:  # Debe coincidir exactamente con el nombre de la herramienta en el agente
+#     return_value: "Valor simulado que retornará la herramienta"
+#     should_fail: false  # Si true, simula que la herramienta falló
+#
+# Ejemplo real:
+# tool_mock_config:
+#   get_weather:
+#     return_value: '{"temperature": 22, "condition": "sunny"}'
+#     should_fail: false
+#   send_email:
+#     return_value: "Email enviado correctamente"
+#     should_fail: false
+
+# Historial de conversación parcial (opcional)
+# Permite iniciar el test desde un punto específico de la conversación
+# en lugar de comenzar desde cero
+# partial_conversation_history:
+#   - role: "user"
+#     message: "Hola"
+#     time_in_call_secs: 0
+#   - role: "agent"
+#     message: "¡Hola! ¿En qué puedo ayudarte?"
+#     time_in_call_secs: 2
+
+# Límite máximo de turnos en la conversación (opcional, default: 10000)
+# Útil para evitar conversaciones infinitas en tests
+# Valores típicos: 10-30 para tests enfocados, 50+ para tests extensos
+new_turns_limit: 20
+
+# ===== LÍMITES DE LA API DE ELEVENLABS =====
+# - Máximo ~10 evaluation_criteria por test (recomendado)
+# - new_turns_limit default: 10000 (máximo turnos en la conversación)
+# - temperature: 0.0 - 1.0 (controla aleatoriedad del usuario simulado)
+# - Los criterios de evaluación devuelven: "success", "failure", o "unknown"
+
+# ===== EJEMPLOS DE REFERENCIA =====
+# Para ver tests completos funcionando, revisa:
+# - tests/scenarios/happy-path.yaml: Flujo exitoso completo con múltiples criterios
+# - tests/scenarios/invalid-data.yaml: Manejo de datos inválidos y "No aplica"
+# - tests/scenarios/callback-scheduling.yaml: Agendamiento de callbacks
+
+# ===== EJEMPLO MÍNIMO PARA SIMULACIÓN =====
+# name: "Mi Test de Simulación"
+# description: "Test básico de conversación"
+# agent_id: "${ELEVENLABS_AGENT_ID}"
+# type: "llm"
+# simulated_user:
+#   prompt: "Eres un usuario que quiere información sobre un producto."
+#   first_message: "Hola, necesito información"
+#   language: "es"
+# evaluation_criteria:
+#   - id: "test-1"
+#     name: "Respuesta Profesional"
+#     prompt: "Evalúa si el agente respondió de manera profesional y cortés."
+#     use_knowledge_base: false
+
+# ===== EJEMPLO MÍNIMO PARA TEST PERSISTENTE =====
+# name: "Mi Test Persistente"
+# description: "Test de respuesta única"
+# agent_id: "${ELEVENLABS_AGENT_ID}"
+# type: "llm"
+# simulated_user:
+#   prompt: "Eres un usuario que saluda."
+#   first_message: "Hola"
+#   language: "es"
+# success_condition: "El agente debe saludar profesionalmente"
+# success_examples:
+#   - "Hola, ¿en qué puedo ayudarte?"
+#   - "Buenos días, bienvenido"
+# failure_examples:
+#   - "¿Qué quieres?"
+#   - "Hola"
+
+# ===== TROUBLESHOOTING COMÚN =====
+#
+# Problema: "Error 422 - validation error"
+# Solución: Verifica que agent_id exista y que los campos requeridos estén presentes
+#
+# Problema: "El test siempre falla"
+# Solución: Revisa los evaluation_criteria, pueden ser demasiado estrictos.
+#           Ajusta los criterios para ser más específicos pero alcanzables.
+#
+# Problema: "La conversación no termina"
+# Solución: Ajusta new_turns_limit a un valor más bajo (ej: 20-30) o
+#           revisa que el agente tenga un flujo de cierre apropiado
+#
+# Problema: "Error 500 Internal Server Error"
+# Solución: Verifica la estructura del simulated_user.prompt (debe ser string simple).
+#           Revisa que el agent_id sea válido y esté activo.
+#
+# Problema: "Tests muy lentos"
+# Solución: Reduce new_turns_limit o simplifica los evaluation_criteria

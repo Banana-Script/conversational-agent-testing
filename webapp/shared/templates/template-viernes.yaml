@@ -1,0 +1,270 @@
+# ============================================================================
+# VIERNES TEST TEMPLATE
+# ============================================================================
+# Template para crear tests del provider Viernes
+# Viernes simula conversaciones con agentes usando usuarios LLM y evalúa
+# automáticamente contra criterios personalizados
+#
+# Documentación completa: docs/providers/viernes.md
+# API Reference: SIMULATION_API_REFERENCE.md
+# ============================================================================
+
+name: "Viernes Example Test"
+description: "Template para tests de Viernes provider"
+
+# ============================================================================
+# CONFIGURACIÓN DEL AGENTE
+# ============================================================================
+
+# ID del agente (será convertido a número)
+agent_id: "111"
+
+# Provider a usar (REQUERIDO para Viernes)
+provider: "viernes"
+
+# ============================================================================
+# CONFIGURACIÓN ESPECÍFICA DE VIERNES
+# ============================================================================
+
+viernes:
+  # ID de la organización (REQUERIDO)
+  # También puede venir de VIERNES_ORGANIZATION_ID env var
+  organization_id: 69
+
+  # ID del agente (opcional, override del agent_id de arriba)
+  # Útil si quieres probar diferentes agentes con el mismo test
+  agent_id: 111
+
+  # Plataforma de conversación
+  # Opciones: whatsapp, telegram, facebook, instagram, web, api
+  # Default: whatsapp
+  platform: "whatsapp"
+
+  # Número máximo de turnos en la conversación
+  # Default: 10
+  max_turns: 5
+
+  # Timeout total de la conversación en segundos
+  # Default: 300 (5 minutos)
+  conversation_timeout: 180
+
+  # Timeout por mensaje individual en segundos
+  # Default: 120 (2 minutos)
+  webhook_timeout: 60
+
+# ============================================================================
+# CONFIGURACIÓN DEL USUARIO SIMULADO
+# ============================================================================
+# Esta sección usa el formato estándar del framework
+# ViernesAdapter la convierte automáticamente al formato de la API de Viernes
+
+simulated_user:
+  # Descripción del comportamiento del usuario
+  # Sé específico sobre personalidad, tono, idioma, y respuestas esperadas
+  prompt: |
+    Eres un cliente interesado en servicios.
+    Responde brevemente en español.
+    Sé amable y cooperativo.
+    Si te preguntan tu nombre, di "María López".
+    Si te piden aceptar términos, responde "Acepto".
+    Mantén respuestas cortas (1-2 oraciones).
+
+  # Primer mensaje del usuario (inicia la conversación)
+  first_message: "Hola, quiero información"
+
+  # Idioma de la conversación (código ISO)
+  language: "es"
+
+  # Modelo LLM para el usuario simulado
+  # Opciones: gpt-4o-mini, gpt-4o, ollama/llama3.2, ollama/llama3.1
+  # Recomendado para desarrollo: gpt-4o-mini (rápido y económico)
+  # Recomendado para producción: gpt-4o (mayor calidad)
+  # Gratis: ollama/llama3.2 o ollama/llama3.1 (requiere Ollama local)
+  llm: "gpt-5-mini"
+
+  # Temperature para generación de respuestas (0.0-1.0)
+  # Más bajo = más determinístico
+  # Más alto = más creativo/variado
+  # Default: 0.7
+  temperature: 0.3
+
+  # Máximo de tokens por respuesta del usuario
+  # Default: 150
+  max_tokens: 100
+
+# ============================================================================
+# CRITERIOS DE EVALUACIÓN
+# ============================================================================
+# El framework convierte automáticamente este formato al de Viernes:
+# - 'name' → 'goal'
+# - 'prompt' → 'evaluation_prompt'
+
+evaluation_criteria:
+  - id: "greeting"
+    name: "Professional Greeting"
+    prompt: "Did the agent greet the user professionally and warmly?"
+
+  - id: "collect-info"
+    name: "Information Collection"
+    prompt: "Did the agent ask for and gather necessary customer information?"
+
+  - id: "provide-value"
+    name: "Value Provision"
+    prompt: "Did the agent provide relevant and helpful information to the customer?"
+
+# ============================================================================
+# DATOS ESTRUCTURADOS ESPERADOS (STRUCTURED DATA)
+# ============================================================================
+# Esta sección define los campos estructurados que el LLM debe capturar
+# durante la conversación. Estos campos vienen del JSON response del LLM
+# (por ejemplo: funnel, priority, category, sentiment, response_type).
+#
+# El evaluador verificará que los campos esperados fueron capturados con
+# los valores correctos según el modo de comparación (match_mode).
+#
+# Campos soportados por el sistema:
+#   - funnel: Clasificación del lead en el CRM
+#   - priority: Nivel de prioridad del caso
+#   - category: Categoría de la conversación
+#   - sentiment: Sentimiento detectado del usuario
+#   - response_type: Tipo de respuesta del agente
+#   - confidence: Score de confianza del AI
+#   - intent: Intención detectada del usuario
+
+expected_structured_data:
+  # Ejemplo 1: Match exacto (case-insensitive)
+  - field_name: "funnel"
+    expected_value: "CRM - B2C - PERDIDO"
+    match_mode: "exact"           # exact | contains | regex | any_of
+    capture_strategy: "last"      # first | last | all
+    required: true                # Si es requerido, el test falla si no se captura
+    description: "Lead debe ser clasificado como perdido B2C"
+
+  # Ejemplo 2: Match con cualquiera de varios valores
+  # - field_name: "priority"
+  #   expected_value: ["high", "critical", "urgent"]
+  #   match_mode: "any_of"
+  #   capture_strategy: "last"
+  #   required: false
+  #   description: "Prioridad debe ser alta, crítica o urgente"
+
+  # Ejemplo 3: Match parcial (contains)
+  # - field_name: "category"
+  #   expected_value: "sales"
+  #   match_mode: "contains"
+  #   capture_strategy: "first"
+  #   required: true
+  #   description: "Categoría debe contener 'sales'"
+
+  # Ejemplo 4: Match con regex
+  # - field_name: "funnel"
+  #   expected_value: "CRM.*PERDIDO"
+  #   match_mode: "regex"
+  #   capture_strategy: "last"
+  #   required: true
+  #   description: "Funnel debe matchear patrón de lead perdido"
+
+# ============================================================================
+# MATCH MODES DISPONIBLES
+# ============================================================================
+#
+# exact:    Comparación exacta (case-insensitive)
+#           expected: "high" → captured: "HIGH" ✓
+#           expected: "high" → captured: "medium" ✗
+#
+# contains: El valor capturado debe contener el valor esperado
+#           expected: "sales" → captured: "B2C - sales - lead" ✓
+#           expected: "sales" → captured: "support" ✗
+#
+# regex:    El valor esperado es un patrón regex (case-insensitive)
+#           expected: "CRM.*LOST" → captured: "CRM - B2C - LOST" ✓
+#           expected: "^ERROR" → captured: "ERROR: timeout" ✓
+#
+# any_of:   El valor capturado debe coincidir con alguno de la lista
+#           expected: ["high", "critical"] → captured: "critical" ✓
+#           expected: ["high", "critical"] → captured: "low" ✗
+#
+# ============================================================================
+# CAPTURE STRATEGIES
+# ============================================================================
+#
+# first:    Usa el primer valor capturado en la conversación
+# last:     Usa el último valor capturado (default, recomendado)
+# all:      Verifica todos los valores capturados, pasa si ALGUNO coincide
+#
+# ============================================================================
+# GUÍA DE USO
+# ============================================================================
+#
+# 1. SELECCIÓN DE MODELO
+#    - Desarrollo/Testing: gpt-4o-mini (rápido, económico)
+#    - Producción: gpt-4o (mejor calidad)
+#    - Gratis: ollama/llama3.2 (requiere Ollama instalado)
+#
+# 2. DISEÑO DE PERSONA
+#    ✅ Bueno:
+#       - Específico sobre comportamiento
+#       - Incluye idioma
+#       - Pre-define respuestas a preguntas comunes
+#       - Especifica longitud de respuestas
+#    ❌ Malo:
+#       - "Un cliente" (muy vago)
+#       - Sin contexto ni personalidad
+#
+# 3. NÚMERO DE TURNOS
+#    - Validación rápida: 2-3 turnos
+#    - Flujo estándar: 5-7 turnos
+#    - End-to-end completo: 10-15 turnos
+#    - Stress test: 20+ turnos
+#
+# 4. TIMEOUTS
+#    - conversation_timeout = max_turns × avg_response_time × 2
+#    - webhook_timeout = avg_response_time + 10s buffer
+#
+# 5. PLATAFORMAS
+#    - whatsapp: Conversaciones de WhatsApp
+#    - telegram: Mensajes de Telegram
+#    - facebook: Facebook Messenger
+#    - instagram: Instagram DM
+#    - web: Chat web
+#    - api: Integración directa API
+#
+# 6. CRITERIOS DE EVALUACIÓN
+#    - Mínimo recomendado: 3-5 criterios por test
+#    - Sé específico en los prompts de evaluación
+#    - Usa preguntas claras que puedan responderse sí/no
+#
+# ============================================================================
+# EJEMPLOS DE EJECUCIÓN
+# ============================================================================
+#
+# # Test básico
+# npm run simulate tests/my-viernes-test.yaml
+#
+# # Con variables de entorno
+# VIERNES_ORGANIZATION_ID=69 npm run simulate tests/my-viernes-test.yaml
+#
+# # Múltiples tests
+# npm run simulate tests/viernes/*.yaml
+#
+# ============================================================================
+# ERRORES COMUNES
+# ============================================================================
+#
+# 1. "organization_id is required"
+#    → Asegúrate de tener VIERNES_ORGANIZATION_ID en .env
+#    → O especifica organization_id en viernes.organization_id
+#
+# 2. "agent_id must be a valid number"
+#    → agent_id debe ser numérico, no string
+#    → Usa 111 en lugar de "mi-agente"
+#
+# 3. Timeout
+#    → Aumenta conversation_timeout
+#    → O reduce max_turns
+#
+# 4. "Model unavailable"
+#    → Si usas ollama/*, asegúrate de tener Ollama corriendo
+#    → Alternativa: usa gpt-4o-mini
+#
+# ============================================================================
