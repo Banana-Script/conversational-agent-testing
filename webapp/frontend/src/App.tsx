@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Sparkles, AlertCircle } from 'lucide-react';
+import { Sparkles, AlertCircle, HelpCircle } from 'lucide-react';
 import { FileUploader, type ContextFile } from './components/FileUploader';
 import { ProviderSelector } from './components/ProviderSelector';
 import { ViernesSelector } from './components/ViernesSelector';
 import { ElevenLabsSelector } from './components/ElevenLabsSelector';
 import { ProgressDisplay } from './components/ProgressDisplay';
+import { HelpModal } from './components/HelpModal';
 import { useSSE } from './hooks/useSSE';
 import { startGeneration, getSSEUrl } from './services/api';
 import type { Provider } from './types';
@@ -18,6 +19,7 @@ function App() {
   const [testCount, setTestCount] = useState<number | undefined>(undefined);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
 
   const { events, status, downloadUrl, totalFiles, connect, reset } = useSSE();
 
@@ -79,16 +81,25 @@ function App() {
       {/* Header */}
       <header className="bg-gray-800 border-b border-gray-700">
         <div className="max-w-4xl mx-auto px-4 py-6">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-600 rounded-lg">
-              <Sparkles className="w-6 h-6 text-white" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-600 rounded-lg">
+                <Sparkles className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-white">Test Generator</h1>
+                <p className="text-gray-400 text-sm">
+                  Genera test cases automaticamente con IA
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-white">Test Generator</h1>
-              <p className="text-gray-400 text-sm">
-                Genera test cases automaticamente con IA
-              </p>
-            </div>
+            <button
+              onClick={() => setIsHelpModalOpen(true)}
+              className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+              title="Ayuda"
+            >
+              <HelpCircle className="w-5 h-5 text-gray-400" />
+            </button>
           </div>
         </div>
       </header>
@@ -103,6 +114,7 @@ function App() {
             <div className="space-y-6">
               <FileUploader
                 onFilesChange={handleFilesChange}
+                onHelpClick={() => setIsHelpModalOpen(true)}
                 disabled={isGenerating && !isComplete}
               />
 
@@ -220,6 +232,12 @@ function App() {
           Test Generator Web App - Powered by Claude Code
         </div>
       </footer>
+
+      {/* Help Modal */}
+      <HelpModal
+        isOpen={isHelpModalOpen}
+        onClose={() => setIsHelpModalOpen(false)}
+      />
     </div>
   );
 }

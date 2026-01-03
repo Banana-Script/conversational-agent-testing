@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Upload, FileText, X, Plus } from 'lucide-react';
+import { Upload, FileText, X, Plus, HelpCircle } from 'lucide-react';
 
 export interface ContextFile {
   name: string;
@@ -8,6 +8,7 @@ export interface ContextFile {
 
 interface FileUploaderProps {
   onFilesChange: (files: ContextFile[]) => void;
+  onHelpClick?: () => void;
   disabled?: boolean;
 }
 
@@ -15,7 +16,7 @@ const VALID_EXTENSIONS = ['.txt', '.md', '.json', '.yaml', '.yml'];
 const MAX_FILE_SIZE = 1024 * 1024; // 1MB
 const MAX_TOTAL_SIZE = 5 * 1024 * 1024; // 5MB
 
-export function FileUploader({ onFilesChange, disabled }: FileUploaderProps) {
+export function FileUploader({ onFilesChange, onHelpClick, disabled }: FileUploaderProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [files, setFiles] = useState<ContextFile[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -125,9 +126,21 @@ export function FileUploader({ onFilesChange, disabled }: FileUploaderProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <label className="block text-sm font-medium text-gray-300">
-          Archivos de contexto
-        </label>
+        <div className="flex items-center gap-2">
+          <label className="block text-sm font-medium text-gray-300">
+            Archivos de contexto
+          </label>
+          {onHelpClick && (
+            <button
+              onClick={onHelpClick}
+              type="button"
+              className="text-blue-400 hover:text-blue-300 transition-colors"
+              title="¿Qué archivos subir?"
+            >
+              <HelpCircle className="w-4 h-4" />
+            </button>
+          )}
+        </div>
         {files.length > 0 && (
           <button
             onClick={clearAllFiles}
@@ -221,6 +234,20 @@ export function FileUploader({ onFilesChange, disabled }: FileUploaderProps) {
           )}
         </label>
       </div>
+
+      {/* Hint text */}
+      {onHelpClick && (
+        <p className="text-sm text-gray-500">
+          Sube configuraciones de agente, prompts o especificaciones.{' '}
+          <button
+            onClick={onHelpClick}
+            type="button"
+            className="text-blue-400 hover:text-blue-300 underline"
+          >
+            Ver ejemplos
+          </button>
+        </p>
+      )}
 
       {error && (
         <p className="text-red-400 text-sm">{error}</p>
