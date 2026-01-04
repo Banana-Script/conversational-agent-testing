@@ -41,9 +41,9 @@ RUN npm run build
 # ============================================
 FROM node:20-slim
 
-# Install Claude Code CLI, SSH client, and autossh
+# Install Claude Code CLI, SSH client, autossh, and netcat for tunnel verification
 RUN apt-get update && \
-    apt-get install -y openssh-client autossh && \
+    apt-get install -y openssh-client autossh netcat-openbsd && \
     rm -rf /var/lib/apt/lists/* && \
     npm install -g @anthropic-ai/claude-code
 

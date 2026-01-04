@@ -39,9 +39,26 @@ if [ -n "$SSH_HOST" ] && [ -f "$HOME/.ssh/id_rsa" ]; then
         -L 3306:${RDS_HOST}:${RDS_PORT} \
         ${SSH_USER}@${SSH_HOST}
 
-    # Wait for tunnel to be ready
-    sleep 2
-    echo "SSH tunnel established"
+    # Wait for tunnel to be ready with verification
+    echo "Waiting for SSH tunnel to be ready..."
+    MAX_WAIT=30
+    WAITED=0
+    while [ $WAITED -lt $MAX_WAIT ]; do
+        if nc -z localhost 3306 2>/dev/null; then
+            echo "SSH tunnel established and verified (port 3306 is listening)"
+            break
+        fi
+        sleep 1
+        WAITED=$((WAITED + 1))
+        if [ $((WAITED % 5)) -eq 0 ]; then
+            echo "Still waiting for tunnel... ($WAITED/$MAX_WAIT seconds)"
+        fi
+    done
+
+    if [ $WAITED -ge $MAX_WAIT ]; then
+        echo "ERROR: SSH tunnel failed to become ready after $MAX_WAIT seconds"
+        exit 1
+    fi
 fi
 
 # Execute main command

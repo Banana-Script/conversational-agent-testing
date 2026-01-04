@@ -31,17 +31,15 @@ class Database {
       queueLimit: 10,                  // CAMBIADO de 0 a 10
 
       // Connection health (previene zombies)
-      enableKeepAlive: true,           // NUEVO
-      keepAliveInitialDelay: 10000,    // NUEVO: 10s
+      enableKeepAlive: true,           // Mantiene conexiones vivas
+      keepAliveInitialDelay: 10000,    // 10s antes de primer keepalive
 
       // Timeouts (protección)
-      connectTimeout: 10000,           // NUEVO: 10s
-      acquireTimeout: 10000,           // NUEVO: 10s
-      timeout: 60000,                  // NUEVO: 60s query timeout
+      connectTimeout: 10000,           // 10s para establecer conexión inicial
 
       // Lifecycle (limpia conexiones idle)
-      maxIdle: 2,                      // NUEVO
-      idleTimeout: 60000,              // NUEVO: 60s
+      maxIdle: 2,                      // Máximo 2 conexiones idle en pool
+      idleTimeout: 60000,              // 60s antes de cerrar conexión idle
     };
 
     while (this.retryCount < this.maxRetries) {
