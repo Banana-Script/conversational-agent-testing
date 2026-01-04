@@ -24,9 +24,24 @@ class Database {
       user: process.env.MYSQL_USER,
       password: process.env.MYSQL_PASSWORD,
       database: process.env.MYSQL_DATABASE,
+
+      // Pool sizing (optimizado para auto-scaling)
       waitForConnections: true,
-      connectionLimit: 5,
-      queueLimit: 0,
+      connectionLimit: 3,              // REDUCIDO de 5 a 3
+      queueLimit: 10,                  // CAMBIADO de 0 a 10
+
+      // Connection health (previene zombies)
+      enableKeepAlive: true,           // NUEVO
+      keepAliveInitialDelay: 10000,    // NUEVO: 10s
+
+      // Timeouts (protección)
+      connectTimeout: 10000,           // NUEVO: 10s
+      acquireTimeout: 10000,           // NUEVO: 10s
+      timeout: 60000,                  // NUEVO: 60s query timeout
+
+      // Lifecycle (limpia conexiones idle)
+      maxIdle: 2,                      // NUEVO
+      idleTimeout: 60000,              // NUEVO: 60s
     };
 
     while (this.retryCount < this.maxRetries) {
@@ -73,10 +88,58 @@ class Database {
     return rows as ChatAgent[];
   }
 
+  getPoolStats(): object | null {
+    if (!this.pool) {
+      return null;
+    }
+
+    try {
+      // Access mysql2 pool internals for metrics
+      const poolInternal = (this.pool as any).pool;
+
+      return {
+        totalConnections: poolInternal._allConnections?.length || 0,
+        freeConnections: poolInternal._freeConnections?.length || 0,
+        queuedRequests: poolInternal._connectionQueue?.length || 0,
+        config: {
+          connectionLimit: 3,
+          queueLimit: 10,
+        },
+      };
+    } catch (error) {
+      console.error('Error getting pool stats:', error);
+      return { error: 'Unable to fetch pool stats' };
+    }
+  }
+
   async close(): Promise<void> {
-    if (this.pool) {
-      await this.pool.end();
+    if (!this.pool) {
+      console.log('Database pool already closed');
+      return;
+    }
+
+    console.log('Closing database pool...');
+
+    // Timeout de seguridad usando Promise.race
+    const closePromise = this.pool.end();
+
+    let timeoutId: NodeJS.Timeout;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutId = setTimeout(() => {
+        reject(new Error('Database close timeout after 10 seconds'));
+      }, 10000);
+    });
+
+    try {
+      await Promise.race([closePromise, timeoutPromise]);
+      clearTimeout(timeoutId!);
       this.pool = null;
+      console.log('Database pool closed successfully');
+    } catch (error) {
+      clearTimeout(timeoutId!);
+      console.error('Error closing database pool:', error);
+      this.pool = null;
+      throw error;
     }
   }
 }

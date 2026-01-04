@@ -4,6 +4,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { config } from 'dotenv';
 import multer from 'multer';
+import { Server } from 'http';
 
 import generateRouter from './routes/generate.js';
 import viernesRouter from './routes/viernes.js';
@@ -19,6 +20,10 @@ const __dirname = dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Module-level variables for shutdown management
+let serverInstance: Server | null = null;
+let isShuttingDown = false;
 
 // Middleware
 app.use(cors());
@@ -65,12 +70,13 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
   });
 });
 
-// Health check
+// Health check with database metrics
 app.get('/health', (_req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
     claudeToken: process.env.CLAUDE_CODE_OAUTH_TOKEN ? 'configured' : 'missing',
+    database: database.getPoolStats(),
   });
 });
 
@@ -95,7 +101,7 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 });
 
 // Start server
-async function start() {
+async function start(): Promise<Server> {
   try {
     // Initialize Claude executor
     await claudeExecutor.initialize();
@@ -104,15 +110,21 @@ async function start() {
     console.warn('Claude executor initialization warning:', error);
   }
 
-  try {
-    // Initialize database connection (waits for SSH tunnel)
-    await database.initialize();
-    console.log('Database connection established');
-  } catch (error) {
-    console.warn('Database initialization warning:', error);
+  // Make database required if credentials are configured
+  if (process.env.MYSQL_HOST && process.env.MYSQL_USER) {
+    try {
+      // Initialize database connection (waits for SSH tunnel)
+      await database.initialize();
+      console.log('Database connection established');
+    } catch (error) {
+      console.error('FATAL: Database initialization failed:', error);
+      throw error;
+    }
+  } else {
+    console.warn('Database credentials not configured, skipping...');
   }
 
-  app.listen(PORT, () => {
+  serverInstance = app.listen(PORT, () => {
     console.log(`
 ╔════════════════════════════════════════════════════════╗
 ║  Test Generator Web App                                ║
@@ -130,6 +142,62 @@ async function start() {
 ╚════════════════════════════════════════════════════════╝
     `);
   });
+
+  return serverInstance;
 }
 
-start();
+// Graceful shutdown handler
+async function gracefulShutdown(signal: string): Promise<void> {
+  // Prevent multiple shutdown calls
+  if (isShuttingDown) {
+    console.log(`${signal} received but shutdown already in progress, ignoring...`);
+    return;
+  }
+  isShuttingDown = true;
+
+  console.log(`\n${signal} received. Starting graceful shutdown...`);
+
+  // Timeout de seguridad: forzar exit después de 30s
+  const shutdownTimeout = setTimeout(() => {
+    console.error('Shutdown timeout exceeded (30s), forcing exit');
+    process.exit(1);
+  }, 30000);
+
+  try {
+    // 1. Dejar de aceptar nuevas conexiones HTTP
+    if (serverInstance) {
+      console.log('Closing HTTP server...');
+      await new Promise<void>((resolve) => {
+        serverInstance!.close(() => {
+          console.log('HTTP server closed');
+          resolve();
+        });
+      });
+    }
+
+    // 2. Cerrar pool de conexiones MySQL
+    console.log('Closing database connections...');
+    await database.close();
+    console.log('Database connections closed');
+
+    clearTimeout(shutdownTimeout);
+    console.log('Graceful shutdown completed successfully');
+    process.exit(0);
+  } catch (error) {
+    console.error('Error during graceful shutdown:', error);
+    clearTimeout(shutdownTimeout);
+    process.exit(1);
+  }
+}
+
+// Start the server with error handling
+try {
+  await start();
+
+  // Register signal handlers
+  process.on('SIGTERM', () => void gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => void gracefulShutdown('SIGINT'));
+} catch (error) {
+  console.error('Failed to start server:', error);
+  process.exit(1);
+}
