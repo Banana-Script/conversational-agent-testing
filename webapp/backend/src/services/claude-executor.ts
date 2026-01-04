@@ -244,6 +244,170 @@ El usuario seleccionó este agente en el frontend. DEBES usarlo en TODOS los tes
 `;
     }
 
+    // Instrucciones de contexto para proveedores de voz
+    let voiceContextInstructions = '';
+    if (provider === 'elevenlabs' || provider === 'vapi') {
+      voiceContextInstructions = `
+## 📞 CONTEXTO DE COMUNICACIÓN: LLAMADA TELEFÓNICA
+
+IMPORTANTE: Este agente se comunica mediante LLAMADAS DE VOZ.
+
+Al generar el campo \`simulated_user.first_message\`, ten en cuenta que:
+
+1. **¿QUIÉN INICIA LA LLAMADA? (Contexto Crítico)**
+
+   **Escenario A: El AGENTE llama al usuario (llamada saliente/outbound)**
+   - El usuario CONTESTA una llamada entrante
+   - first_message debe ser REACTIVO e interrogativo
+   - Ejemplos: "¿Aló?", "¿Sí?", "¿Quién habla?", "Diga"
+   - **Este es el escenario MÁS COMÚN para voice agents**
+
+   **Escenario B: El USUARIO llama al agente (llamada entrante/inbound - línea de soporte)**
+   - El usuario INICIA con un propósito específico
+   - first_message puede ser más DIRECTO
+   - Ejemplos: "Hola, llamo por...", "Buenos días, necesito ayuda con..."
+
+   **Por defecto, asumir Escenario A (agente llama) a menos que el contexto indique lo contrario.**
+
+2. **Variaciones regionales de saludos telefónicos:**
+   - **España:** "¿Dígame?" o "Diga"
+   - **México:** "¿Bueno?"
+   - **Argentina:** "Hola" o "¿Sí?"
+   - **Chile/Colombia/Perú:** "¿Aló?"
+   - **Cuba/Caribe:** "Oigo" o "¿Dígame?"
+   - **Inglés (US/UK):** "Hello?", "Yes?", "Speaking?"
+   - **Nota:** Estas variaciones son IMPORTANTES y reflejan patrones culturales reales
+
+3. **Contexto profesional vs. personal:**
+   - **Llamadas personales/casuales:** "¿Aló?", "¿Sí?", "¿Bueno?", "Diga"
+   - **Contexto empresarial/profesional:** "Buenos días", "Buenas tardes", "[Nombre Empresa], ¿en qué puedo ayudarle?"
+   - **Considera:** Si el agente representa una empresa (banco, soporte), el usuario puede responder más formalmente
+
+4. **Variaciones por hora del día (contexto profesional):**
+   - Mañana (6am-12pm): "Buenos días"
+   - Tarde (12pm-8pm): "Buenas tardes"
+   - Noche (8pm-6am): "Buenas noches"
+   - Nota: En contexto casual, estas variaciones son menos comunes al contestar
+
+5. **Características del first_message:**
+   - Debe sonar NATURAL para una llamada telefónica real
+   - Puede incluir tono de interrogación (¿...?)
+   - Puede reflejar sorpresa/curiosidad inicial (Escenario A)
+   - Debe ser BREVE y REACTIVO (no más de 2-3 palabras típicamente)
+   - Refleja que la persona está RESPONDIENDO, no iniciando
+
+6. **Ejemplos de cómo NO debe ser (Escenario A - agente llama):**
+   ❌ "Hola, necesito ayuda con mi cuenta" (demasiado directo para contestar teléfono)
+   ❌ "Quiero información sobre productos" (no natural al contestar)
+   ❌ "Buenos días, quisiera hacer una consulta" (usuario no inicia, responde)
+
+7. **Ejemplos de cómo SÍ debe ser (Escenario A - agente llama):**
+   ✅ "¿Aló?"
+   ✅ "Diga"
+   ✅ "¿Sí?"
+   ✅ "¿Quién habla?"
+   ✅ "Buenos días" (si responde formalmente)
+   ✅ "¿Bueno?" (México)
+   ✅ "Hello?" (inglés)
+
+`;
+    }
+
+    // Instrucciones de contexto para proveedor de chat
+    let chatContextInstructions = '';
+    if (provider === 'viernes') {
+      chatContextInstructions = `
+## 💬 CONTEXTO DE COMUNICACIÓN: CHATBOT DE MENSAJERÍA
+
+IMPORTANTE: Este agente se comunica mediante MENSAJES DE TEXTO (WhatsApp, Telegram, Facebook, Instagram, Web).
+
+Al generar el campo \`simulated_user.first_message\`, ten en cuenta que:
+
+1. **El usuario está INICIANDO una conversación de chat**
+   - Es un mensaje de texto, no una llamada telefónica
+   - El usuario ESCRIBE el primer mensaje al agente
+   - El usuario tiene un propósito o necesidad específica
+   - Puede escribir a su propio ritmo, sin presión de tiempo real
+
+2. **Matriz de Formalidad por Industria (IMPORTANTE):**
+
+   **ALTA FORMALIDAD (formal, sin emojis, usar "usted"):**
+   - Servicios bancarios y financieros
+   - Servicios legales y jurídicos
+   - Servicios médicos y de salud
+   - Seguros y pensiones
+   - Gobierno y servicios públicos
+   - Ejemplos: "Buenos días, necesito consultar mi saldo", "Buenas tardes, quisiera información sobre..."
+
+   **FORMALIDAD MODERADA (profesional pero amigable):**
+   - E-commerce y retail
+   - Soporte técnico y servicio al cliente
+   - Servicios de delivery y logística
+   - Educación y capacitación
+   - Inmobiliaria y bienes raíces
+   - Ejemplos: "Hola, quiero rastrear mi pedido", "Buen día, tengo una pregunta sobre..."
+
+   **FORMALIDAD BAJA (casual, emojis permitidos):**
+   - Entretenimiento y ocio
+   - Moda, belleza y lifestyle
+   - Food & beverage, restaurantes
+   - Redes sociales y comunidades
+   - Servicios de streaming
+   - Ejemplos: "Hola! Quiero hacer un pedido 😊", "Hey, qué tal?"
+
+   **Ajusta el tono del first_message según la industria del agente.**
+
+3. **Plataformas de mensajería - Consideraciones importantes:**
+   - El TONO y ESTILO de comunicación es CONSISTENTE entre plataformas
+   - WhatsApp, Telegram, Facebook Messenger, Instagram, Web chat tienen diferencias TÉCNICAS (listas, botones, ventanas de tiempo)
+   - PERO estas diferencias técnicas NO afectan cómo el usuario escribe su primer mensaje
+   - Los usuarios NO piensan "escribiré diferente porque esto es WhatsApp vs Telegram"
+   - **Genera mensajes naturales que funcionarían en CUALQUIER app de mensajería**
+
+4. **Estilos de first_message apropiados:**
+
+   **Saludo simple:**
+   - "Hola"
+   - "Buenos días"
+   - "Buenas tardes"
+   - "Buen día"
+
+   **Saludo + motivo (muy común):**
+   - "Hola, necesito información sobre..."
+   - "Buenos días, quisiera consultar..."
+   - "Buenas tardes, tengo una pregunta sobre..."
+   - "Hola! Quiero hacer un pedido"
+
+   **Directo al asunto (válido en contextos casuales):**
+   - "Quiero rastrear mi pedido #12345"
+   - "Necesito ayuda con mi cuenta"
+   - "Tengo un problema con..."
+
+5. **Características del first_message:**
+   - Debe ser apropiado para CHAT DE TEXTO (no voz)
+   - Puede ser desde muy breve ("Hola") hasta incluir contexto completo
+   - Es natural ir directo al asunto en chat (a diferencia de llamadas)
+   - Puede incluir detalles específicos (números de orden, fechas, etc.)
+   - En contextos casuales, emojis son naturales y apropiados
+
+6. **Ejemplos de cómo SÍ debe ser:**
+   ✅ "Hola" (simple y universal)
+   ✅ "Buenos días" (formal)
+   ✅ "Hola, necesito información sobre..." (saludo + motivo)
+   ✅ "Quiero hacer una consulta" (directo)
+   ✅ "Buenas tardes, quisiera saber..." (formal + motivo)
+   ✅ "Hola! Quiero hacer un pedido 😊" (casual con emoji, apropiado para retail/food)
+
+7. **Ejemplos de cómo NO debe ser:**
+   ❌ "¿Aló?" (esto es para llamadas telefónicas, NO para chat)
+   ❌ "Diga" (contexto de teléfono, no chat)
+   ❌ "¿Sí?" (respuesta telefónica, no inicio de chat)
+   ❌ "¿Quién habla?" (no tiene sentido en chat donde el usuario inicia)
+   ❌ "¿Bueno?" (saludo telefónico mexicano, no para mensajería)
+
+`;
+    }
+
     // Construir instrucción de número de tests
     let testCountInstruction: string;
     if (job.options?.testCount) {
@@ -255,7 +419,7 @@ El usuario seleccionó este agente en el frontend. DEBES usarlo en TODOS los tes
     }
 
     // Build final prompt
-    const finalPrompt = `${providerContext}${viernesConfig}${elevenLabsConfig}${prompt}
+    const finalPrompt = `${providerContext}${viernesConfig}${elevenLabsConfig}${voiceContextInstructions}${chatContextInstructions}${prompt}
 
 ## TEMPLATE DE REFERENCIA
 
