@@ -202,6 +202,8 @@ function App() {
                 status={status}
                 downloadUrl={downloadUrl}
                 totalFiles={totalFiles}
+                provider={provider}
+                agentId={provider === 'elevenlabs' ? selectedElevenLabsAgentId : null}
               />
 
               {isComplete && (

@@ -544,11 +544,11 @@ ${testCountInstruction}
         stderr += data.toString();
       });
 
-      // Timeout after 5 minutes
+      // Timeout after 15 minutes
       const timeout = setTimeout(() => {
         child.kill('SIGTERM');
-        reject(new Error('Claude CLI timeout (5 minutes)'));
-      }, 5 * 60 * 1000);
+        reject(new Error('Claude CLI timeout (15 minutes)'));
+      }, 15 * 60 * 1000);
 
       child.on('close', (code) => {
         clearTimeout(timeout);

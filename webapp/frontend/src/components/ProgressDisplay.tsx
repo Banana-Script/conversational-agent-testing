@@ -1,14 +1,33 @@
-import { CheckCircle, AlertCircle, Loader2, FileText, Download } from 'lucide-react';
-import type { ProgressEvent } from '../types';
+import { CheckCircle, AlertCircle, Loader2, FileText, Download, BookOpen } from 'lucide-react';
+import type { ProgressEvent, Provider } from '../types';
 
 interface ProgressDisplayProps {
   events: ProgressEvent[];
   status: 'idle' | 'connecting' | 'connected' | 'closed' | 'error';
   downloadUrl: string | null;
   totalFiles: number;
+  provider: Provider;
+  agentId?: string | null;
 }
 
-export function ProgressDisplay({ events, status, downloadUrl, totalFiles }: ProgressDisplayProps) {
+function getEnvVarsForProvider(provider: Provider, agentId?: string | null): string {
+  switch (provider) {
+    case 'elevenlabs':
+      return `ELEVENLABS_API_KEY=tu_api_key
+ELEVENLABS_AGENT_ID=${agentId || 'tu_agent_id'}`;
+    case 'vapi':
+      return `VAPI_API_KEY=tu_api_key
+VAPI_ASSISTANT_ID=tu_assistant_id
+OPENAI_API_KEY=tu_openai_key  # Requerido para evaluaciones`;
+    case 'viernes':
+      return `VIERNES_BASE_URL=https://bot.dev.viernes-for-business.bananascript.io
+TEST_PROVIDER=viernes`;
+    default:
+      return '';
+  }
+}
+
+export function ProgressDisplay({ events, status, downloadUrl, totalFiles, provider, agentId }: ProgressDisplayProps) {
   if (events.length === 0 && status === 'idle') {
     return null;
   }
@@ -114,6 +133,57 @@ export function ProgressDisplay({ events, status, downloadUrl, totalFiles }: Pro
           <Download className="w-5 h-5" />
           Descargar ZIP ({totalFiles} tests)
         </a>
+      )}
+
+      {/* Next steps guide */}
+      {isComplete && downloadUrl && (
+        <div className="mt-6 bg-blue-900/30 border border-blue-500/50 rounded-lg p-4">
+          <h4 className="font-semibold text-white mb-3 flex items-center gap-2">
+            <BookOpen className="w-5 h-5 text-blue-400" />
+            Siguientes pasos
+          </h4>
+          <ol className="text-gray-300 text-sm space-y-3">
+            <li className="flex gap-2">
+              <span className="text-blue-400 font-mono font-bold">1.</span>
+              <span>Descomprime el archivo ZIP descargado</span>
+            </li>
+            <li className="flex gap-2">
+              <span className="text-blue-400 font-mono font-bold">2.</span>
+              <span>
+                Copia la carpeta <code className="bg-gray-700 px-1.5 py-0.5 rounded text-blue-300">scenarios/</code> a{' '}
+                <code className="bg-gray-700 px-1.5 py-0.5 rounded text-blue-300">tests/scenarios/</code> en tu proyecto
+              </span>
+            </li>
+            <li className="flex gap-2">
+              <span className="text-blue-400 font-mono font-bold">3.</span>
+              <div className="flex-1">
+                <span>
+                  Configura las variables de entorno en tu{' '}
+                  <code className="bg-gray-700 px-1.5 py-0.5 rounded text-blue-300">.env</code>:
+                </span>
+                <pre className="mt-2 bg-gray-800 p-3 rounded text-xs text-green-300 overflow-x-auto border border-gray-700">
+                  {getEnvVarsForProvider(provider, agentId)}
+                </pre>
+              </div>
+            </li>
+            <li className="flex gap-2">
+              <span className="text-blue-400 font-mono font-bold">4.</span>
+              <div className="flex-1">
+                <span>Ejecuta los tests:</span>
+                <pre className="mt-2 bg-gray-800 p-3 rounded text-xs text-green-300 overflow-x-auto border border-gray-700">
+{`# Ejecutar todos los tests
+npm run simulate
+
+# Ejecutar un test específico
+npm run simulate -- -f tests/scenarios/nombre-del-test.yaml
+
+# Ver logs detallados
+npm run simulate -- --verbose`}
+                </pre>
+              </div>
+            </li>
+          </ol>
+        </div>
       )}
     </div>
   );

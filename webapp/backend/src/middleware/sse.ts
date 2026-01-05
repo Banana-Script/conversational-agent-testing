@@ -1,14 +1,19 @@
 import { Response } from 'express';
 import type { ProgressEvent } from '../types/index.js';
 
+// Heartbeat interval in milliseconds (15 seconds)
+const HEARTBEAT_INTERVAL = 15000;
+
 export class SSEConnection {
   private res: Response;
   private closed = false;
+  private heartbeatInterval: NodeJS.Timeout | null = null;
 
   constructor(res: Response) {
     this.res = res;
     this.setupHeaders();
     this.setupCleanup();
+    this.startHeartbeat();
   }
 
   private setupHeaders(): void {
@@ -21,8 +26,31 @@ export class SSEConnection {
 
   private setupCleanup(): void {
     this.res.on('close', () => {
+      this.stopHeartbeat();
       this.closed = true;
     });
+  }
+
+  private startHeartbeat(): void {
+    this.heartbeatInterval = setInterval(() => {
+      if (!this.closed) {
+        try {
+          // SSE comment (ignored by client but keeps connection alive)
+          this.res.write(': heartbeat\n\n');
+        } catch (error) {
+          // Connection likely closed, clean up
+          this.stopHeartbeat();
+          this.closed = true;
+        }
+      }
+    }, HEARTBEAT_INTERVAL);
+  }
+
+  private stopHeartbeat(): void {
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = null;
+    }
   }
 
   send(event: ProgressEvent): void {
@@ -73,6 +101,7 @@ export class SSEConnection {
 
   close(): void {
     if (!this.closed) {
+      this.stopHeartbeat();
       this.res.end();
       this.closed = true;
     }
