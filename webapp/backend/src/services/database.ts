@@ -42,20 +42,51 @@ class Database {
       idleTimeout: 60000,              // 60s antes de cerrar conexión idle
     };
 
+    // DEBUG: Log connection config (sin password)
+    console.log('[DB] Initializing database connection with config:', {
+      host: config.host,
+      port: config.port,
+      user: config.user,
+      database: config.database,
+      connectionLimit: config.connectionLimit,
+      connectTimeout: config.connectTimeout,
+    });
+
     while (this.retryCount < this.maxRetries) {
       try {
+        console.log(`[DB] Attempt ${this.retryCount + 1}/${this.maxRetries}: Creating connection pool...`);
         this.pool = mysql.createPool(config);
-        // Test connection
+
+        console.log(`[DB] Attempt ${this.retryCount + 1}/${this.maxRetries}: Testing connection...`);
+        const startTime = Date.now();
         const connection = await this.pool.getConnection();
+        const duration = Date.now() - startTime;
+
+        console.log(`[DB] Attempt ${this.retryCount + 1}/${this.maxRetries}: Connection acquired in ${duration}ms`);
         connection.release();
-        console.log('Database connection established');
+        console.log(`[DB] Attempt ${this.retryCount + 1}/${this.maxRetries}: Connection released`);
+
+        console.log('[DB] ✅ Database connection established successfully');
+        console.log('[DB] Pool stats:', this.getPoolStats());
         return;
       } catch (error) {
         this.retryCount++;
-        console.log(`Database connection attempt ${this.retryCount}/${this.maxRetries} failed, retrying in ${this.retryDelay}ms...`);
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        const errorCode = (error as any)?.code || 'UNKNOWN';
+        const errorErrno = (error as any)?.errno || 'N/A';
+
+        console.error(`[DB] ❌ Attempt ${this.retryCount}/${this.maxRetries} failed:`, {
+          code: errorCode,
+          errno: errorErrno,
+          message: errorMsg,
+        });
+
         if (this.retryCount >= this.maxRetries) {
+          console.error('[DB] 💀 All connection attempts exhausted');
           throw new Error(`Failed to connect to database after ${this.maxRetries} attempts: ${error}`);
         }
+
+        console.log(`[DB] ⏳ Retrying in ${this.retryDelay}ms...`);
         await new Promise(resolve => setTimeout(resolve, this.retryDelay));
       }
     }
@@ -66,9 +97,13 @@ class Database {
       throw new Error('Database not initialized');
     }
 
+    console.log('[DB] Executing query: getOrganizations');
+    const startTime = Date.now();
     const [rows] = await this.pool.execute<mysql.RowDataPacket[]>(
       'SELECT id, name FROM organizations WHERE status_id = 1 ORDER BY name'
     );
+    const duration = Date.now() - startTime;
+    console.log(`[DB] Query completed in ${duration}ms, returned ${rows.length} organizations`);
 
     return rows as Organization[];
   }
@@ -78,10 +113,14 @@ class Database {
       throw new Error('Database not initialized');
     }
 
+    console.log(`[DB] Executing query: getAgentsByOrganization(${organizationId})`);
+    const startTime = Date.now();
     const [rows] = await this.pool.execute<mysql.RowDataPacket[]>(
       'SELECT id, name, organization_id FROM chat_agents WHERE organization_id = ? AND status_id IN (233, 234) ORDER BY name',
       [organizationId]
     );
+    const duration = Date.now() - startTime;
+    console.log(`[DB] Query completed in ${duration}ms, returned ${rows.length} agents`);
 
     return rows as ChatAgent[];
   }
@@ -112,11 +151,12 @@ class Database {
 
   async close(): Promise<void> {
     if (!this.pool) {
-      console.log('Database pool already closed');
+      console.log('[DB] Database pool already closed');
       return;
     }
 
-    console.log('Closing database pool...');
+    console.log('[DB] Closing database pool...');
+    console.log('[DB] Pool stats before close:', this.getPoolStats());
 
     // Timeout de seguridad usando Promise.race
     const closePromise = this.pool.end();
@@ -129,13 +169,15 @@ class Database {
     });
 
     try {
+      const startTime = Date.now();
       await Promise.race([closePromise, timeoutPromise]);
+      const duration = Date.now() - startTime;
       clearTimeout(timeoutId!);
       this.pool = null;
-      console.log('Database pool closed successfully');
+      console.log(`[DB] ✅ Database pool closed successfully in ${duration}ms`);
     } catch (error) {
       clearTimeout(timeoutId!);
-      console.error('Error closing database pool:', error);
+      console.error('[DB] ❌ Error closing database pool:', error);
       this.pool = null;
       throw error;
     }

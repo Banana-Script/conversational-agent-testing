@@ -102,29 +102,59 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 
 // Start server
 async function start(): Promise<Server> {
+  console.log('[STARTUP] 🚀 Starting application...');
+  console.log('[STARTUP] Node version:', process.version);
+  console.log('[STARTUP] Environment:', process.env.NODE_ENV || 'development');
+  console.log('[STARTUP] Platform:', process.platform);
+  console.log('[STARTUP] Working directory:', process.cwd());
+
+  // Log environment config (without sensitive data)
+  console.log('[STARTUP] Configuration:', {
+    port: PORT,
+    mysqlHost: process.env.MYSQL_HOST || 'not set',
+    mysqlPort: process.env.MYSQL_PORT || 'not set',
+    mysqlUser: process.env.MYSQL_USER || 'not set',
+    mysqlDatabase: process.env.MYSQL_DATABASE || 'not set',
+    claudeTokenConfigured: process.env.CLAUDE_CODE_OAUTH_TOKEN ? 'yes' : 'no',
+  });
+
   try {
-    // Initialize Claude executor
+    console.log('[STARTUP] Step 1/3: Initializing Claude executor...');
+    const claudeStartTime = Date.now();
     await claudeExecutor.initialize();
-    console.log('Claude executor initialized');
+    const claudeDuration = Date.now() - claudeStartTime;
+    console.log(`[STARTUP] ✅ Claude executor initialized in ${claudeDuration}ms`);
   } catch (error) {
-    console.warn('Claude executor initialization warning:', error);
+    console.warn('[STARTUP] ⚠️ Claude executor initialization warning:', error);
   }
 
   // Make database required if credentials are configured
   if (process.env.MYSQL_HOST && process.env.MYSQL_USER) {
     try {
+      console.log('[STARTUP] Step 2/3: Initializing database connection...');
+      console.log('[STARTUP] Database config:', {
+        host: process.env.MYSQL_HOST,
+        port: process.env.MYSQL_PORT,
+        user: process.env.MYSQL_USER,
+        database: process.env.MYSQL_DATABASE,
+      });
+
+      const dbStartTime = Date.now();
       // Initialize database connection (waits for SSH tunnel)
       await database.initialize();
-      console.log('Database connection established');
+      const dbDuration = Date.now() - dbStartTime;
+      console.log(`[STARTUP] ✅ Database connection established in ${dbDuration}ms`);
     } catch (error) {
-      console.error('FATAL: Database initialization failed:', error);
+      console.error('[STARTUP] ❌ FATAL: Database initialization failed:', error);
       throw error;
     }
   } else {
-    console.warn('Database credentials not configured, skipping...');
+    console.warn('[STARTUP] ⚠️ Database credentials not configured, skipping...');
   }
 
+  console.log('[STARTUP] Step 3/3: Starting HTTP server...');
   serverInstance = app.listen(PORT, () => {
+    console.log(`[STARTUP] ✅ HTTP server listening on port ${PORT}`);
     console.log(`
 ╔════════════════════════════════════════════════════════╗
 ║  Test Generator Web App                                ║
@@ -141,6 +171,7 @@ async function start(): Promise<Server> {
 ║  - GET  /api/elevenlabs/agents    List ElevenLabs agents║
 ╚════════════════════════════════════════════════════════╝
     `);
+    console.log('[STARTUP] 🎉 Application started successfully');
   });
 
   return serverInstance;
@@ -150,41 +181,44 @@ async function start(): Promise<Server> {
 async function gracefulShutdown(signal: string): Promise<void> {
   // Prevent multiple shutdown calls
   if (isShuttingDown) {
-    console.log(`${signal} received but shutdown already in progress, ignoring...`);
+    console.log(`[SHUTDOWN] ${signal} received but shutdown already in progress, ignoring...`);
     return;
   }
   isShuttingDown = true;
 
-  console.log(`\n${signal} received. Starting graceful shutdown...`);
+  console.log(`\n[SHUTDOWN] ${signal} received. Starting graceful shutdown...`);
+  const shutdownStartTime = Date.now();
 
   // Timeout de seguridad: forzar exit después de 30s
   const shutdownTimeout = setTimeout(() => {
-    console.error('Shutdown timeout exceeded (30s), forcing exit');
+    console.error('[SHUTDOWN] ❌ Shutdown timeout exceeded (30s), forcing exit');
     process.exit(1);
   }, 30000);
 
   try {
     // 1. Dejar de aceptar nuevas conexiones HTTP
     if (serverInstance) {
-      console.log('Closing HTTP server...');
+      console.log('[SHUTDOWN] Step 1/2: Closing HTTP server...');
+      const httpStartTime = Date.now();
       await new Promise<void>((resolve) => {
         serverInstance!.close(() => {
-          console.log('HTTP server closed');
+          const httpDuration = Date.now() - httpStartTime;
+          console.log(`[SHUTDOWN] ✅ HTTP server closed in ${httpDuration}ms`);
           resolve();
         });
       });
     }
 
     // 2. Cerrar pool de conexiones MySQL
-    console.log('Closing database connections...');
+    console.log('[SHUTDOWN] Step 2/2: Closing database connections...');
     await database.close();
-    console.log('Database connections closed');
 
     clearTimeout(shutdownTimeout);
-    console.log('Graceful shutdown completed successfully');
+    const totalDuration = Date.now() - shutdownStartTime;
+    console.log(`[SHUTDOWN] ✅ Graceful shutdown completed successfully in ${totalDuration}ms`);
     process.exit(0);
   } catch (error) {
-    console.error('Error during graceful shutdown:', error);
+    console.error('[SHUTDOWN] ❌ Error during graceful shutdown:', error);
     clearTimeout(shutdownTimeout);
     process.exit(1);
   }
