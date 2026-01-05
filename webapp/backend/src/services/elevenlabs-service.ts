@@ -15,7 +15,15 @@ export interface ElevenLabsAgent {
   agent_id: string;
   name: string;
   created_at?: string;
-  // Agregar más campos según necesidad
+}
+
+export interface AgentDynamicVariables {
+  [key: string]: string;
+}
+
+export interface AgentConfig {
+  name: string;
+  dynamicVariables: AgentDynamicVariables;
 }
 
 export async function getElevenLabsAgents(forceRefresh = false): Promise<ElevenLabsAgent[]> {
@@ -66,4 +74,79 @@ export async function getElevenLabsAgents(forceRefresh = false): Promise<ElevenL
   console.log(`[ElevenLabs] Caché actualizado con ${allAgents.length} agentes`);
 
   return allAgents;
+}
+
+// Patrón válido para IDs de agentes de ElevenLabs (alfanumérico con guiones/underscores)
+const AGENT_ID_PATTERN = /^[a-zA-Z0-9_-]{1,100}$/;
+
+/**
+ * Valida que las variables dinámicas tengan el formato esperado
+ */
+function isValidDynamicVariables(obj: unknown): obj is AgentDynamicVariables {
+  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) {
+    return false;
+  }
+
+  return Object.entries(obj).every(([key, value]) =>
+    typeof key === 'string' &&
+    typeof value === 'string' &&
+    key.length < 100 &&
+    value.length < 1000
+  );
+}
+
+/**
+ * Obtiene la configuración completa de un agente, incluyendo sus variables dinámicas
+ * @param agentId - ID del agente
+ * @returns Configuración del agente con nombre y variables dinámicas
+ */
+export async function getElevenLabsAgentConfig(agentId: string): Promise<AgentConfig> {
+  // Validar formato del agentId para prevenir path traversal / injection
+  if (!agentId || !AGENT_ID_PATTERN.test(agentId)) {
+    console.warn(`[ElevenLabs] agentId inválido: formato no permitido`);
+    return { name: '', dynamicVariables: {} };
+  }
+
+  console.log(`[ElevenLabs] Obteniendo configuración del agente ${agentId}...`);
+
+  try {
+    const response = await axios.get(`${ELEVENLABS_BASE_URL}/convai/agents/${agentId}`, {
+      headers: {
+        'xi-api-key': ELEVENLABS_API_KEY,
+      },
+      timeout: 30000, // 30 segundos timeout
+    });
+
+    const agentData = response.data;
+    const name = agentData.name || '';
+
+    // Extraer variables dinámicas de conversation_config.agent.dynamic_variables.dynamic_variable_placeholders
+    let dynamicVariables: AgentDynamicVariables = {};
+
+    const placeholders = agentData?.conversation_config?.agent?.dynamic_variables?.dynamic_variable_placeholders;
+    if (isValidDynamicVariables(placeholders)) {
+      dynamicVariables = placeholders;
+    }
+
+    const varCount = Object.keys(dynamicVariables).length;
+    console.log(`[ElevenLabs] Agente "${name}" tiene ${varCount} variable(s) dinámica(s)`);
+
+    if (varCount > 0) {
+      console.log(`[ElevenLabs] Variables encontradas: ${Object.keys(dynamicVariables).join(', ')}`);
+    }
+
+    return {
+      name,
+      dynamicVariables,
+    };
+  } catch (error) {
+    // Sanitizar error para no exponer API key en logs
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.warn(`[ElevenLabs] Error obteniendo configuración del agente ${agentId}: ${errorMessage}`);
+    // Graceful degradation: retornar objeto vacío en caso de error
+    return {
+      name: '',
+      dynamicVariables: {},
+    };
+  }
 }

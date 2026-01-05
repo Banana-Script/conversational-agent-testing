@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import { parse as parseYAML } from 'yaml';
 import type { Provider, Job, ContextFile } from '../types/index.js';
 import { broadcastToJob } from '../middleware/sse.js';
+import { getElevenLabsAgentConfig } from './elevenlabs-service.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -110,7 +111,7 @@ export class ClaudeExecutor {
       }
 
       // 3. Build full prompt
-      const fullPrompt = this.buildPrompt(userContent, template, job);
+      const fullPrompt = await this.buildPrompt(userContent, template, job);
 
       // 4. Write prompt to temp file
       const tmpFile = join(tmpdir(), `prompt-${job.id}.txt`);
@@ -199,7 +200,7 @@ export class ClaudeExecutor {
     return readFile(templatePath, 'utf-8');
   }
 
-  private buildPrompt(userContent: string, template: string, job: Job): string {
+  private async buildPrompt(userContent: string, template: string, job: Job): Promise<string> {
     const provider = job.provider;
     let prompt = this.promptTemplate!;
 
@@ -242,6 +243,57 @@ El usuario seleccionó este agente en el frontend. DEBES usarlo en TODOS los tes
 ✅ USA el valor de arriba en cada test
 
 `;
+
+      // Obtener variables dinámicas del agente
+      try {
+        const agentConfig = await getElevenLabsAgentConfig(String(job.agentId));
+        const dynamicVars = agentConfig.dynamicVariables;
+        const varKeys = Object.keys(dynamicVars);
+
+        // Limitar cantidad de variables para evitar prompts muy largos
+        const MAX_VARIABLES = 20;
+        const limitedVarKeys = varKeys.slice(0, MAX_VARIABLES);
+
+        if (limitedVarKeys.length > 0) {
+          // Sanitizar valores para prevenir prompt injection
+          const sanitizeValue = (value: string): string => {
+            return value
+              .replace(/\n/g, ' ')           // Remover saltos de línea
+              .replace(/[#*`\[\]]/g, '')     // Remover caracteres markdown especiales
+              .substring(0, 100);             // Limitar longitud
+          };
+
+          const varList = limitedVarKeys.map(key => {
+            const defaultValue = sanitizeValue(dynamicVars[key] || '');
+            const sanitizedKey = key.replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 50);
+            return `- **${sanitizedKey}**: valor por defecto "${defaultValue}"`;
+          }).join('\n');
+
+          const truncatedWarning = varKeys.length > MAX_VARIABLES
+            ? `\n(Mostrando ${MAX_VARIABLES} de ${varKeys.length} variables)\n`
+            : '';
+
+          elevenLabsConfig += `
+## 🔧 VARIABLES DINÁMICAS DEL AGENTE
+
+El agente tiene las siguientes variables dinámicas configuradas que DEBES incluir en la sección \`dynamic_variables\` de CADA test:
+${truncatedWarning}
+${varList}
+
+⚠️ IMPORTANTE:
+- Genera valores APROPIADOS y REALISTAS para cada variable según el escenario del test
+- Para tests de error/datos inválidos, usa valores que provoquen el escenario (ej: documento inválido "ABC123")
+- Para happy paths, usa valores válidos y realistas
+- NO uses los valores por defecto mostrados arriba, genera valores VARIADOS para cada test
+- Considera el contexto del test para elegir valores apropiados (nombres, documentos, teléfonos, etc.)
+
+`;
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.warn(`[ClaudeExecutor] Error obteniendo variables dinámicas del agente ${job.agentId}: ${errorMessage}`);
+        // Continuar sin variables dinámicas (graceful degradation)
+      }
     }
 
     // Instrucciones de contexto para proveedores de voz
