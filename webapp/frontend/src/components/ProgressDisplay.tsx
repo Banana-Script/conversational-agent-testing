@@ -77,23 +77,35 @@ export function ProgressDisplay({ events, status, downloadUrl, totalFiles, provi
             <div
               key={index}
               className={`
-                flex items-start gap-2 text-sm
+                text-sm
                 ${event.type === 'error' ? 'text-red-400' : ''}
                 ${event.type === 'completed' ? 'text-green-400' : ''}
                 ${event.type === 'file_created' ? 'text-blue-400' : ''}
                 ${event.type === 'progress' ? 'text-gray-400' : ''}
               `}
             >
-              {event.type === 'file_created' && <FileText className="w-4 h-4 flex-shrink-0 mt-0.5" />}
-              {event.type === 'completed' && <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />}
-              {event.type === 'error' && <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />}
-              {event.type === 'progress' && <Loader2 className="w-4 h-4 flex-shrink-0 mt-0.5" />}
+              <div className="flex items-start gap-2">
+                {event.type === 'file_created' && <FileText className="w-4 h-4 flex-shrink-0 mt-0.5" />}
+                {event.type === 'completed' && <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />}
+                {event.type === 'error' && <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />}
+                {event.type === 'progress' && <Loader2 className="w-4 h-4 flex-shrink-0 mt-0.5" />}
 
-              <span className="flex-1">{event.message}</span>
+                <span className="flex-1">{event.message}</span>
 
-              <span className="text-xs text-gray-600 flex-shrink-0">
-                {new Date(event.timestamp).toLocaleTimeString()}
-              </span>
+                <span className="text-xs text-gray-600 flex-shrink-0">
+                  {new Date(event.timestamp).toLocaleTimeString()}
+                </span>
+              </div>
+              {event.data?.debugInfo && (
+                <details className="ml-6 mt-1">
+                  <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-400">
+                    Ver respuesta de Claude
+                  </summary>
+                  <pre className="mt-1 text-xs bg-gray-900 p-2 rounded overflow-x-auto max-h-40 overflow-y-auto text-gray-500 whitespace-pre-wrap">
+                    {event.data.debugInfo}
+                  </pre>
+                </details>
+              )}
             </div>
           ))}
         </div>

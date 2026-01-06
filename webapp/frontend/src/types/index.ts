@@ -32,6 +32,7 @@ export interface ProgressEvent {
     totalFiles?: number;
     currentFile?: number;
     downloadUrl?: string;
+    debugInfo?: string;
   };
 }
 

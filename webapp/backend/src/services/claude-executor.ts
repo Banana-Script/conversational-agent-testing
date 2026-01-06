@@ -12,6 +12,46 @@ import { getElevenLabsAgentConfig } from './elevenlabs-service.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Constantes para debug output
+const DEBUG_PREVIEW_MAX_CHARS = 500;
+
+// Patrones de datos sensibles a sanitizar en debug output
+const SENSITIVE_PATTERNS = [
+  /sk-ant-[a-zA-Z0-9-]+/gi,                    // Anthropic API keys
+  /sk_[a-zA-Z0-9]{20,}/gi,                     // Generic sk_ keys (ElevenLabs, etc.)
+  /xi-api-key[=:]\s*['"]?[a-zA-Z0-9-]+['"]?/gi, // ElevenLabs header
+  /api[_-]?key[=:]\s*['"]?[a-zA-Z0-9-]+['"]?/gi,
+  /password[=:]\s*['"]?[^\s'"]+['"]?/gi,
+  /token[=:]\s*['"]?[a-zA-Z0-9-_.]+['"]?/gi,
+  /Bearer\s+[a-zA-Z0-9-_.]+/gi,
+  /[a-zA-Z0-9-_.]+@[a-zA-Z0-9-_.]+\.[a-zA-Z]{2,}/gi, // Emails
+];
+
+/**
+ * Sanitiza el output para remover posibles secrets antes de enviarlo al frontend
+ */
+function sanitizeDebugOutput(output: string): string {
+  let sanitized = output;
+  for (const pattern of SENSITIVE_PATTERNS) {
+    sanitized = sanitized.replace(pattern, '[REDACTED]');
+  }
+  return sanitized;
+}
+
+/**
+ * Trunca un string de manera segura para Unicode (no corta emojis/caracteres multi-byte)
+ */
+function truncateUnicodeSafe(text: string, maxChars: number): { truncated: string; wasTruncated: boolean } {
+  const chars = [...text];
+  if (chars.length <= maxChars) {
+    return { truncated: text, wasTruncated: false };
+  }
+  return {
+    truncated: chars.slice(0, maxChars).join(''),
+    wasTruncated: true,
+  };
+}
+
 // Paths relativos al backend
 // En desarrollo: backend/src/services -> ../../shared
 // En Docker: /app/dist/services -> ../../shared (-> /app/shared)
@@ -129,6 +169,24 @@ export class ClaudeExecutor {
 
         // 6. Parse YAML blocks from output
         const yamlBlocks = this.parseYAMLBlocks(output);
+
+        // Si no hay bloques YAML pero Claude respondió algo, enviar preview para debug
+        const trimmedOutput = output.trim();
+        if (yamlBlocks.length === 0 && trimmedOutput.length > 0) {
+          // Sanitizar secrets y truncar de manera segura para Unicode
+          const sanitized = sanitizeDebugOutput(trimmedOutput);
+          const { truncated, wasTruncated } = truncateUnicodeSafe(sanitized, DEBUG_PREVIEW_MAX_CHARS);
+          const preview = wasTruncated
+            ? `${truncated}... (${[...sanitized].length} chars total)`
+            : truncated;
+
+          broadcastToJob(job.id, {
+            type: 'progress',
+            message: 'Claude respondió pero no se encontraron bloques YAML válidos',
+            timestamp: new Date().toISOString(),
+            data: { debugInfo: preview },
+          });
+        }
 
         broadcastToJob(job.id, {
           type: 'progress',
