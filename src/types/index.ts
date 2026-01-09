@@ -182,6 +182,14 @@ export interface TestResult {
   success: boolean;
   simulation_response: SimulationResponse;
   execution_time_ms: number;
+  // Análisis de timeout para recomendaciones inteligentes
+  timeout_analysis?: {
+    configured_timeout_seconds: number;
+    configured_max_turns: number;
+    elapsed_seconds: number;
+    current_turn: number;
+    total_turns: number;
+  };
   // Vapi-specific fields (opcionales)
   vapi_eval_run_id?: string;
   vapi_cost?: number;

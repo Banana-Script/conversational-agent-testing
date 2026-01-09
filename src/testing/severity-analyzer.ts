@@ -294,6 +294,13 @@ export class SeverityAnalyzer {
         success: boolean;
         test_name: string;
         error?: string;
+        timeout_analysis?: {
+          configured_timeout_seconds: number;
+          configured_max_turns: number;
+          elapsed_seconds: number;
+          current_turn: number;
+          total_turns: number;
+        };
         simulation_response?: {
           analysis?: {
             evaluation_criteria_results?: Record<string, {
@@ -519,6 +526,7 @@ export class SeverityAnalyzer {
       },
       test_classifications: classifications,
       recommendations: [
+        ...this.generateTimeoutOrTurnsRecommendations(results.results),
         'Revisar los criterios fallidos en cada test',
         'Priorizar la corrección de fallos críticos y altos antes del despliegue'
       ],
@@ -526,6 +534,67 @@ export class SeverityAnalyzer {
         'Análisis básico generado sin Claude - para análisis más detallado ejecutar con Claude CLI'
       ]
     };
+  }
+
+  /**
+   * Genera recomendaciones inteligentes basadas en análisis de timeout/turnos
+   * Evalúa si el problema fue de timeout o de turnos y sugiere incrementos específicos
+   */
+  private generateTimeoutOrTurnsRecommendations(
+    tests: Array<{
+      test_name: string;
+      timeout_analysis?: {
+        configured_timeout_seconds: number;
+        configured_max_turns: number;
+        elapsed_seconds: number;
+        current_turn: number;
+        total_turns: number;
+      };
+    }>
+  ): string[] {
+    const recommendations: string[] = [];
+
+    for (const test of tests) {
+      const analysis = test.timeout_analysis;
+      if (!analysis) continue;
+
+      const { configured_timeout_seconds, configured_max_turns,
+              elapsed_seconds, current_turn, total_turns } = analysis;
+
+      // Evitar división por cero
+      if (configured_timeout_seconds <= 0 || total_turns <= 0 || current_turn <= 0) continue;
+
+      const timeoutUsage = elapsed_seconds / configured_timeout_seconds;
+      const turnsCompletion = current_turn / total_turns;
+      const avgSecsPerTurn = elapsed_seconds / current_turn;
+      const estimatedTotal = avgSecsPerTurn * total_turns;
+
+      if (timeoutUsage > 0.9 && turnsCompletion < 1) {
+        // Timeout fue el factor limitante
+        const suggested = Math.ceil(estimatedTotal * 1.1);
+        const pct = Math.round(((suggested / configured_timeout_seconds) - 1) * 100);
+        recommendations.push(
+          `**Aumentar conversation_timeout** de ${configured_timeout_seconds}s a ${suggested}s (+${pct}%) ` +
+          `para "${test.test_name}" - usó ${Math.round(timeoutUsage*100)}% del tiempo, ` +
+          `${Math.round(turnsCompletion*100)}% turnos (${current_turn}/${total_turns})`
+        );
+      } else if (turnsCompletion >= 1 && timeoutUsage < 0.9) {
+        // Turnos completados con tiempo de sobra - podría necesitar más turnos
+        recommendations.push(
+          `Considerar **aumentar max_turns** de ${configured_max_turns} para "${test.test_name}" - ` +
+          `completó todos los turnos con ${Math.round(timeoutUsage*100)}% del tiempo disponible`
+        );
+      } else if (timeoutUsage > 0.9 && Math.abs(timeoutUsage - turnsCompletion) < 0.15) {
+        // Tiempo y turnos proporcionales - sugerir ambos
+        const sugT = Math.ceil(configured_timeout_seconds * 1.33);
+        const sugM = Math.ceil(configured_max_turns * 1.33);
+        recommendations.push(
+          `Para "${test.test_name}": Aumentar **timeout** a ${sugT}s y **max_turns** a ${sugM} (+33%)`
+        );
+      }
+    }
+
+    return recommendations;
   }
 
   /**

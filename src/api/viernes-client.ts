@@ -304,7 +304,7 @@ export class ViernesClient {
           throw new ViernesAPIError(
             'Simulation exceeded server timeout',
             504,
-            { simulation_id: simulationId }
+            { simulation_id: simulationId, progress: statusResponse.progress }
           );
 
         case 'pending':

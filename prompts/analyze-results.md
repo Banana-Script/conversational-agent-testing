@@ -145,7 +145,46 @@ Ejemplo de patrón problemático:
 - **No progresión**: La conversación no avanza hacia una resolución
 - **Eco mecánico**: El agente solo repite lo que dice el usuario sin aportar
 
-### 5. Nivel de confianza
+### 5. Análisis de Timeout (IMPORTANTE para tests con timeout_analysis)
+
+Si un test tiene el campo `timeout_analysis`, DEBES calcular y generar recomendaciones específicas:
+
+```json
+"timeout_analysis": {
+  "configured_timeout_seconds": 200,
+  "configured_max_turns": 12,
+  "elapsed_seconds": 197.94,
+  "current_turn": 9,
+  "total_turns": 12
+}
+```
+
+**Cálculos requeridos:**
+1. `timeoutUsage = elapsed_seconds / configured_timeout_seconds` (ej: 197.94/200 = 98.97%)
+2. `turnsCompletion = current_turn / total_turns` (ej: 9/12 = 75%)
+3. `avgSecsPerTurn = elapsed_seconds / current_turn` (ej: 197.94/9 = 21.99s)
+4. `estimatedTotalTime = avgSecsPerTurn × total_turns` (ej: 21.99×12 = 263.9s)
+5. `suggestedTimeout = estimatedTotalTime × 1.1` (ej: 263.9×1.1 = 290s, +45%)
+
+**Reglas de recomendación:**
+
+| Condición | Recomendación |
+|-----------|---------------|
+| `timeoutUsage > 90%` Y `turnsCompletion < 100%` | **Aumentar timeout** - el tiempo se agotó antes de completar turnos |
+| `turnsCompletion = 100%` Y `timeoutUsage < 90%` | **Aumentar turnos** - completó turnos con tiempo sobrante |
+| `timeoutUsage > 90%` Y `abs(timeoutUsage - turnsCompletion) < 15%` | **Aumentar ambos +33%** - proporcionales |
+
+**Formato de recomendación (OBLIGATORIO si hay timeout_analysis):**
+```
+"Aumentar conversation_timeout de Xs a Ys (+Z%) para test 'nombre' - usó A% del tiempo, B% turnos (C/D)"
+```
+
+Ejemplo real con los datos de arriba:
+```
+"Aumentar conversation_timeout de 200s a 290s (+45%) para test 'P0-029' - usó 99% del tiempo, 75% turnos (9/12)"
+```
+
+### 6. Nivel de confianza
 
 - **Alta confianza**: El fallo es claramente un problema real del bot
 - **Media confianza**: Probablemente es problema del bot pero podría ser test

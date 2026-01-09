@@ -55,6 +55,19 @@ export class ViernesProvider extends BaseTestProvider {
     } catch (error: any) {
       const executionTime = Date.now() - startTime;
 
+      // Extraer datos de timeout si están disponibles en el error
+      let timeoutAnalysis: TestResult['timeout_analysis'] | undefined;
+      if (error.responseData?.progress) {
+        const progress = error.responseData.progress;
+        timeoutAnalysis = {
+          configured_timeout_seconds: test.viernes?.conversation_timeout || 300,
+          configured_max_turns: test.viernes?.max_turns || test.new_turns_limit || 10,
+          elapsed_seconds: progress.elapsed_seconds,
+          current_turn: progress.current_turn,
+          total_turns: progress.total_turns,
+        };
+      }
+
       return {
         test_name: test.name,
         agent_id: test.agent_id,
@@ -70,6 +83,7 @@ export class ViernesProvider extends BaseTestProvider {
           },
         },
         execution_time_ms: executionTime,
+        timeout_analysis: timeoutAnalysis,
       };
     }
   }
