@@ -2,10 +2,12 @@ Evaluate: {{CRITERION_PROMPT}}
 
 Answer with ONLY:
 RESULT: pass
-REASONING: one sentence
+REASONING: una oración en español explicando por qué pasó
 
 OR:
 RESULT: fail
-REASONING: one sentence
+REASONING: una oración en español explicando por qué falló
+
+IMPORTANT: The REASONING must be written in Spanish.
 
 Conversation:
