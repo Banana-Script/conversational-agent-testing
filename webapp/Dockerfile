@@ -43,12 +43,27 @@ FROM node:20-slim
 
 # Install Claude Code CLI, SSH client, autossh, and netcat for tunnel verification
 RUN apt-get update && \
-    apt-get install -y openssh-client autossh netcat-openbsd && \
+    apt-get install -y openssh-client autossh netcat-openbsd git jq && \
     rm -rf /var/lib/apt/lists/* && \
     npm install -g @anthropic-ai/claude-code
 
 # Create non-root user for running the app (required for Claude CLI)
 RUN useradd -m -s /bin/bash appuser
+
+# ============================================
+# Ralph Installation from GitHub
+# ============================================
+RUN git clone https://github.com/frankbria/ralph-claude-code.git /tmp/ralph-install && \
+    cd /tmp/ralph-install && \
+    chmod +x install.sh && \
+    HOME=/home/appuser ./install.sh && \
+    rm -rf /tmp/ralph-install && \
+    chown -R appuser:appuser /home/appuser/.ralph
+
+# Copy custom ralph_loop.sh to overwrite the installed version
+COPY ralph_loop.sh /home/appuser/.ralph/ralph_loop.sh
+RUN chmod +x /home/appuser/.ralph/ralph_loop.sh && \
+    chown appuser:appuser /home/appuser/.ralph/ralph_loop.sh
 
 # Create SSH directory for appuser (key will be provided via env var)
 RUN mkdir -p /home/appuser/.ssh && \
@@ -75,6 +90,19 @@ COPY shared ./shared
 
 # Create temp directory for context files and set ownership
 RUN mkdir -p /tmp/context && chown -R appuser:appuser /app /tmp/context
+
+# ============================================
+# Ralph Project Setup in Workdir
+# ============================================
+# Initialize Ralph project structure in /app
+# Note: git config must use same HOME as setup.sh
+RUN HOME=/home/appuser git config --global user.email "ralph@docker.local" && \
+    HOME=/home/appuser git config --global user.name "Ralph Docker" && \
+    HOME=/home/appuser /home/appuser/.ralph/setup.sh ralph-project && \
+    cp -r ralph-project/PROMPT.md ralph-project/@fix_plan.md ralph-project/@AGENT.md /app/ && \
+    cp -r ralph-project/specs ralph-project/docs ralph-project/logs ralph-project/src ralph-project/examples /app/ && \
+    rm -rf ralph-project && \
+    chown -R appuser:appuser /app
 
 # Environment defaults
 ENV NODE_ENV=production

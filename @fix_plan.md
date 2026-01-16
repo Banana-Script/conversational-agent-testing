@@ -1,27 +1,15 @@
-# Ralph Fix Plan
+# Ralph Fix Plan - Ralph Integration
 
 ## High Priority
-- [ ] Set up basic project structure and build system
-- [ ] Define core data structures and types
-- [ ] Implement basic input/output handling
-- [ ] Create test framework and initial tests
+- [ ] Create webapp/ralph/ directory with QA-specific prompts
+- [ ] Modify webapp/Dockerfile to copy ralph configuration
+- [ ] Add runClaudeWithRalph() method to claude-executor.ts
+- [ ] Add useRalph option to GenerateOptions type
 
 ## Medium Priority
-- [ ] Add error handling and validation
-- [ ] Implement core business logic
-- [ ] Add configuration management
-- [ ] Create user documentation
-
-## Low Priority
-- [ ] Performance optimization
-- [ ] Extended feature set
-- [ ] Integration with external services
-- [ ] Advanced error recovery
+- [ ] Add Ralph toggle to frontend UI
+- [ ] Test Docker build with Ralph configuration
+- [ ] Document Ralph mode in README
 
 ## Completed
-- [x] Project initialization
-
-## Notes
-- Focus on MVP functionality first
-- Ensure each feature is properly tested
-- Update this file after each major milestone
+- [x] Project exploration and planning
