@@ -1,11 +1,12 @@
 import { spawn } from 'child_process';
 import { writeFile, readFile, unlink, mkdir, rm } from 'fs/promises';
 import { existsSync } from 'fs';
-import { join, dirname } from 'path';
+import { join, dirname, basename } from 'path';
 import { tmpdir } from 'os';
 import { fileURLToPath } from 'url';
 import { parse as parseYAML } from 'yaml';
-import type { Provider, Job, ContextFile } from '../types/index.js';
+import type { Provider, Job, ContextFile, RalphStatusBlock } from '../types/index.js';
+import { glob } from 'glob';
 import { broadcastToJob } from '../middleware/sse.js';
 import { getElevenLabsAgentConfig } from './elevenlabs-service.js';
 
@@ -39,6 +40,24 @@ function sanitizeDebugOutput(output: string): string {
 }
 
 /**
+ * Sanitizes a filename to prevent path traversal attacks.
+ * Removes path components and dangerous characters.
+ */
+function sanitizeFilename(filename: string): string {
+  // Extract just the filename, removing any path components
+  let safe = basename(filename);
+  // Remove any null bytes and control characters
+  safe = safe.replace(/[\x00-\x1f]/g, '');
+  // Remove path traversal sequences that might slip through
+  safe = safe.replace(/\.\./g, '');
+  // Default to 'file.txt' if the result is empty or just dots
+  if (!safe || safe === '.' || safe === '..') {
+    safe = 'file.txt';
+  }
+  return safe;
+}
+
+/**
  * Trunca un string de manera segura para Unicode (no corta emojis/caracteres multi-byte)
  */
 function truncateUnicodeSafe(text: string, maxChars: number): { truncated: string; wasTruncated: boolean } {
@@ -58,6 +77,12 @@ function truncateUnicodeSafe(text: string, maxChars: number): { truncated: strin
 const SHARED_DIR = join(__dirname, '../../shared');
 const PROMPTS_DIR = join(SHARED_DIR, 'prompts');
 const TEMPLATES_DIR = join(SHARED_DIR, 'templates');
+const RALPH_TEMPLATES_DIR = join(SHARED_DIR, 'ralph-templates');
+
+// Ralph configuration
+const RALPH_MAX_ITERATIONS = 5;
+const RALPH_ITERATION_TIMEOUT = 5 * 60 * 1000;  // 5 minutes per iteration
+const RALPH_TOTAL_TIMEOUT = 30 * 60 * 1000;     // 30 minutes total
 
 export class ClaudeExecutor {
   private promptTemplate: string | null = null;
@@ -84,7 +109,8 @@ export class ClaudeExecutor {
 
     const filePaths: string[] = [];
     for (const file of files) {
-      const filePath = join(contextDir, file.name);
+      const safeName = sanitizeFilename(file.name);
+      const filePath = join(contextDir, safeName);
       await writeFile(filePath, file.content, 'utf-8');
       filePaths.push(filePath);
     }
@@ -104,6 +130,11 @@ export class ClaudeExecutor {
   }
 
   async execute(job: Job): Promise<void> {
+    // Branch to Ralph iterative mode if enabled
+    if (job.options?.useRalph) {
+      return this.executeWithRalph(job);
+    }
+
     if (!this.promptTemplate) {
       await this.initialize();
     }
@@ -572,7 +603,6 @@ ${testCountInstruction}
       ];
 
       const child = spawn(claudePath, args, {
-        shell: true,
         stdio: ['ignore', 'pipe', 'pipe'],
         env: {
           ...process.env,
@@ -669,11 +699,401 @@ ${testCountInstruction}
           .substring(0, 50);
         return `${name}.yaml`;
       }
-    } catch {
-      // Ignore parse errors
+    } catch (error) {
+      console.warn(`[ClaudeExecutor] Failed to parse YAML for filename extraction: ${error instanceof Error ? error.message : 'unknown'}`);
     }
 
     return `test-${String(index + 1).padStart(3, '0')}.yaml`;
+  }
+
+  // ==================== RALPH ITERATIVE MODE ====================
+
+  /**
+   * Sets up Ralph workspace with templates and context files
+   */
+  private async setupRalphWorkspace(
+    jobId: string,
+    provider: Provider,
+    contextFiles: ContextFile[],
+    job: Job
+  ): Promise<string> {
+    const workspaceDir = join(tmpdir(), `ralph-workspaces`, jobId);
+    const specsDir = join(workspaceDir, 'specs');
+    const testsDir = join(workspaceDir, 'tests');
+
+    // Create directories
+    await mkdir(workspaceDir, { recursive: true });
+    await mkdir(specsDir, { recursive: true });
+    await mkdir(testsDir, { recursive: true });
+
+    // Copy Ralph templates
+    const templateFiles = ['PROMPT.md', '@fix_plan.md', '@AGENT.md'];
+    for (const templateFile of templateFiles) {
+      const srcPath = join(RALPH_TEMPLATES_DIR, templateFile);
+      const destPath = join(workspaceDir, templateFile);
+
+      if (existsSync(srcPath)) {
+        let content = await readFile(srcPath, 'utf-8');
+
+        // Customize PROMPT.md with provider context
+        if (templateFile === 'PROMPT.md') {
+          content = content.replace(/\{\{PROVIDER\}\}/g, provider.toUpperCase());
+
+          // Add provider-specific configuration
+          let providerConfig = '';
+          if (provider === 'viernes' && job.organizationId && job.agentId) {
+            providerConfig = `
+## Viernes Configuration (REQUIRED)
+- **organization_id**: ${job.organizationId}
+- **agent_id**: ${job.agentId}
+
+Use these values in the \`viernes:\` section of EVERY test.
+`;
+          } else if (provider === 'elevenlabs' && job.agentId) {
+            providerConfig = `
+## ElevenLabs Configuration (REQUIRED)
+- **agent_id**: "${job.agentId}"
+
+Use this value in the \`agent_id:\` field of EVERY test.
+`;
+          } else if (provider === 'vapi') {
+            providerConfig = `
+## VAPI Configuration
+Generate tests with appropriate VAPI schema structure.
+`;
+          }
+          content = content.replace(/\{\{PROVIDER_CONFIG\}\}/g, providerConfig);
+
+          // Add test count instruction if specified
+          let testCountInstruction = '';
+          if (job.options?.testCount) {
+            testCountInstruction = `
+## Test Count Requirement (CRITICAL)
+**Generate EXACTLY ${job.options.testCount} tests.** No more, no less.
+This is a hard requirement from the user.
+`;
+          }
+          content = content.replace(/\{\{TEST_COUNT_INSTRUCTION\}\}/g, testCountInstruction);
+        }
+
+        await writeFile(destPath, content, 'utf-8');
+      }
+    }
+
+    // Copy user context files to specs/ (sanitize filenames to prevent path traversal)
+    for (const file of contextFiles) {
+      const safeName = sanitizeFilename(file.name);
+      const filePath = join(specsDir, safeName);
+      await writeFile(filePath, file.content, 'utf-8');
+    }
+
+    // Initialize git repo (required by Ralph/Claude Code)
+    const { execSync } = await import('child_process');
+    try {
+      execSync('git init', { cwd: workspaceDir, stdio: 'ignore' });
+      execSync('git add -A', { cwd: workspaceDir, stdio: 'ignore' });
+      execSync('git commit -m "Initial workspace setup" --allow-empty', {
+        cwd: workspaceDir,
+        stdio: 'ignore',
+        env: { ...process.env, GIT_AUTHOR_NAME: 'Ralph', GIT_AUTHOR_EMAIL: 'ralph@test.local', GIT_COMMITTER_NAME: 'Ralph', GIT_COMMITTER_EMAIL: 'ralph@test.local' }
+      });
+    } catch (error) {
+      console.warn(`[ClaudeExecutor] Git init failed in workspace (non-critical): ${error instanceof Error ? error.message : 'unknown'}`);
+    }
+
+    return workspaceDir;
+  }
+
+  /**
+   * Executes a single Ralph iteration
+   */
+  private runRalphIteration(workspaceDir: string, jobId: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const claudePath = this.findClaudePath();
+
+      const args = [
+        '-p',
+        '@PROMPT.md',
+        '--dangerously-skip-permissions',
+      ];
+
+      const child = spawn(claudePath, args, {
+        cwd: workspaceDir,
+        stdio: ['ignore', 'pipe', 'pipe'],
+        env: {
+          ...process.env,
+          CLAUDE_CODE_OAUTH_TOKEN: process.env.CLAUDE_CODE_OAUTH_TOKEN,
+        },
+      });
+
+      let stdout = '';
+      let stderr = '';
+
+      child.stdout.on('data', (data) => {
+        stdout += data.toString();
+      });
+
+      child.stderr.on('data', (data) => {
+        stderr += data.toString();
+      });
+
+      const timeout = setTimeout(() => {
+        child.kill('SIGTERM');
+        reject(new Error(`Ralph iteration timeout (${RALPH_ITERATION_TIMEOUT / 60000} minutes)`));
+      }, RALPH_ITERATION_TIMEOUT);
+
+      child.on('close', (code) => {
+        clearTimeout(timeout);
+        if (code === 0) {
+          resolve(stdout);
+        } else {
+          // Even on non-zero exit, return output for status parsing
+          resolve(stdout || stderr);
+        }
+      });
+
+      child.on('error', (error) => {
+        clearTimeout(timeout);
+        reject(error);
+      });
+    });
+  }
+
+  /**
+   * Parses RALPH_STATUS block from output
+   */
+  private parseRalphStatus(output: string): RalphStatusBlock | null {
+    const statusMatch = output.match(/---RALPH_STATUS---\s*([\s\S]*?)\s*---END_RALPH_STATUS---/);
+    if (!statusMatch) {
+      return null;
+    }
+
+    const statusBlock = statusMatch[1];
+    const getField = (field: string): string => {
+      const match = statusBlock.match(new RegExp(`${field}:\\s*(.+)`, 'i'));
+      return match ? match[1].trim() : '';
+    };
+
+    const status = getField('STATUS') as RalphStatusBlock['status'];
+    const tasksCompletedThisLoop = parseInt(getField('TASKS_COMPLETED_THIS_LOOP')) || 0;
+    const filesModified = parseInt(getField('FILES_MODIFIED')) || 0;
+    const testsStatus = getField('TESTS_STATUS') as RalphStatusBlock['testsStatus'] || 'NOT_RUN';
+    const workType = getField('WORK_TYPE') as RalphStatusBlock['workType'] || 'IMPLEMENTATION';
+    const exitSignalStr = getField('EXIT_SIGNAL').toLowerCase();
+    const exitSignal = exitSignalStr === 'true';
+    const recommendation = getField('RECOMMENDATION');
+
+    return {
+      status: status || 'IN_PROGRESS',
+      tasksCompletedThisLoop,
+      filesModified,
+      testsStatus,
+      workType,
+      exitSignal,
+      recommendation,
+    };
+  }
+
+  /**
+   * Collects generated YAML files from Ralph workspace
+   */
+  private async collectRalphOutput(workspaceDir: string): Promise<Array<{ name: string; content: string }>> {
+    const testsDir = join(workspaceDir, 'tests');
+    const files: Array<{ name: string; content: string }> = [];
+
+    try {
+      const yamlFiles = await glob('*.yaml', { cwd: testsDir });
+
+      for (const filename of yamlFiles) {
+        const filePath = join(testsDir, filename);
+        const content = await readFile(filePath, 'utf-8');
+        files.push({ name: filename, content });
+      }
+    } catch (error) {
+      console.warn(`[ClaudeExecutor] Failed to collect Ralph output: ${error instanceof Error ? error.message : 'unknown'}`);
+    }
+
+    return files;
+  }
+
+  /**
+   * Executes test generation using Ralph iterative mode
+   */
+  async executeWithRalph(job: Job): Promise<void> {
+    const maxIterations = job.options?.maxIterations || RALPH_MAX_ITERATIONS;
+    const startTime = Date.now();
+
+    broadcastToJob(job.id, {
+      type: 'progress',
+      message: 'Iniciando modo Ralph iterativo...',
+      timestamp: new Date().toISOString(),
+    });
+
+    let workspaceDir: string | null = null;
+
+    try {
+      // Setup workspace
+      const contextFiles = job.contextFiles || [];
+      if (contextFiles.length === 0 && job.content) {
+        // Convert deprecated content to file
+        contextFiles.push({ name: 'agent-spec.md', content: job.content });
+      }
+
+      workspaceDir = await this.setupRalphWorkspace(job.id, job.provider, contextFiles, job);
+
+      broadcastToJob(job.id, {
+        type: 'progress',
+        message: `Workspace Ralph creado con ${contextFiles.length} archivos de especificacion`,
+        timestamp: new Date().toISOString(),
+      });
+
+      let totalTestsGenerated = 0;
+      let totalTasksCompleted = 0;
+
+      // Main iteration loop
+      for (let iteration = 1; iteration <= maxIterations; iteration++) {
+        // Check total timeout
+        if (Date.now() - startTime > RALPH_TOTAL_TIMEOUT) {
+          broadcastToJob(job.id, {
+            type: 'progress',
+            message: `Timeout total alcanzado (${RALPH_TOTAL_TIMEOUT / 60000} minutos)`,
+            timestamp: new Date().toISOString(),
+          });
+          break;
+        }
+
+        broadcastToJob(job.id, {
+          type: 'progress',
+          message: `Ralph iteracion ${iteration}/${maxIterations}...`,
+          timestamp: new Date().toISOString(),
+          data: {
+            iteration,
+            maxIterations,
+            tasksCompleted: totalTasksCompleted,
+            testsGenerated: totalTestsGenerated,
+            workType: 'IMPLEMENTATION',
+          },
+        });
+
+        try {
+          // Run Ralph iteration
+          const output = await this.runRalphIteration(workspaceDir, job.id);
+
+          // Parse status
+          const status = this.parseRalphStatus(output);
+
+          if (status) {
+            totalTasksCompleted += status.tasksCompletedThisLoop;
+
+            // Collect current test count
+            const currentFiles = await this.collectRalphOutput(workspaceDir);
+            totalTestsGenerated = currentFiles.length;
+
+            broadcastToJob(job.id, {
+              type: 'progress',
+              message: `Iteracion ${iteration}: ${status.tasksCompletedThisLoop} tareas, ${totalTestsGenerated} tests generados`,
+              timestamp: new Date().toISOString(),
+              data: {
+                iteration,
+                maxIterations,
+                tasksCompleted: totalTasksCompleted,
+                testsGenerated: totalTestsGenerated,
+                workType: status.workType,
+              },
+            });
+
+            // Check exit conditions
+            if (status.exitSignal || status.status === 'COMPLETE') {
+              broadcastToJob(job.id, {
+                type: 'progress',
+                message: `Ralph completado: ${status.recommendation || 'Todas las tareas finalizadas'}`,
+                timestamp: new Date().toISOString(),
+              });
+              break;
+            }
+
+            if (status.status === 'BLOCKED') {
+              broadcastToJob(job.id, {
+                type: 'progress',
+                message: `Ralph bloqueado: ${status.recommendation || 'Se requiere intervencion manual'}`,
+                timestamp: new Date().toISOString(),
+              });
+              break;
+            }
+          } else {
+            // No status block found - may be first iteration or error
+            broadcastToJob(job.id, {
+              type: 'progress',
+              message: `Iteracion ${iteration} completada (sin bloque de estado)`,
+              timestamp: new Date().toISOString(),
+            });
+          }
+        } catch (iterError) {
+          const errorMsg = iterError instanceof Error ? iterError.message : 'Error desconocido';
+          broadcastToJob(job.id, {
+            type: 'progress',
+            message: `Error en iteracion ${iteration}: ${errorMsg}`,
+            timestamp: new Date().toISOString(),
+          });
+          // Continue to next iteration unless it's a critical error
+          if (errorMsg.includes('timeout')) {
+            break;
+          }
+        }
+      }
+
+      // Collect final output
+      const generatedFiles = await this.collectRalphOutput(workspaceDir);
+
+      if (generatedFiles.length === 0) {
+        broadcastToJob(job.id, {
+          type: 'progress',
+          message: 'Ralph no genero archivos YAML. Verificar especificaciones de entrada.',
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      // Broadcast each file
+      for (let i = 0; i < generatedFiles.length; i++) {
+        const file = generatedFiles[i];
+        broadcastToJob(job.id, {
+          type: 'file_created',
+          message: `Archivo creado: ${file.name}`,
+          timestamp: new Date().toISOString(),
+          data: {
+            filename: file.name,
+            content: file.content.substring(0, 500),
+            currentFile: i + 1,
+            totalFiles: generatedFiles.length,
+          },
+        });
+      }
+
+      job.generatedFiles = generatedFiles;
+      job.status = 'completed';
+      job.completedAt = new Date();
+
+    } catch (error) {
+      job.status = 'failed';
+      job.error = error instanceof Error ? error.message : 'Unknown error';
+
+      broadcastToJob(job.id, {
+        type: 'error',
+        message: job.error,
+        timestamp: new Date().toISOString(),
+      });
+
+      throw error;
+    } finally {
+      // Cleanup workspace
+      if (workspaceDir) {
+        try {
+          await rm(workspaceDir, { recursive: true, force: true });
+        } catch {
+          // Ignore cleanup errors
+        }
+      }
+    }
   }
 }
 

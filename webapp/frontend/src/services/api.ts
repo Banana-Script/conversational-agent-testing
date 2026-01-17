@@ -37,7 +37,10 @@ export async function startGeneration(
       contentType: 'specification',
       organizationId: organizationId || undefined,
       agentId: agentId || undefined,
-      options: testCount ? { testCount } : undefined,
+      options: {
+        useRalph: true,
+        ...(testCount ? { testCount } : {}),
+      },
     }),
   });
 

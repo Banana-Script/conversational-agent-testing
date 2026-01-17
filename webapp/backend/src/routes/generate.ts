@@ -12,6 +12,37 @@ const router = Router();
 // In-memory job storage (for simplicity - in production use Redis)
 const jobs = new Map<string, Job>();
 
+// Job cleanup configuration
+const JOB_MAX_AGE_MS = 60 * 60 * 1000; // 1 hour
+const CLEANUP_INTERVAL_MS = 5 * 60 * 1000; // Every 5 minutes
+
+// Cleanup old jobs to prevent memory leaks
+function cleanupOldJobs(): void {
+  const now = Date.now();
+  let cleaned = 0;
+
+  for (const [jobId, job] of jobs.entries()) {
+    const age = now - job.createdAt.getTime();
+    const isFinished = job.status === 'completed' || job.status === 'failed';
+
+    if (isFinished && age > JOB_MAX_AGE_MS) {
+      // Clean up ZIP file if it exists
+      if (job.zipPath) {
+        unlink(job.zipPath).catch(() => {});
+      }
+      jobs.delete(jobId);
+      cleaned++;
+    }
+  }
+
+  if (cleaned > 0) {
+    console.log(`[JobCleanup] Removed ${cleaned} old jobs, ${jobs.size} remaining`);
+  }
+}
+
+// Start cleanup interval
+setInterval(cleanupOldJobs, CLEANUP_INTERVAL_MS);
+
 // Validate provider
 function isValidProvider(provider: string): provider is Provider {
   return ['elevenlabs', 'vapi', 'viernes'].includes(provider);
