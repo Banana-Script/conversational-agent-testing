@@ -1,5 +1,13 @@
 export type Provider = 'elevenlabs' | 'vapi' | 'viernes';
 
+// RAG Mode Types
+export type JobMode = 'tests-only' | 'rag-only' | 'rag-then-tests';
+
+export interface RagFile {
+  path: string;      // e.g., '01-empresa/general.md'
+  content: string;
+}
+
 export interface ContextFile {
   name: string;
   content: string;
@@ -12,6 +20,7 @@ export interface GenerateRequest {
   provider: Provider;
   organizationId?: number;
   agentId?: number | string;  // number para Viernes, string para ElevenLabs
+  mode?: JobMode;  // NEW - RAG mode selection
   options?: {
     testCount?: number;
     priority?: 'smoke' | 'full';
@@ -27,7 +36,7 @@ export interface GenerateResponse {
 }
 
 export interface ProgressEvent {
-  type: 'progress' | 'file_created' | 'completed' | 'error';
+  type: 'progress' | 'file_created' | 'completed' | 'error' | 'rag_completed';
   message: string;
   timestamp: string;
   data?: {
@@ -37,6 +46,9 @@ export interface ProgressEvent {
     currentFile?: number;
     downloadUrl?: string;
     debugInfo?: string;
+    // RAG-specific fields
+    ragDownloadUrl?: string;
+    ragTotalFiles?: number;
     // Ralph iterative mode fields
     iteration?: number;
     maxIterations?: number;
@@ -48,8 +60,9 @@ export interface ProgressEvent {
 
 export interface Job {
   id: string;
-  status: 'queued' | 'processing' | 'completed' | 'failed';
+  status: 'queued' | 'preprocessing' | 'processing' | 'completed' | 'failed';
   provider: Provider;
+  mode: JobMode;  // NEW - RAG mode
   content?: string;  // DEPRECATED
   contextFiles?: ContextFile[];  // NUEVO - archivos de contexto subidos
   organizationId?: number;
@@ -65,6 +78,9 @@ export interface Job {
   generatedFiles: Array<{ name: string; content: string }>;  // Renombrado para claridad
   zipPath?: string;
   error?: string;
+  // RAG-specific fields
+  ragFiles?: RagFile[];
+  ragZipPath?: string;
 }
 
 // Ralph iterative mode types

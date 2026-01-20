@@ -602,6 +602,8 @@ ${testCountInstruction}
         '--dangerously-skip-permissions',
       ];
 
+      console.log(`[Claude][${jobId}] Starting Claude CLI...`);
+
       const child = spawn(claudePath, args, {
         stdio: ['ignore', 'pipe', 'pipe'],
         env: {
@@ -618,6 +620,12 @@ ${testCountInstruction}
         const chunk = data.toString();
         stdout += chunk;
 
+        // Log to Docker console in real-time
+        const lines = chunk.split('\n').filter((line: string) => line.trim());
+        for (const line of lines) {
+          console.log(`[Claude][${jobId}] ${line}`);
+        }
+
         // Detect YAML blocks being created
         if (chunk.includes('```yaml')) {
           broadcastToJob(jobId, {
@@ -629,17 +637,25 @@ ${testCountInstruction}
       });
 
       child.stderr.on('data', (data) => {
-        stderr += data.toString();
+        const chunk = data.toString();
+        stderr += chunk;
+        // Log stderr lines as warnings
+        const lines = chunk.split('\n').filter((line: string) => line.trim());
+        for (const line of lines) {
+          console.warn(`[Claude][${jobId}][stderr] ${line}`);
+        }
       });
 
       // Timeout after 15 minutes
       const timeout = setTimeout(() => {
+        console.error(`[Claude][${jobId}] Timeout reached, killing process...`);
         child.kill('SIGTERM');
         reject(new Error('Claude CLI timeout (15 minutes)'));
       }, 15 * 60 * 1000);
 
       child.on('close', (code) => {
         clearTimeout(timeout);
+        console.log(`[Claude][${jobId}] Claude CLI exited with code ${code}`);
 
         if (code === 0) {
           resolve(stdout);
@@ -650,6 +666,7 @@ ${testCountInstruction}
 
       child.on('error', (error) => {
         clearTimeout(timeout);
+        console.error(`[Claude][${jobId}] Claude CLI error:`, error.message);
         reject(error);
       });
     });
@@ -815,7 +832,25 @@ This is a hard requirement from the user.
         '-p',
         '@PROMPT.md',
         '--dangerously-skip-permissions',
+        '--output-format', 'text',  // Explicit text output
       ];
+
+      const hasToken = !!process.env.CLAUDE_CODE_OAUTH_TOKEN;
+      const tokenPreview = hasToken
+        ? `${process.env.CLAUDE_CODE_OAUTH_TOKEN!.substring(0, 10)}...`
+        : 'NOT SET';
+
+      console.log(`[Ralph][${jobId}] ========== STARTING ITERATION ==========`);
+      console.log(`[Ralph][${jobId}] Claude path: ${claudePath}`);
+      console.log(`[Ralph][${jobId}] Working dir: ${workspaceDir}`);
+      console.log(`[Ralph][${jobId}] Token present: ${hasToken ? 'YES' : 'NO'} (preview: ${tokenPreview})`);
+      console.log(`[Ralph][${jobId}] Command: ${claudePath} ${args.join(' ')}`);
+
+      let stdout = '';
+      let stderr = '';
+      let outputReceived = false;
+      let stdoutBytes = 0;
+      let stderrBytes = 0;
 
       const child = spawn(claudePath, args, {
         cwd: workspaceDir,
@@ -823,27 +858,79 @@ This is a hard requirement from the user.
         env: {
           ...process.env,
           CLAUDE_CODE_OAUTH_TOKEN: process.env.CLAUDE_CODE_OAUTH_TOKEN,
+          // Force non-interactive mode
+          CI: 'true',
+          TERM: 'dumb',
+          // Force unbuffered output
+          PYTHONUNBUFFERED: '1',
+          NODE_NO_WARNINGS: '1',
         },
       });
 
-      let stdout = '';
-      let stderr = '';
+      console.log(`[Ralph][${jobId}] Process spawned with PID: ${child.pid}`);
 
       child.stdout.on('data', (data) => {
-        stdout += data.toString();
+        outputReceived = true;
+        const chunk = data.toString();
+        stdout += chunk;
+        stdoutBytes += data.length;
+        // Log each line to console in real-time
+        const lines = chunk.split('\n').filter((line: string) => line.trim());
+        for (const line of lines) {
+          console.log(`[Ralph][${jobId}][stdout] ${line}`);
+        }
+        // Also log raw byte count periodically
+        if (stdoutBytes % 10000 < data.length) {
+          console.log(`[Ralph][${jobId}] Received ${stdoutBytes} bytes from stdout so far`);
+        }
       });
 
       child.stderr.on('data', (data) => {
-        stderr += data.toString();
+        outputReceived = true;
+        const chunk = data.toString();
+        stderr += chunk;
+        stderrBytes += data.length;
+        // Log stderr lines
+        const lines = chunk.split('\n').filter((line: string) => line.trim());
+        for (const line of lines) {
+          console.log(`[Ralph][${jobId}][stderr] ${line}`);
+        }
       });
 
+      const startTime = Date.now();
+
+      // Heartbeat every 15 seconds with detailed status
+      const heartbeat = setInterval(() => {
+        const elapsed = Math.round((Date.now() - startTime) / 1000);
+        console.log(`[Ralph][${jobId}] [HEARTBEAT] pid=${child.pid} elapsed=${elapsed}s stdout=${stdoutBytes}b stderr=${stderrBytes}b output=${outputReceived ? 'YES' : 'NO'}`);
+      }, 15000);
+
       const timeout = setTimeout(() => {
+        clearInterval(heartbeat);
+        const elapsed = Math.round((Date.now() - startTime) / 1000);
+        console.log(`[Ralph][${jobId}] ========== TIMEOUT ==========`);
+        console.log(`[Ralph][${jobId}] Process timed out after ${elapsed}s`);
+        console.log(`[Ralph][${jobId}] Total stdout: ${stdoutBytes} bytes`);
+        console.log(`[Ralph][${jobId}] Total stderr: ${stderrBytes} bytes`);
+        console.log(`[Ralph][${jobId}] Output received: ${outputReceived ? 'YES' : 'NO'}`);
         child.kill('SIGTERM');
         reject(new Error(`Ralph iteration timeout (${RALPH_ITERATION_TIMEOUT / 60000} minutes)`));
       }, RALPH_ITERATION_TIMEOUT);
 
-      child.on('close', (code) => {
+      child.on('close', (code, signal) => {
         clearTimeout(timeout);
+        clearInterval(heartbeat);
+        const elapsed = Math.round((Date.now() - startTime) / 1000);
+        console.log(`[Ralph][${jobId}] ========== PROCESS EXITED ==========`);
+        console.log(`[Ralph][${jobId}] Exit code: ${code}, Signal: ${signal}`);
+        console.log(`[Ralph][${jobId}] Duration: ${elapsed}s`);
+        console.log(`[Ralph][${jobId}] Total stdout: ${stdoutBytes} bytes`);
+        console.log(`[Ralph][${jobId}] Total stderr: ${stderrBytes} bytes`);
+
+        if (stdoutBytes === 0 && stderrBytes === 0) {
+          console.log(`[Ralph][${jobId}] WARNING: No output captured from Claude CLI!`);
+        }
+
         if (code === 0) {
           resolve(stdout);
         } else {
@@ -854,6 +941,9 @@ This is a hard requirement from the user.
 
       child.on('error', (error) => {
         clearTimeout(timeout);
+        clearInterval(heartbeat);
+        console.error(`[Ralph][${jobId}] ========== PROCESS ERROR ==========`);
+        console.error(`[Ralph][${jobId}] Error: ${error.message}`);
         reject(error);
       });
     });

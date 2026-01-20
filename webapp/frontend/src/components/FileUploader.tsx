@@ -1,25 +1,41 @@
-import { useCallback, useState } from 'react';
-import { Upload, FileText, X, Plus, HelpCircle } from 'lucide-react';
+import { useCallback, useState, useMemo } from 'react';
+import { Upload, FileText, X, Plus, HelpCircle, Image, FileSpreadsheet, FileType } from 'lucide-react';
 
 export interface ContextFile {
   name: string;
   content: string;
 }
 
+export type JobMode = 'tests-only' | 'rag-only' | 'rag-then-tests';
+
 interface FileUploaderProps {
   onFilesChange: (files: ContextFile[]) => void;
   onHelpClick?: () => void;
   disabled?: boolean;
+  mode?: JobMode;
 }
 
-const VALID_EXTENSIONS = ['.txt', '.md', '.json', '.yaml', '.yml'];
-const MAX_FILE_SIZE = 1024 * 1024; // 1MB
-const MAX_TOTAL_SIZE = 5 * 1024 * 1024; // 5MB
+// Extensions and limits based on mode
+const TESTS_ONLY_EXTENSIONS = ['.txt', '.md', '.json', '.yaml', '.yml'];
+const RAG_EXTENSIONS = ['.txt', '.md', '.json', '.yaml', '.yml', '.pdf', '.docx', '.xlsx', '.xls', '.png', '.jpg', '.jpeg'];
 
-export function FileUploader({ onFilesChange, onHelpClick, disabled }: FileUploaderProps) {
+const TESTS_ONLY_MAX_FILE_SIZE = 1024 * 1024; // 1MB
+const TESTS_ONLY_MAX_TOTAL_SIZE = 5 * 1024 * 1024; // 5MB
+const RAG_MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+const RAG_MAX_TOTAL_SIZE = 50 * 1024 * 1024; // 50MB
+
+export function FileUploader({ onFilesChange, onHelpClick, disabled, mode = 'tests-only' }: FileUploaderProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [files, setFiles] = useState<ContextFile[]>([]);
   const [error, setError] = useState<string | null>(null);
+
+  // Determine limits based on mode
+  const isRagMode = mode === 'rag-only' || mode === 'rag-then-tests';
+  const validExtensions = useMemo(() => isRagMode ? RAG_EXTENSIONS : TESTS_ONLY_EXTENSIONS, [isRagMode]);
+  const maxFileSize = isRagMode ? RAG_MAX_FILE_SIZE : TESTS_ONLY_MAX_FILE_SIZE;
+  const maxTotalSize = isRagMode ? RAG_MAX_TOTAL_SIZE : TESTS_ONLY_MAX_TOTAL_SIZE;
+  const maxFileSizeMB = maxFileSize / (1024 * 1024);
+  const maxTotalSizeMB = maxTotalSize / (1024 * 1024);
 
   const getTotalSize = (fileList: ContextFile[]): number => {
     return fileList.reduce((sum, f) => sum + f.content.length, 0);
@@ -28,12 +44,12 @@ export function FileUploader({ onFilesChange, onHelpClick, disabled }: FileUploa
   const validateFile = (file: File, currentFiles: ContextFile[]): string | null => {
     const ext = file.name.toLowerCase().slice(file.name.lastIndexOf('.'));
 
-    if (!VALID_EXTENSIONS.includes(ext)) {
-      return `Extension no permitida: ${ext}. Permitidas: ${VALID_EXTENSIONS.join(', ')}`;
+    if (!validExtensions.includes(ext)) {
+      return `Extension no permitida: ${ext}. Permitidas: ${validExtensions.join(', ')}`;
     }
 
-    if (file.size > MAX_FILE_SIZE) {
-      return `${file.name} excede el limite de 1MB`;
+    if (file.size > maxFileSize) {
+      return `${file.name} excede el limite de ${maxFileSizeMB}MB`;
     }
 
     // Check for duplicates
@@ -43,11 +59,32 @@ export function FileUploader({ onFilesChange, onHelpClick, disabled }: FileUploa
 
     // Check total size
     const newTotal = getTotalSize(currentFiles) + file.size;
-    if (newTotal > MAX_TOTAL_SIZE) {
-      return 'El tamaño total excede el limite de 5MB';
+    if (newTotal > maxTotalSize) {
+      return `El tamaño total excede el limite de ${maxTotalSizeMB}MB`;
     }
 
     return null;
+  };
+
+  // Check if file should be read as binary (base64) or text
+  const isBinaryFile = (filename: string): boolean => {
+    const ext = filename.toLowerCase().substring(filename.lastIndexOf('.'));
+    return ['.pdf', '.png', '.jpg', '.jpeg', '.xlsx', '.xls', '.docx'].includes(ext);
+  };
+
+  // Read file as base64 for binary files
+  const readFileAsBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        // Remove data URL prefix (e.g., "data:image/png;base64,")
+        const base64 = result.split(',')[1];
+        resolve(base64);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   };
 
   const processFiles = async (fileList: FileList) => {
@@ -62,7 +99,14 @@ export function FileUploader({ onFilesChange, onHelpClick, disabled }: FileUploa
         continue;
       }
 
-      const content = await file.text();
+      // Read as base64 for binary files, as text for text files
+      let content: string;
+      if (isBinaryFile(file.name)) {
+        content = await readFileAsBase64(file);
+      } else {
+        content = await file.text();
+      }
+
       const newFile = { name: file.name, content };
       newFiles.push(newFile);
       currentFiles.push(newFile);
@@ -120,7 +164,26 @@ export function FileUploader({ onFilesChange, onHelpClick, disabled }: FileUploa
 
   const formatSize = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`;
-    return `${(bytes / 1024).toFixed(1)} KB`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  // Get icon component based on file type
+  const getFileIcon = (filename: string) => {
+    const ext = filename.toLowerCase().substring(filename.lastIndexOf('.'));
+    if (['.png', '.jpg', '.jpeg'].includes(ext)) {
+      return <Image className="w-4 h-4 text-green-400 flex-shrink-0" />;
+    }
+    if (['.xlsx', '.xls'].includes(ext)) {
+      return <FileSpreadsheet className="w-4 h-4 text-emerald-400 flex-shrink-0" />;
+    }
+    if (ext === '.pdf') {
+      return <FileType className="w-4 h-4 text-red-400 flex-shrink-0" />;
+    }
+    if (ext === '.docx') {
+      return <FileText className="w-4 h-4 text-blue-500 flex-shrink-0" />;
+    }
+    return <FileText className="w-4 h-4 text-blue-400 flex-shrink-0" />;
   };
 
   return (
@@ -162,7 +225,7 @@ export function FileUploader({ onFilesChange, onHelpClick, disabled }: FileUploa
                 className="flex items-center justify-between bg-gray-900 rounded-lg px-3 py-2"
               >
                 <div className="flex items-center gap-2 min-w-0">
-                  <FileText className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                  {getFileIcon(file.name)}
                   <span className="text-sm truncate" title={file.name}>
                     {file.name}
                   </span>
@@ -203,7 +266,7 @@ export function FileUploader({ onFilesChange, onHelpClick, disabled }: FileUploa
       >
         <input
           type="file"
-          accept={VALID_EXTENSIONS.join(',')}
+          accept={validExtensions.join(',')}
           onChange={handleFileSelect}
           disabled={disabled}
           className="hidden"
@@ -228,7 +291,11 @@ export function FileUploader({ onFilesChange, onHelpClick, disabled }: FileUploa
                 Arrastra archivos aquí o haz clic para seleccionar
               </p>
               <p className="text-sm text-gray-500">
-                Formatos: {VALID_EXTENSIONS.join(', ')} (max 1MB cada uno, 5MB total)
+                {isRagMode ? (
+                  <>Formatos: PDF, Excel, Word, imagenes, texto (max {maxFileSizeMB}MB cada uno, {maxTotalSizeMB}MB total)</>
+                ) : (
+                  <>Formatos: {validExtensions.join(', ')} (max {maxFileSizeMB}MB cada uno, {maxTotalSizeMB}MB total)</>
+                )}
               </p>
             </>
           )}

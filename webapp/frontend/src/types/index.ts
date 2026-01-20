@@ -22,8 +22,10 @@ export interface ElevenLabsAgent {
   created_at?: string;
 }
 
+export type JobMode = 'tests-only' | 'rag-only' | 'rag-then-tests';
+
 export interface ProgressEvent {
-  type: 'progress' | 'file_created' | 'completed' | 'error';
+  type: 'progress' | 'file_created' | 'completed' | 'error' | 'rag_completed';
   message: string;
   timestamp: string;
   data?: {
@@ -32,7 +34,15 @@ export interface ProgressEvent {
     totalFiles?: number;
     currentFile?: number;
     downloadUrl?: string;
+    ragDownloadUrl?: string;
+    ragTotalFiles?: number;
     debugInfo?: string;
+    // Ralph iteration data
+    iteration?: number;
+    maxIterations?: number;
+    tasksCompleted?: number;
+    testsGenerated?: number;
+    workType?: string;
   };
 }
 

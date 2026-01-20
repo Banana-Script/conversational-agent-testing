@@ -4,15 +4,17 @@ import { FileUploader, type ContextFile } from './components/FileUploader';
 import { ProviderSelector } from './components/ProviderSelector';
 import { ViernesSelector } from './components/ViernesSelector';
 import { ElevenLabsSelector } from './components/ElevenLabsSelector';
+import { ModeSelector } from './components/ModeSelector';
 import { ProgressDisplay } from './components/ProgressDisplay';
 import { HelpModal } from './components/HelpModal';
 import { useSSE } from './hooks/useSSE';
 import { startGeneration, getSSEUrl } from './services/api';
-import type { Provider } from './types';
+import type { Provider, JobMode } from './types';
 
 function App() {
   const [files, setFiles] = useState<ContextFile[]>([]);
   const [provider, setProvider] = useState<Provider>('viernes');
+  const [mode, setMode] = useState<JobMode>('tests-only');
   const [selectedOrgId, setSelectedOrgId] = useState<number | null>(null);
   const [selectedAgentId, setSelectedAgentId] = useState<number | null>(null);
   const [selectedElevenLabsAgentId, setSelectedElevenLabsAgentId] = useState<string | null>(null);
@@ -21,7 +23,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
 
-  const { events, status, downloadUrl, totalFiles, connect, reset } = useSSE();
+  const { events, status, downloadUrl, ragDownloadUrl, totalFiles, ragTotalFiles, connect, reset } = useSSE();
 
   const handleFilesChange = (newFiles: ContextFile[]) => {
     setFiles(newFiles);
@@ -39,14 +41,14 @@ function App() {
       return;
     }
 
-    // Validate Viernes selection
-    if (provider === 'viernes' && (!selectedOrgId || !selectedAgentId)) {
+    // Validate Viernes selection (not required for rag-only mode)
+    if (mode !== 'rag-only' && provider === 'viernes' && (!selectedOrgId || !selectedAgentId)) {
       setError('Por favor selecciona una organizacion y un agente');
       return;
     }
 
-    // Validate ElevenLabs selection
-    if (provider === 'elevenlabs' && !selectedElevenLabsAgentId) {
+    // Validate ElevenLabs selection (not required for rag-only mode)
+    if (mode !== 'rag-only' && provider === 'elevenlabs' && !selectedElevenLabsAgentId) {
       setError('Por favor selecciona un agente de ElevenLabs');
       return;
     }
@@ -61,7 +63,7 @@ function App() {
                       provider === 'elevenlabs' ? selectedElevenLabsAgentId :
                       null;
 
-      const response = await startGeneration(files, provider, selectedOrgId, agentId, testCount);
+      const response = await startGeneration(files, provider, selectedOrgId, agentId, testCount, mode);
       connect(getSSEUrl(response.jobId));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al iniciar generacion');
@@ -74,7 +76,7 @@ function App() {
     reset();
   };
 
-  const isComplete = status === 'closed' && downloadUrl;
+  const isComplete = status === 'closed' && (downloadUrl || ragDownloadUrl);
 
   return (
     <div className="min-h-screen bg-gray-900">
@@ -87,9 +89,13 @@ function App() {
                 <Sparkles className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-white">Test Generator</h1>
+                <h1 className="text-2xl font-bold text-white">
+                  {mode === 'rag-only' ? 'RAG Knowledge Base' : 'Test Generator'}
+                </h1>
                 <p className="text-gray-400 text-sm">
-                  Genera test cases automaticamente con IA
+                  {mode === 'rag-only'
+                    ? 'Extrae una base de conocimiento estructurada con IA'
+                    : 'Genera test cases automaticamente con IA'}
                 </p>
               </div>
             </div>
@@ -112,51 +118,63 @@ function App() {
             <h2 className="text-lg font-semibold text-white mb-6">Configuracion</h2>
 
             <div className="space-y-6">
+              <ModeSelector
+                value={mode}
+                onChange={setMode}
+                disabled={isGenerating && !isComplete}
+              />
+
               <FileUploader
                 onFilesChange={handleFilesChange}
                 onHelpClick={() => setIsHelpModalOpen(true)}
                 disabled={isGenerating && !isComplete}
+                mode={mode}
               />
 
-              <ProviderSelector
-                value={provider}
-                onChange={setProvider}
-                disabled={isGenerating && !isComplete}
-              />
+              {/* Provider and agent selection - hidden for rag-only mode */}
+              {mode !== 'rag-only' && (
+                <>
+                  <ProviderSelector
+                    value={provider}
+                    onChange={setProvider}
+                    disabled={isGenerating && !isComplete}
+                  />
 
-              {provider === 'viernes' && (
-                <ViernesSelector
-                  onSelect={handleViernesSelect}
-                  disabled={isGenerating && !isComplete}
-                />
+                  {provider === 'viernes' && (
+                    <ViernesSelector
+                      onSelect={handleViernesSelect}
+                      disabled={isGenerating && !isComplete}
+                    />
+                  )}
+
+                  {provider === 'elevenlabs' && (
+                    <ElevenLabsSelector
+                      onSelect={setSelectedElevenLabsAgentId}
+                      disabled={isGenerating && !isComplete}
+                    />
+                  )}
+
+                  <div>
+                    <label htmlFor="testCount" className="block text-sm font-medium text-gray-300 mb-2">
+                      Número de tests (opcional)
+                    </label>
+                    <input
+                      type="number"
+                      id="testCount"
+                      min="1"
+                      max="50"
+                      value={testCount || ''}
+                      onChange={(e) => setTestCount(e.target.value ? parseInt(e.target.value) : undefined)}
+                      placeholder="Dejar vacío para que Claude decida"
+                      disabled={isGenerating && !isComplete}
+                      className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Si se deja vacío, Claude generará entre 15-25 tests
+                    </p>
+                  </div>
+                </>
               )}
-
-              {provider === 'elevenlabs' && (
-                <ElevenLabsSelector
-                  onSelect={setSelectedElevenLabsAgentId}
-                  disabled={isGenerating && !isComplete}
-                />
-              )}
-
-              <div>
-                <label htmlFor="testCount" className="block text-sm font-medium text-gray-300 mb-2">
-                  Número de tests (opcional)
-                </label>
-                <input
-                  type="number"
-                  id="testCount"
-                  min="1"
-                  max="50"
-                  value={testCount || ''}
-                  onChange={(e) => setTestCount(e.target.value ? parseInt(e.target.value) : undefined)}
-                  placeholder="Dejar vacío para que Claude decida"
-                  disabled={isGenerating && !isComplete}
-                  className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Si se deja vacío, Claude generará entre 15-25 tests
-                </p>
-              </div>
             </div>
           </section>
 
@@ -174,14 +192,15 @@ function App() {
               onClick={handleGenerate}
               disabled={
                 files.length === 0 ||
-                (provider === 'viernes' && (!selectedOrgId || !selectedAgentId)) ||
-                (provider === 'elevenlabs' && !selectedElevenLabsAgentId)
+                (mode !== 'rag-only' && provider === 'viernes' && (!selectedOrgId || !selectedAgentId)) ||
+                (mode !== 'rag-only' && provider === 'elevenlabs' && !selectedElevenLabsAgentId)
               }
               className={`
                 w-full py-4 px-6 rounded-lg font-medium text-lg
                 transition-all flex items-center justify-center gap-2
                 ${files.length > 0 &&
-                  (provider === 'vapi' ||
+                  (mode === 'rag-only' ||
+                   provider === 'vapi' ||
                    (provider === 'viernes' && selectedOrgId && selectedAgentId) ||
                    (provider === 'elevenlabs' && selectedElevenLabsAgentId))
                   ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
@@ -190,7 +209,7 @@ function App() {
               `}
             >
               <Sparkles className="w-5 h-5" />
-              Generar Test Cases
+              {mode === 'rag-only' ? 'Extraer Knowledge Base' : 'Generar Test Cases'}
             </button>
           )}
 
@@ -201,9 +220,12 @@ function App() {
                 events={events}
                 status={status}
                 downloadUrl={downloadUrl}
+                ragDownloadUrl={ragDownloadUrl}
                 totalFiles={totalFiles}
+                ragTotalFiles={ragTotalFiles}
                 provider={provider}
                 agentId={provider === 'elevenlabs' ? selectedElevenLabsAgentId : null}
+                mode={mode}
               />
 
               {isComplete && (
@@ -220,9 +242,19 @@ function App() {
           {/* Help section */}
           <section className="text-center text-gray-500 text-sm">
             <p>
-              Sube un archivo con el prompt del agente o especificaciones de negocio.
-              <br />
-              El sistema generara tests YAML compatibles con el framework de testing.
+              {mode === 'rag-only' ? (
+                <>
+                  Sube documentos (PDF, Word, Excel, imágenes) con información del negocio.
+                  <br />
+                  El sistema extraerá una base de conocimiento estructurada en Markdown.
+                </>
+              ) : (
+                <>
+                  Sube un archivo con el prompt del agente o especificaciones de negocio.
+                  <br />
+                  El sistema generara tests YAML compatibles con el framework de testing.
+                </>
+              )}
             </p>
           </section>
         </div>

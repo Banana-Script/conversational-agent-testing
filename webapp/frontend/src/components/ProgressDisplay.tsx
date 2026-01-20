@@ -1,13 +1,18 @@
-import { CheckCircle, AlertCircle, Loader2, FileText, Download, BookOpen } from 'lucide-react';
+import { CheckCircle, AlertCircle, Loader2, FileText, Download, BookOpen, Database } from 'lucide-react';
 import type { ProgressEvent, Provider } from '../types';
+
+export type JobMode = 'tests-only' | 'rag-only' | 'rag-then-tests';
 
 interface ProgressDisplayProps {
   events: ProgressEvent[];
   status: 'idle' | 'connecting' | 'connected' | 'closed' | 'error';
   downloadUrl: string | null;
+  ragDownloadUrl?: string | null;
   totalFiles: number;
+  ragTotalFiles?: number;
   provider: Provider;
   agentId?: string | null;
+  mode?: JobMode;
 }
 
 function getEnvVarsForProvider(provider: Provider, agentId?: string | null): string {
@@ -27,14 +32,34 @@ TEST_PROVIDER=viernes`;
   }
 }
 
-export function ProgressDisplay({ events, status, downloadUrl, totalFiles, provider, agentId }: ProgressDisplayProps) {
+export function ProgressDisplay({
+  events,
+  status,
+  downloadUrl,
+  ragDownloadUrl,
+  totalFiles,
+  ragTotalFiles,
+  provider,
+  agentId,
+  mode = 'tests-only'
+}: ProgressDisplayProps) {
   if (events.length === 0 && status === 'idle') {
     return null;
   }
 
   const fileEvents = events.filter((e) => e.type === 'file_created');
+  const ragCompletedEvent = events.find((e) => e.type === 'rag_completed');
   const hasError = events.some((e) => e.type === 'error');
-  const isComplete = status === 'closed' && !hasError && downloadUrl;
+
+  // Determine completion state based on mode
+  const isRagOnly = mode === 'rag-only';
+  const isRagComplete = ragCompletedEvent !== undefined || ragDownloadUrl;
+  const isTestsComplete = downloadUrl !== null;
+
+  const isComplete = status === 'closed' && !hasError && (
+    (isRagOnly && isRagComplete) ||
+    (!isRagOnly && isTestsComplete)
+  );
 
   return (
     <div className="space-y-4">
@@ -80,6 +105,7 @@ export function ProgressDisplay({ events, status, downloadUrl, totalFiles, provi
                 text-sm
                 ${event.type === 'error' ? 'text-red-400' : ''}
                 ${event.type === 'completed' ? 'text-green-400' : ''}
+                ${event.type === 'rag_completed' ? 'text-purple-400' : ''}
                 ${event.type === 'file_created' ? 'text-blue-400' : ''}
                 ${event.type === 'progress' ? 'text-gray-400' : ''}
               `}
@@ -87,6 +113,7 @@ export function ProgressDisplay({ events, status, downloadUrl, totalFiles, provi
               <div className="flex items-start gap-2">
                 {event.type === 'file_created' && <FileText className="w-4 h-4 flex-shrink-0 mt-0.5" />}
                 {event.type === 'completed' && <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />}
+                {event.type === 'rag_completed' && <Database className="w-4 h-4 flex-shrink-0 mt-0.5" />}
                 {event.type === 'error' && <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />}
                 {event.type === 'progress' && <Loader2 className="w-4 h-4 flex-shrink-0 mt-0.5" />}
 
@@ -131,24 +158,45 @@ export function ProgressDisplay({ events, status, downloadUrl, totalFiles, provi
         </div>
       )}
 
-      {/* Download button */}
-      {isComplete && downloadUrl && (
-        <a
-          href={downloadUrl}
-          download
-          className="
-            flex items-center justify-center gap-2 w-full
-            bg-green-600 hover:bg-green-700 text-white
-            font-medium py-3 px-4 rounded-lg transition-colors
-          "
-        >
-          <Download className="w-5 h-5" />
-          Descargar ZIP ({totalFiles} tests)
-        </a>
+      {/* Download buttons */}
+      {isComplete && (
+        <div className="space-y-3">
+          {/* RAG Download button */}
+          {ragDownloadUrl && (
+            <a
+              href={ragDownloadUrl}
+              download
+              className="
+                flex items-center justify-center gap-2 w-full
+                bg-purple-600 hover:bg-purple-700 text-white
+                font-medium py-3 px-4 rounded-lg transition-colors
+              "
+            >
+              <Database className="w-5 h-5" />
+              Descargar Base de Conocimiento ({ragTotalFiles || 0} archivos)
+            </a>
+          )}
+
+          {/* Tests Download button */}
+          {downloadUrl && !isRagOnly && (
+            <a
+              href={downloadUrl}
+              download
+              className="
+                flex items-center justify-center gap-2 w-full
+                bg-green-600 hover:bg-green-700 text-white
+                font-medium py-3 px-4 rounded-lg transition-colors
+              "
+            >
+              <Download className="w-5 h-5" />
+              Descargar Tests ZIP ({totalFiles} tests)
+            </a>
+          )}
+        </div>
       )}
 
-      {/* Next steps guide */}
-      {isComplete && downloadUrl && (
+      {/* Next steps guide - only for test modes */}
+      {isComplete && downloadUrl && !isRagOnly && (
         <div className="mt-6 bg-blue-900/30 border border-blue-500/50 rounded-lg p-4">
           <h4 className="font-semibold text-white mb-3 flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-blue-400" />

@@ -19,12 +19,15 @@ export async function uploadFile(file: File): Promise<{ filename: string; conten
   return response.json();
 }
 
+export type JobMode = 'tests-only' | 'rag-only' | 'rag-then-tests';
+
 export async function startGeneration(
   files: ContextFile[],
   provider: Provider,
   organizationId?: number | null,
   agentId?: number | string | null,
-  testCount?: number
+  testCount?: number,
+  mode: JobMode = 'tests-only'
 ): Promise<GenerateResponse> {
   const response = await fetch(`${API_BASE}/generate`, {
     method: 'POST',
@@ -34,6 +37,7 @@ export async function startGeneration(
     body: JSON.stringify({
       files,
       provider,
+      mode,
       contentType: 'specification',
       organizationId: organizationId || undefined,
       agentId: agentId || undefined,

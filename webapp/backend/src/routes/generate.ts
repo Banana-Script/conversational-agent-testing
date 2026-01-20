@@ -2,10 +2,13 @@ import { Router, Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { createReadStream, existsSync } from 'fs';
 import { unlink } from 'fs/promises';
-import type { GenerateRequest, Job, Provider } from '../types/index.js';
-import { SSEConnection, addConnection, broadcastToJob } from '../middleware/sse.js';
+import type { GenerateRequest, Job, Provider, JobMode } from '../types/index.js';
+import { SSEConnection, addConnection, broadcastToJob, removeJobConnections } from '../middleware/sse.js';
 import { claudeExecutor } from '../services/claude-executor.js';
 import { createTestsZip } from '../services/zip-creator.js';
+import { ragExecutor } from '../services/rag-executor.js';
+import { createRagZip } from '../services/rag-zip-creator.js';
+import { getSupportedRagExtensions, isSupportedForRag } from '../services/file-converter.js';
 
 const router = Router();
 
@@ -26,10 +29,15 @@ function cleanupOldJobs(): void {
     const isFinished = job.status === 'completed' || job.status === 'failed';
 
     if (isFinished && age > JOB_MAX_AGE_MS) {
-      // Clean up ZIP file if it exists
+      // Clean up ZIP files if they exist
       if (job.zipPath) {
         unlink(job.zipPath).catch(() => {});
       }
+      if (job.ragZipPath) {
+        unlink(job.ragZipPath).catch(() => {});
+      }
+      // Clean up any remaining SSE connections
+      removeJobConnections(jobId);
       jobs.delete(jobId);
       cleaned++;
     }
@@ -48,10 +56,18 @@ function isValidProvider(provider: string): provider is Provider {
   return ['elevenlabs', 'vapi', 'viernes'].includes(provider);
 }
 
+// Validate job mode
+function isValidJobMode(mode: string): mode is JobMode {
+  return ['tests-only', 'rag-only', 'rag-then-tests'].includes(mode);
+}
+
 // POST /api/generate - Start test generation
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { content, files, provider, contentType, organizationId, agentId, options } = req.body as GenerateRequest;
+    const { content, files, provider, contentType, organizationId, agentId, options, mode } = req.body as GenerateRequest;
+
+    // Determine job mode (default to tests-only for backward compatibility)
+    const jobMode: JobMode = mode && isValidJobMode(mode) ? mode : 'tests-only';
 
     // Validation: require either content (deprecated) or files (new)
     const hasContent = content && typeof content === 'string';
@@ -72,9 +88,13 @@ router.post('/', async (req: Request, res: Response) => {
 
     // Validate files
     if (hasFiles) {
-      const MAX_FILE_SIZE = 1024 * 1024; // 1MB per file
-      const MAX_TOTAL_SIZE = 5 * 1024 * 1024; // 5MB total
-      const ALLOWED_EXTENSIONS = ['.txt', '.md', '.json', '.yaml', '.yml'];
+      // Different limits based on mode - RAG mode allows larger files and more formats
+      const isRagMode = jobMode === 'rag-only' || jobMode === 'rag-then-tests';
+      const MAX_FILE_SIZE = isRagMode ? 20 * 1024 * 1024 : 1024 * 1024; // 20MB for RAG, 1MB for tests
+      const MAX_TOTAL_SIZE = isRagMode ? 50 * 1024 * 1024 : 5 * 1024 * 1024; // 50MB for RAG, 5MB for tests
+      const ALLOWED_EXTENSIONS = isRagMode
+        ? getSupportedRagExtensions()  // Extended formats for RAG
+        : ['.txt', '.md', '.json', '.yaml', '.yml'];  // Original formats for tests
 
       let totalSize = 0;
       for (const file of files) {
@@ -88,14 +108,16 @@ router.post('/', async (req: Request, res: Response) => {
         }
 
         if (file.content.length > MAX_FILE_SIZE) {
-          return res.status(400).json({ error: `File ${file.name} exceeds 1MB limit` });
+          const limitMB = MAX_FILE_SIZE / (1024 * 1024);
+          return res.status(400).json({ error: `File ${file.name} exceeds ${limitMB}MB limit` });
         }
 
         totalSize += file.content.length;
       }
 
       if (totalSize > MAX_TOTAL_SIZE) {
-        return res.status(400).json({ error: 'Total file size exceeds 5MB limit' });
+        const limitMB = MAX_TOTAL_SIZE / (1024 * 1024);
+        return res.status(400).json({ error: `Total file size exceeds ${limitMB}MB limit` });
       }
     }
 
@@ -105,6 +127,7 @@ router.post('/', async (req: Request, res: Response) => {
       id: jobId,
       status: 'queued',
       provider,
+      mode: jobMode,
       content: hasContent ? content : undefined,
       contextFiles: hasFiles ? files : undefined,
       organizationId,
@@ -171,14 +194,21 @@ router.get('/:jobId/status', (req: Request, res: Response) => {
     return res.status(404).json({ error: 'Job not found' });
   }
 
+  const hasTests = job.generatedFiles.length > 0;
+  const hasRag = job.ragFiles && job.ragFiles.length > 0;
+  const isComplete = job.status === 'completed';
+
   return res.json({
     jobId: job.id,
     status: job.status,
+    mode: job.mode,
     filesCount: job.generatedFiles.length,
+    ragFilesCount: job.ragFiles?.length || 0,
     createdAt: job.createdAt,
     completedAt: job.completedAt,
     error: job.error,
-    downloadUrl: job.status === 'completed' ? `/api/generate/${jobId}/download` : undefined,
+    downloadUrl: isComplete && hasTests ? `/api/generate/${jobId}/download` : undefined,
+    ragDownloadUrl: isComplete && hasRag ? `/api/generate/${jobId}/download-rag` : undefined,
   });
 });
 
@@ -217,42 +247,145 @@ router.get('/:jobId/download', async (req: Request, res: Response) => {
   });
 });
 
+// GET /api/generate/:jobId/download-rag - Download RAG Knowledge Base ZIP
+router.get('/:jobId/download-rag', async (req: Request, res: Response) => {
+  const { jobId } = req.params;
+  const job = jobs.get(jobId);
+
+  if (!job) {
+    return res.status(404).json({ error: 'Job not found' });
+  }
+
+  if (!job.ragZipPath || !existsSync(job.ragZipPath)) {
+    return res.status(404).json({ error: 'RAG ZIP file not found' });
+  }
+
+  const filename = `knowledge-base-${job.id.substring(0, 8)}.zip`;
+
+  res.setHeader('Content-Type', 'application/zip');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+  const stream = createReadStream(job.ragZipPath);
+  stream.pipe(res);
+
+  // Note: Don't delete RAG ZIP immediately as user may download multiple times
+  // It will be cleaned up by the job cleanup routine
+});
+
 // Background job processor
 async function processJob(job: Job): Promise<void> {
   try {
-    job.status = 'processing';
+    const mode = job.mode;
 
     broadcastToJob(job.id, {
       type: 'progress',
-      message: 'Iniciando procesamiento...',
+      message: `Iniciando procesamiento (modo: ${mode})...`,
       timestamp: new Date().toISOString(),
     });
 
-    // Execute Claude to generate tests
-    await claudeExecutor.execute(job);
+    // Phase 1: RAG Preprocessing (if applicable)
+    if (mode === 'rag-only' || mode === 'rag-then-tests') {
+      job.status = 'preprocessing';
 
-    if (job.generatedFiles.length === 0) {
-      throw new Error('No se generaron tests');
+      broadcastToJob(job.id, {
+        type: 'progress',
+        message: 'Fase 1: Preprocesamiento RAG...',
+        timestamp: new Date().toISOString(),
+      });
+
+      await ragExecutor.execute(job);
+
+      // Create RAG ZIP if files were generated
+      if (job.ragFiles && job.ragFiles.length > 0) {
+        broadcastToJob(job.id, {
+          type: 'progress',
+          message: 'Creando archivo ZIP de base de conocimiento...',
+          timestamp: new Date().toISOString(),
+        });
+
+        job.ragZipPath = await createRagZip(job.ragFiles, job.id);
+
+        broadcastToJob(job.id, {
+          type: 'rag_completed',
+          message: `RAG completado: ${job.ragFiles.length} archivos de conocimiento`,
+          timestamp: new Date().toISOString(),
+          data: {
+            ragDownloadUrl: `/api/generate/${job.id}/download-rag`,
+            ragTotalFiles: job.ragFiles.length,
+          },
+        });
+      }
     }
 
-    // Create ZIP
-    broadcastToJob(job.id, {
-      type: 'progress',
-      message: 'Creando archivo ZIP...',
-      timestamp: new Date().toISOString(),
-    });
+    // Phase 2: Test Generation (if applicable)
+    if (mode === 'tests-only' || mode === 'rag-then-tests') {
+      job.status = 'processing';
 
-    job.zipPath = await createTestsZip(job.generatedFiles, job.provider);
+      broadcastToJob(job.id, {
+        type: 'progress',
+        message: mode === 'rag-then-tests'
+          ? 'Fase 2: Generacion de tests desde base de conocimiento...'
+          : 'Generando tests...',
+        timestamp: new Date().toISOString(),
+      });
 
-    // Send completion
+      // If RAG was done first, use RAG output as context for test generation
+      if (mode === 'rag-then-tests' && job.ragFiles && job.ragFiles.length > 0) {
+        // Convert RAG files to context files for test generation
+        job.contextFiles = job.ragFiles.map(f => ({
+          name: f.path,
+          content: f.content,
+        }));
+      }
+
+      // Execute test generation
+      await claudeExecutor.execute(job);
+
+      if (job.generatedFiles.length === 0) {
+        throw new Error('No se generaron tests');
+      }
+
+      // Create Tests ZIP
+      broadcastToJob(job.id, {
+        type: 'progress',
+        message: 'Creando archivo ZIP de tests...',
+        timestamp: new Date().toISOString(),
+      });
+
+      job.zipPath = await createTestsZip(job.generatedFiles, job.provider);
+    }
+
+    // Determine what completion message to send
+    const hasRag = job.ragFiles && job.ragFiles.length > 0;
+    const hasTests = job.generatedFiles.length > 0;
+
+    let completionMessage = '';
+    const completionData: Record<string, unknown> = {};
+
+    if (mode === 'rag-only' && hasRag) {
+      completionMessage = `RAG completado: ${job.ragFiles!.length} archivos de conocimiento`;
+      completionData.ragDownloadUrl = `/api/generate/${job.id}/download-rag`;
+      completionData.ragTotalFiles = job.ragFiles!.length;
+    } else if (mode === 'tests-only' && hasTests) {
+      completionMessage = `Generacion completada: ${job.generatedFiles.length} tests`;
+      completionData.downloadUrl = `/api/generate/${job.id}/download`;
+      completionData.totalFiles = job.generatedFiles.length;
+    } else if (mode === 'rag-then-tests') {
+      const ragCount = hasRag ? job.ragFiles!.length : 0;
+      const testCount = hasTests ? job.generatedFiles.length : 0;
+      completionMessage = `Completado: ${ragCount} archivos KB + ${testCount} tests`;
+      completionData.downloadUrl = `/api/generate/${job.id}/download`;
+      completionData.ragDownloadUrl = `/api/generate/${job.id}/download-rag`;
+      completionData.totalFiles = testCount;
+      completionData.ragTotalFiles = ragCount;
+    }
+
+    // Send completion event
     broadcastToJob(job.id, {
       type: 'completed',
-      message: `Generacion completada: ${job.generatedFiles.length} tests`,
+      message: completionMessage,
       timestamp: new Date().toISOString(),
-      data: {
-        downloadUrl: `/api/generate/${job.id}/download`,
-        totalFiles: job.generatedFiles.length,
-      },
+      data: completionData,
     });
 
     job.status = 'completed';
