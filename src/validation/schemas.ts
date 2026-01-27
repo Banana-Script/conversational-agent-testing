@@ -50,6 +50,7 @@ const ConversationTurnSchema = z.object({
   message: z.string(),
   tool_calls: z.array(z.any()).optional(),
   timestamp: z.string().optional(),
+  response_type: z.string().nullable().optional(),
 });
 
 /**

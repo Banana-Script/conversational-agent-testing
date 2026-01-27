@@ -45,6 +45,7 @@ export interface ConversationTurn {
   message: string;
   tool_calls?: any[];
   timestamp?: string;
+  response_type?: string | null; // 'normal', 'tool_call', etc. or null for user messages
 }
 
 // Especificación de simulación interna

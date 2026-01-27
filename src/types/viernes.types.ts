@@ -63,6 +63,7 @@ export interface ViernesTranscriptTurn {
   tool_results?: any[];
   interrupted?: boolean;
   message_id?: string;
+  response_type?: string | null; // 'normal', 'tool_call', etc. or null for user messages
 }
 
 // Evaluation Result

@@ -209,6 +209,7 @@ export class ViernesAdapter {
       message: turn.message,
       tool_calls: turn.tool_calls,
       timestamp: turn.timestamp,
+      response_type: turn.response_type,
     }));
   }
 
